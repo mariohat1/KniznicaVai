@@ -1,0 +1,73 @@
+-- init.sql: create schema and tables for the library app
+-- This file will be executed by the MariaDB container on first initialization.
+-- Database name set to match docker/.env (MARIADB_DATABASE=vaiicko_db)
+
+
+-- Authors
+CREATE TABLE IF NOT EXISTS authors (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50),
+  nationality VARCHAR(50),
+  birth_date DATETIME
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Categories
+CREATE TABLE IF NOT EXISTS categories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Genres
+CREATE TABLE IF NOT EXISTS genres (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Books
+CREATE TABLE IF NOT EXISTS books (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  isbn VARCHAR(50),
+  year_published DATE,
+  description VARCHAR(100),
+  title VARCHAR(100) NOT NULL,
+  author_id INT NULL,
+  category_id INT NULL,
+  genre_id INT NULL,
+ FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE SET NULL ON UPDATE CASCADE,
+  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL ON UPDATE CASCADE,
+   FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Book copies
+CREATE TABLE IF NOT EXISTS book_copy (
+     id INT AUTO_INCREMENT PRIMARY KEY,
+     available BOOLEAN DEFAULT TRUE,
+     book_id INT NOT NULL,
+     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Users
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50),
+  username VARCHAR(100) UNIQUE,
+  password VARCHAR(255),
+  email VARCHAR(255),
+  role VARCHAR(50),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Reservations
+CREATE TABLE IF NOT EXISTS reservation (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+   reserved VARCHAR(50),
+    user_id INT,
+    book_copy_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (book_copy_id) REFERENCES book_copy(id) ON DELETE SET NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- End of init.sql

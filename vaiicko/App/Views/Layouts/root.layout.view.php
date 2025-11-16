@@ -25,7 +25,7 @@
 <body>
 
 <header class="site-header">
-    <nav class="navbar navbar-expand-sm navbar-dark">
+    <nav class="navbar navbar-expand-sm bg-light">
         <div class="container-fluid">
             <a class="navbar-brand" href="<?= $link->url('home.index') ?>">
                 <img src="<?= $link->asset('images/vaiicko_logo.png') ?>" title="<?= App\Configuration::APP_NAME ?>"
