@@ -35,14 +35,53 @@
                 <li class="nav-item">
                     <a class="nav-link" href="<?= $link->url('home.contact') ?>">Contact</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= $link->url('author.index') ?>">Autori</a>
+                </li>
             </ul>
             <?php if ($auth?->isLogged()) { ?>
-                <span class="navbar-text">Logged in user: <b><?= $auth?->user?->name ?></b></span>
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= $link->url('auth.logout') ?>">Log out</a>
-                    </li>
-                </ul>
+                <?php
+                // Determine if current user is admin. Support different identity shapes (role property or username methods/properties)
+                $user = null;
+                try {
+                    $user = $auth->getUser();
+                } catch (\Throwable $e) {
+                    $user = $auth?->user ?? null;
+                }
+
+                $isAdmin = false;
+                if ($user) {
+                    if (isset($user->role)) {
+                        $isAdmin = ($user->role === 'admin');
+                    } elseif (method_exists($user, 'getUsername')) {
+                        $isAdmin = ($user->getUsername() === 'admin');
+                    } elseif (isset($user->username)) {
+                        $isAdmin = ($user->username === 'admin');
+                    }
+                }
+                ?>
+
+                <div class="d-flex align-items-center ms-auto">
+                    <?php if ($isAdmin): ?>
+                        <div class="dropdown me-3">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="adminMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                                Správa
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminMenu">
+                                <li><a class="dropdown-item" href="<?= $link->url('author.index') ?>">Správa autorov</a></li>
+                                <li><a class="dropdown-item" href="<?= $link->url('book.index') ?>">Správa kníh</a></li>
+                                <li><a class="dropdown-item" href="<?= $link->url('admin.index') ?>">Nastavenia</a></li>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
+
+                    <span class="navbar-text me-3">Prihlásený: <b><?= htmlspecialchars($user?->name ?? ($user?->getUsername() ?? ($user?->username ?? ''))) ?></b></span>
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= $link->url('auth.logout') ?>">Odhlásiť sa</a>
+                        </li>
+                    </ul>
+                </div>
             <?php } else { ?>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">

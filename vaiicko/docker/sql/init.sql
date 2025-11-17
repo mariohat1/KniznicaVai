@@ -1,9 +1,4 @@
--- init.sql: create schema and tables for the library app
--- This file will be executed by the MariaDB container on first initialization.
--- Database name set to match docker/.env (MARIADB_DATABASE=vaiicko_db)
 
-
--- Authors
 CREATE TABLE IF NOT EXISTS authors (
   id INT AUTO_INCREMENT PRIMARY KEY,
   first_name VARCHAR(50),
