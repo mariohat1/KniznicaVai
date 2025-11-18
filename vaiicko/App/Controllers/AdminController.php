@@ -16,6 +16,7 @@ use Framework\Http\Responses\Response;
  */
 class AdminController extends BaseController
 {
+
     /**
      * Authorizes actions in this controller.
      *

@@ -3,18 +3,16 @@
 namespace App\Models;
 
 use Framework\Core\IIdentity;
+use Framework\Core\Model;
 
-/**
- * Simple User value object representing an authenticated user.
- */
-class User implements IIdentity
+
+class User extends Model implements IIdentity
 {
-    public function __construct(
-        public ?int $id = null,
-        public string $username = '',
-        public string $name = ''
-    ) {
-    }
+    protected ?int $id = null;
+    protected ?string $username = null;
+    protected ?string $password = null;
+    protected ?string $email = null;
+    protected ?string $role = null;
 
     public function getId(): ?int
     {
@@ -28,7 +26,7 @@ class User implements IIdentity
 
     public function getUsername(): string
     {
-        return $this->username;
+        return (string)($this->username ?? '');
     }
 
     public function setUsername(string $username): void
@@ -36,13 +34,36 @@ class User implements IIdentity
         $this->username = $username;
     }
 
-    public function getName(): string
+    public function getPassword(): ?string
     {
-        return $this->name;
+        return $this->password;
     }
 
-    public function setName(string $name): void
+    public function setPassword(?string $password): void
     {
-        $this->name = $name;
+        $this->password = $password;
     }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(?string $email): void
+    {
+        $this->email = $email;
+    }
+
+    public function getRole(): ?string
+    {
+        return $this->role;
+    }
+
+    public function setRole(?string $role): void
+    {
+        $this->role = $role;
+    }
+
+
 }
+

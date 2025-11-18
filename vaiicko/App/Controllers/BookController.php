@@ -22,16 +22,15 @@ class BookController extends BaseController
         }
 
         $user = $auth->getUser();
-        // If user has role property, require it to be 'admin'. Otherwise, fallback to username check for DummyAuthenticator.
+        // Require explicit role === 'admin' (case-insensitive). No username fallback.
         if (is_object($user)) {
-            if (property_exists($user, 'role')) {
-                return ($user->role === 'admin');
+            if (method_exists($user, 'getRole')) {
+                return (strtolower((string)$user->getRole()) === 'admin');
             }
-            if (method_exists($user, 'getUsername')) {
-                return $user->getUsername() === 'admin';
-            }
-            if (property_exists($user, 'username')) {
-                return ($user->username === 'admin');
+            // If role is a public/protected property (no getter), inspect it defensively
+            $vars = is_object($user) ? get_object_vars($user) : [];
+            if (isset($vars['role'])) {
+                return (strtolower((string)$vars['role']) === 'admin');
             }
         }
 
@@ -59,4 +58,3 @@ class BookController extends BaseController
         return $this->redirect($this->url('book.index'));
     }
 }
-

@@ -8,6 +8,7 @@ use Framework\Core\BaseController;
 use Framework\Http\Request;
 use Framework\Http\Responses\Response;
 use Framework\Http\Responses\ViewResponse;
+use App\Models\User;
 
 /**
  * Class AuthController
@@ -45,17 +46,50 @@ class AuthController extends BaseController
      */
     public function login(Request $request): Response
     {
-        $logged = null;
-        if ($request->hasValue('submit')) {
-            $logged = $this->app->getAuth()->login($request->value('username'), $request->value('password'));
+        $message = null;
+
+        if ($request->isPost()) {
+            // accept either 'login' or 'username' field for compatibility
+            $loginField = $request->value('login') ?? $request->value('username');
+            $password = $request->value('password');
+
+            $logged = $this->app->getAuth()->login($loginField, $password);
+            $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
+
             if ($logged) {
-                return $this->redirect($this->url("admin.index"));
+                return $this->redirect($referer);
             }
+
+            // On failure, set session flags so layout reopens modal and shows message
+            $session = $this->app->getSession();
+            $items = $session->get('flash_messages', []);
+            // set a danger flash too (optional)
+            $items[] = ['type' => 'danger', 'message' => 'Neplatné meno alebo heslo'];
+            $session->set('flash_messages', $items);
+
+            $session->set('open_auth_modal', true);
+            $session->set('auth_modal_mode', 'login');
+            $session->set('auth_modal_message', 'Neplatné meno alebo heslo');
+            $session->set('auth_modal_username', $loginField ?? '');
+
+            return $this->redirect($referer);
         }
 
-        $message = $logged === false ? 'Bad username or password' : null;
-        return $this->html(compact("message"));
+        return $this->html(compact('message'));
     }
+
+    /**
+     * Registers a new user and handles the registration request.
+     *
+     * This action processes user registration attempts. If the registration form is submitted, it validates the
+     * provided data, creates a new User model, hashes the password, and saves the user. Upon successful
+     * registration, the user is redirected to the login page. If registration fails, an error message is displayed
+     * on the registration page.
+     *
+     * @return Response The response object which can either redirect to the login page on success or render the
+     *                  registration view with an error message on failure.
+     */
+
 
     /**
      * Logs out the current user.

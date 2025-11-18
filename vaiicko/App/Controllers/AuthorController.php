@@ -11,11 +11,23 @@ class AuthorController extends BaseController
 {
     public function authorize(Request $request, string $action): bool
     {
-        // Allow public viewing of the index (authors list); require login for other actions (add/store)
+        // Allow public viewing of the index (authors list)
         if ($action === 'index') {
             return true;
         }
-        return $this->app->getAuth()->isLogged();
+
+        // For other actions (add/store) require explicit admin role
+        $auth = $this->app->getAuth();
+        if (!$auth->isLogged()) {
+            return false;
+        }
+
+        $user = $auth->getUser();
+        if (is_object($user) && ($user instanceof \App\Models\User) && method_exists($user, 'getRole')) {
+            return (strtolower((string)$user->getRole()) === 'admin');
+        }
+
+        return false;
     }
 
     public function index(Request $request): Response
@@ -29,7 +41,12 @@ class AuthorController extends BaseController
 
     public function add(Request $request): Response
     {
-        // Show form to add author
+        // If an id is provided, load the author and pass to view for editing
+        $id = $request->value('id');
+        if (!empty($id)) {
+            $author = Author::getOne((int)$id);
+            return $this->html(['author' => $author]);
+        }
         return $this->html();
     }
 
@@ -39,6 +56,41 @@ class AuthorController extends BaseController
         $author = new Author();
         $author->setFromRequest($request);
         $author->save();
+        return $this->redirect($this->url('author.index'));
+    }
+    public function update(Request $request, int $id): Response
+    {
+        // Update author with given ID from POST data
+        try {
+            $author = Author::getOne($id);
+        } catch (\Exception $e) {
+
+        }
+        if ($author) {
+            $author->setFromRequest($request);
+            try {
+                $author->save();
+            } catch (\Exception $e) {
+
+            }
+        }
+        return $this->redirect($this->url('author.index'));
+    }
+    public function delete(Request $request, ?int $id = null): Response
+    {
+        // Accept id either from route param ($id) or from POST 'id'
+        $idFromReq = $request->value('id');
+        $useId = $id ?? ($idFromReq !== null ? (int)$idFromReq : null);
+        if (!empty($useId)) {
+            try {
+                $author = Author::getOne((int)$useId);
+                if ($author) {
+                    $author->delete();
+                }
+            } catch (\Throwable $e) {
+                // ignore and redirect
+            }
+        }
         return $this->redirect($this->url('author.index'));
     }
 }
