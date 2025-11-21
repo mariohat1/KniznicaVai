@@ -50,11 +50,21 @@ class AuthorController extends BaseController
         return $this->html();
     }
 
+
     public function store(Request $request): Response
     {
         // Create author from POST and save
         $author = new Author();
-        $author->setFromRequest($request);
+        $id = $request->value('id');
+        if (!empty($id)) {
+            $author = Author::getOne($id);
+
+        }
+
+        $author->setFirstName($request->value('first_name'));
+        $author->setLastName($request->value('last_name'));
+        $author->setNationality($request->value('nationality'));
+        $author->setBirthDate($request->value('birth_date'));
         $author->save();
         return $this->redirect($this->url('author.index'));
     }

@@ -4,58 +4,11 @@
 /** @var \Framework\Core\IAuthenticator $auth */
 /** @var \Framework\Support\LinkGenerator $link */
 
-// --- Logic: compute display variables once to keep template markup clean ---
-$user = null;
-try {
-    $user = $auth->getUser();
-} catch (\Throwable $e) {
-    $user = $auth?->user ?? null;
-}
-// Determine admin flag in a safe way (methods first, then public props)
-$isAdmin = false;
-// Only consider admin when authenticator reports logged-in and the user's role is explicitly 'admin'
-try {
-    if ($auth?->isLogged()) {
-        try {
-            // require the user to be the application's User model
-            if (is_object($user) && ($user instanceof \App\Models\User)) {
-                $isAdmin = (strtolower((string)$user->getRole()) === 'admin');
-            } else {
-                $isAdmin = false;
-            }
-        } catch (\Throwable $e) {
-            $isAdmin = false;
-        }
-    }
-} catch (\Throwable $e) {
-    $isAdmin = false;
-}
+use App\Support\AuthView;
 
-// Friendly display name for navbar
-$displayName = '';
-if ($user) {
-    if (is_object($user) && method_exists($user, 'getName')) {
-        $displayName = $user->getName();
-    } elseif (is_object($user) && method_exists($user, 'getUsername')) {
-        $displayName = $user->getUsername();
-    } else {
-        $vars = is_object($user) ? get_object_vars($user) : [];
-        $displayName = $vars['name'] ?? $vars['username'] ?? '';
-    }
-}
-
-$displayNameEsc = htmlspecialchars($displayName);
-
-// Read transient auth modal flags from session (if any)
-$openAuthModal = $_SESSION['open_auth_modal'] ?? false;
-$authModalMode = $_SESSION['auth_modal_mode'] ?? 'login';
-$authModalMessage = $_SESSION['auth_modal_message'] ?? null;
-$authModalUsername = $_SESSION['auth_modal_username'] ?? '';
-// Clear them so they appear only once
-if (isset($_SESSION['open_auth_modal'])) unset($_SESSION['open_auth_modal']);
-if (isset($_SESSION['auth_modal_mode'])) unset($_SESSION['auth_modal_mode']);
-if (isset($_SESSION['auth_modal_message'])) unset($_SESSION['auth_modal_message']);
-if (isset($_SESSION['auth_modal_username'])) unset($_SESSION['auth_modal_username']);
+// Use centralized helper for auth-related display values
+$displayNameEsc = AuthView::displayNameEsc($auth);
+$isAdmin = AuthView::canAddAuthor($auth);
 
 ?>
 <!DOCTYPE html>
@@ -135,16 +88,13 @@ if (isset($_SESSION['auth_modal_username'])) unset($_SESSION['auth_modal_usernam
             </div>
         </div>
 
-        <!-- Login form -->
+        <!-- Login form (AJAX-only, server modal flags removed) -->
         <div id="modalLoginForm">
-            <?php if (!empty($authModalMessage) && $authModalMode === 'login'): ?>
-                <div class="alert alert-danger" role="alert"><?= htmlspecialchars($authModalMessage) ?></div>
-            <?php endif; ?>
-            <form method="post" action="<?= $link->url('auth.login') ?>">
+            <form id="loginForm" method="post" action="<?= $link->url('auth.login') ?>">
               <input type="hidden" name="auth_form" value="login">
                <div class="mb-3">
                  <label for="modal_username" class="form-label">Používateľ</label>
-                <input id="modal_username" name="username" type="text" class="form-control" value="<?= htmlspecialchars($authModalUsername) ?>">
+                <input id="modal_username" name="username" type="text" class="form-control" value="">
                </div>
                <div class="mb-3">
                  <label for="modal_password" class="form-label">Heslo</label>
@@ -227,7 +177,6 @@ if (isset($_SESSION['auth_modal_username'])) unset($_SESSION['auth_modal_usernam
     // No custom fetch submit — rely on normal form POST so cookies/session are sent by the browser.
 </script>
 
-<!-- Persist server modal message into sessionStorage and show it only when user opens the modal -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var loginForm = document.getElementById('modalLoginForm');
@@ -245,24 +194,12 @@ if (isset($_SESSION['auth_modal_username'])) unset($_SESSION['auth_modal_usernam
             if(registerForm) registerForm.style.display = 'block';
         });
 
-        // Open modal automatically if server flagged it
-        var open = <?= $openAuthModal ? 'true' : 'false' ?>;
-        var mode = '<?= htmlspecialchars($authModalMode) ?>';
-
-        if (open && loginModalEl) {
-            if(mode === 'login') {
-                if(loginForm) loginForm.style.display = 'block';
-                if(registerForm) registerForm.style.display = 'none';
-            } else if (mode === 'register') {
-                if(loginForm) loginForm.style.display = 'none';
-                if(registerForm) registerForm.style.display = 'block';
-            }
-
-            var bootstrapModal = new bootstrap.Modal(loginModalEl);
-            bootstrapModal.show();
-        }
+        // No server-driven auto-open: modal opens only when user clicks the button.
+        // Keep client-side toggles for switching login/register views.
     });
 </script>
+
+<script src="<?= $link->asset('js/login.js') ?>"></script>
 
 </body>
 </html>

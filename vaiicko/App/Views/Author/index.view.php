@@ -2,23 +2,15 @@
 /** @var array $authors */
 /** @var \Framework\Support\LinkGenerator $link */
 /** @var \Framework\Core\IAuthenticator $auth */
+
+use App\Support\AuthView;
 ?>
 
 <div class="container">
     <h1>Authors</h1>
     <?php
     // Determine whether the current user may add authors: require explicit role 'admin'
-    $canAddAuthor = false;
-    try {
-        if ($auth?->isLogged()) {
-            $u = $auth->getUser();
-            if (is_object($u) && method_exists($u, 'getRole')) {
-                $canAddAuthor = (strtolower((string)$u->getRole()) === 'admin');
-            }
-        }
-    } catch (\Throwable $e) {
-        $canAddAuthor = false;
-    }
+    $canAddAuthor = AuthView::canAddAuthor($auth);
     ?>
 
     <?php if ($canAddAuthor): ?>
@@ -30,27 +22,26 @@
     <?php if (empty($authors)): ?>
         <p>No authors found.</p>
     <?php else: ?>
-        <table class="table table-striped table-sm">
+        <div class="table-responsive"> <!-- allows horizontal scroll on small screens -->
+        <table class="table table-striped table-sm mt-3 mb-3 authors-table">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>First name</th>
-                    <th>Last name</th>
-                    <th>Nationality</th>
-                    <th>Birth date</th>
-                    <?php if ($canAddAuthor): ?><th>Actions</th><?php endif; ?>
+                    <th scope="col">First name</th>
+                    <th scope="col">Last name</th>
+                    <th scope="col">Nationality</th>
+                    <th scope="col">Birth date</th>
+                    <?php if ($canAddAuthor): ?><th scope="col" class="d-none d-sm-table-cell">Actions</th><?php endif; ?>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($authors as $a): ?>
                     <tr>
-                        <td><?= htmlspecialchars($a->getId()) ?></td>
-                        <td><?= htmlspecialchars($a->getFirstName()) ?></td>
-                        <td><?= htmlspecialchars($a->getLastName()) ?></td>
-                        <td><?= htmlspecialchars($a->getNationality()) ?></td>
-                        <td><?= htmlspecialchars($a->getBirthDate()) ?></td>
+                        <td data-label="First name"><?= htmlspecialchars($a->getFirstName()) ?></td>
+                        <td data-label="Last name"><?= htmlspecialchars($a->getLastName()) ?></td>
+                        <td data-label="Nationality"><?= htmlspecialchars($a->getNationality()) ?></td>
+                        <td data-label="Birth date"><?= htmlspecialchars($a->getBirthDate()) ?></td>
                         <?php if ($canAddAuthor): ?>
-                        <td>
+                        <td class="d-none d-sm-table-cell">
                             <!-- Edit link navigates to the add page with id param so it can prefill -->
                             <a class="btn btn-sm btn-outline-secondary" href="<?= $link->url('author.add', ['id' => $a->getId()]) ?>">Edit</a>
 
@@ -66,6 +57,7 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
     <?php endif; ?>
 </div>
 

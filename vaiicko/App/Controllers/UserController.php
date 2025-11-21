@@ -6,6 +6,7 @@ use Exception;
 use Framework\Core\BaseController;
 use Framework\Http\Request;
 use Framework\Http\Responses\Response;
+use Framework\Http\Responses\JsonResponse;
 use App\Models\User;
 
 class UserController extends BaseController
@@ -28,10 +29,15 @@ class UserController extends BaseController
             if ($username === '' || $password === '' || $password !== $password2) {
                 $message = 'Skontrolujte polia (username a heslá musí byť rovnaké).';
                 $session = $this->app->getSession();
-                $session->set('open_auth_modal', true);
-                $session->set('auth_modal_mode', 'register');
-                $session->set('auth_modal_message', $message);
-                $session->set('auth_modal_username', $username);
+                $items = $session->get('flash_messages', []);
+                $items[] = ['type' => 'danger', 'message' => $message];
+                $session->set('flash_messages', $items);
+
+                // If AJAX, return JSON error so client can show it without relying on server-driven modal
+                if ($request->isAjax()) {
+                    return new JsonResponse(['success' => false, 'message' => $message]);
+                }
+
                 $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
                 return $this->redirect($referer);
             }
@@ -42,10 +48,14 @@ class UserController extends BaseController
                 if ($exists > 0) {
                     $message = 'Používateľ s týmto menom už existuje.';
                     $session = $this->app->getSession();
-                    $session->set('open_auth_modal', true);
-                    $session->set('auth_modal_mode', 'register');
-                    $session->set('auth_modal_message', $message);
-                    $session->set('auth_modal_username', $username);
+                    $items = $session->get('flash_messages', []);
+                    $items[] = ['type' => 'danger', 'message' => $message];
+                    $session->set('flash_messages', $items);
+
+                    if ($request->isAjax()) {
+                        return new JsonResponse(['success' => false, 'message' => $message]);
+                    }
+
                     $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
                     return $this->redirect($referer);
                 }
@@ -82,10 +92,14 @@ class UserController extends BaseController
             } catch (Exception $e) {
                 $message = 'Registrácia zlyhala: ' . $e->getMessage();
                 $session = $this->app->getSession();
-                $session->set('open_auth_modal', true);
-                $session->set('auth_modal_mode', 'register');
-                $session->set('auth_modal_message', $message);
-                $session->set('auth_modal_username', $username);
+                $items = $session->get('flash_messages', []);
+                $items[] = ['type' => 'danger', 'message' => $message];
+                $session->set('flash_messages', $items);
+
+                if ($request->isAjax()) {
+                    return new JsonResponse(['success' => false, 'message' => $message]);
+                }
+
                 $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
                 return $this->redirect($referer);
             }

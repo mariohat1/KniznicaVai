@@ -6,7 +6,9 @@
 <div class="container">
     <h1><?= isset($author) ? 'Edit author' : 'Add author' ?></h1>
     <form method="post" action="<?= $link->url('author.store') ?>">
-        <input type="hidden" name="id" value="<?= isset($author) ? htmlspecialchars($author->getId()) : '' ?>">
+        <?php if (isset($author)) { ?>
+            <input type="hidden" name="id" value="<?= htmlspecialchars($author->getId()) ?>">
+        <?php } ?>
         <div class="mb-3">
             <label class="form-label">First name</label>
             <input type="text" name="first_name" class="form-control" required value="<?= isset($author) ? htmlspecialchars($author->getFirstName()) : '' ?>">
@@ -21,7 +23,20 @@
         </div>
         <div class="mb-3">
             <label class="form-label">Birth date</label>
-            <input type="date" name="birth_date" class="form-control" value="<?= isset($author) ? htmlspecialchars($author->getBirthDate()) : '' ?>">
+            <?php
+            // Ensure the date input gets a YYYY-MM-DD value when editing.
+            $birthValue = '';
+            if (isset($author) && $author->getBirthDate()) {
+                try {
+                    $dt = new \DateTime($author->getBirthDate());
+                    $birthValue = $dt->format('Y-m-d');
+                } catch (\Exception $e) {
+                    // fallback: leave empty if date parsing fails
+                    $birthValue = '';
+                }
+            }
+            ?>
+            <input type="date" name="birth_date" class="form-control" value="<?= htmlspecialchars($birthValue) ?>">
         </div>
         <button class="btn btn-primary"><?= isset($author) ? 'Update' : 'Save' ?></button>
     </form>

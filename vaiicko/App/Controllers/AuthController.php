@@ -8,6 +8,7 @@ use Framework\Core\BaseController;
 use Framework\Http\Request;
 use Framework\Http\Responses\Response;
 use Framework\Http\Responses\ViewResponse;
+use Framework\Http\Responses\JsonResponse;
 use App\Models\User;
 
 /**
@@ -57,25 +58,17 @@ class AuthController extends BaseController
             $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
 
             if ($logged) {
-                return $this->redirect($referer);
+                // Always return JSON success for AJAX usage
+                return new JsonResponse(['success' => true, 'redirect' => $referer]);
             }
 
-            // On failure, set session flags so layout reopens modal and shows message
-            $session = $this->app->getSession();
-            $items = $session->get('flash_messages', []);
-            // set a danger flash too (optional)
-            $items[] = ['type' => 'danger', 'message' => 'Neplatné meno alebo heslo'];
-            $session->set('flash_messages', $items);
-
-            $session->set('open_auth_modal', true);
-            $session->set('auth_modal_mode', 'login');
-            $session->set('auth_modal_message', 'Neplatné meno alebo heslo');
-            $session->set('auth_modal_username', $loginField ?? '');
-
-            return $this->redirect($referer);
+            // Always return JSON error for failed login
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Neplatné meno alebo heslo'
+            ]);
         }
 
-        return $this->html(compact('message'));
     }
 
     /**
