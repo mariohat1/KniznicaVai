@@ -67,7 +67,12 @@ class AuthController extends BaseController
                 'success' => false,
                 'message' => 'Neplatné meno alebo heslo'
             ]);
+
         }
+        return new JsonResponse([
+            'success' => false,
+            'message' => 'Neplatné meno alebo heslo'
+        ]);
 
     }
 

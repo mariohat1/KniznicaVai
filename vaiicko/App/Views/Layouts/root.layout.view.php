@@ -42,6 +42,8 @@ $isAdmin = AuthView::canAddAuthor($auth);
             <ul class="navbar-nav me-auto">
                 <li class="nav-item"><a class="nav-link" href="<?= $link->url('home.contact') ?>">Contact</a></li>
                 <li class="nav-item"><a class="nav-link" href="<?= $link->url('author.index') ?>">Autori</a></li>
+                <li class="nav-item"><a class="nav-link" href="<?= $link->url('book.index') ?>">Knihy</a></li>
+
             </ul>
 
             <?php if ($auth?->isLogged()): ?>
