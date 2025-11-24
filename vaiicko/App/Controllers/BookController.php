@@ -6,6 +6,7 @@ use App\Models\Book;
 use App\Models\Author;
 use App\Models\Category;
 use App\Models\Genre;
+use App\Support\AuthView;
 use Framework\Core\BaseController;
 use Framework\Http\Request;
 use Framework\Http\Responses\Response;
@@ -16,7 +17,8 @@ class BookController extends BaseController
     public function authorize(Request $request, string $action): bool
     {
         // Only admin users can perform non-read actions (add/store). Allow index for everyone.
-        if ($action === 'index') {
+        // Allow public read actions: index and view
+        if (in_array($action, ['index', 'view'])) {
             return true;
         }
 
@@ -44,7 +46,64 @@ class BookController extends BaseController
     public function index(Request $request): Response
     {
         $books = Book::getAll();
-        return $this->html(['books' => $books]);
+        // compute available copies per book using model counts (controller handles logic)
+        $copies = [];
+        foreach ($books as $b) {
+            $bookId = $b->getId();
+            $total = \App\Models\BookCopy::getCount('book_id = ?', [$bookId]);
+            $reserved = \App\Models\Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ?) AND is_active = 1', [$bookId]);
+            $available = max(0, $total - $reserved);
+            $copies[$bookId] = ['total' => $total, 'available' => $available];
+        }
+        return $this->html(['books' => $books, 'copies' => $copies], 'index');
+    }
+
+    // Admin-only management page (classic list). Protected via authorize() since action != 'index'.
+    public function manage(Request $request): Response
+    {
+        $books = Book::getAll();
+        // compute available copies per book using model counts (controller handles logic)
+        $copies = [];
+        foreach ($books as $b) {
+            $bookId = $b->getId();
+            $total = \App\Models\BookCopy::getCount('book_id = ?', [$bookId]);
+            $reserved = \App\Models\Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ?) AND is_active = 1', [$bookId]);
+            $available = max(0, $total - $reserved);
+            $copies[$bookId] = ['total' => $total, 'available' => $available];
+        }
+        // Render the existing classic admin table view (Book/index.view.php)
+        return $this->html(['books' => $books, 'copies' => $copies], 'manage');
+    }
+
+    /**
+     * Display a single book detail view.
+     */
+    public function view(Request $request): Response
+    {
+        $id = $request->value('id');
+        $book = Book::getOne($id);
+
+        if ($book === null) {
+            // not found -> flash + redirect
+            $session = $this->app->getSession();
+            $items = $session->get('flash_messages', []);
+            $items[] = ['type' => 'warning', 'message' => 'Kniha nebola nájdená.'];
+            $session->set('flash_messages', $items);
+            return $this->redirect($this->url('book.index'));
+        }
+
+        $author = null;
+        $category = null;
+        $genre = null;
+        try {
+            if ($book->getAuthorId()) $author = Author::getOne($book->getAuthorId());
+            if ($book->getCategoryId()) $category = Category::getOne($book->getCategoryId());
+            if ($book->getGenreId()) $genre = Genre::getOne($book->getGenreId());
+        } catch (\Throwable $e) {
+            // ignore related load errors
+        }
+
+        return $this->html(['book' => $book, 'author' => $author, 'category' => $category, 'genre' => $genre], 'bookView');
     }
 
     public function add(Request $request): Response

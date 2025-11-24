@@ -57,7 +57,8 @@ CREATE TABLE IF NOT EXISTS users (
 -- Reservations
 CREATE TABLE IF NOT EXISTS reservation (
     id INT AUTO_INCREMENT PRIMARY KEY,
-   reserved VARCHAR(50),
+    is_reserved TINYINT(1) NOT NULL DEFAULT 0,
+    is_active  TINYINT(1) NOT NULL DEFAULT 1,
     user_id INT,
     book_copy_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

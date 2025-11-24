@@ -23,6 +23,33 @@
         return {status: res.status, data};
     }
 
+    // Toggle show/hide for the 'Iné' add controls
+    const showCatSpan = document.getElementById('showCategoryAdd');
+    if (showCatSpan) {
+        showCatSpan.addEventListener('click', () => {
+            const container = document.getElementById('categoryAddContainer');
+            if (!container) return;
+            container.style.display = container.style.display === 'none' ? 'block' : 'none';
+            if (container.style.display === 'block') {
+                const input = document.getElementById('new_category_name');
+                if (input) input.focus();
+            }
+        });
+    }
+
+    const showGenSpan = document.getElementById('showGenreAdd');
+    if (showGenSpan) {
+        showGenSpan.addEventListener('click', () => {
+            const container = document.getElementById('genreAddContainer');
+            if (!container) return;
+            container.style.display = container.style.display === 'none' ? 'block' : 'none';
+            if (container.style.display === 'block') {
+                const input = document.getElementById('new_genre_name');
+                if (input) input.focus();
+            }
+        });
+    }
+
     const catBtn = document.getElementById('createCategoryBtn');
     if (catBtn) {
         catBtn.addEventListener('click', async () => {

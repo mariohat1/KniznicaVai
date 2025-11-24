@@ -9,12 +9,87 @@ use Framework\Core\Model;
  */
 class Reservation extends Model
 {
-    // DB table is named `reservation` (singular), override conventions
+    // explicit table name (DB has singular 'reservation')
     protected static ?string $tableName = 'reservation';
 
+
     protected ?int $id = null;
-    protected ?string $reserved = null;
+    protected ?int $is_reserved = null;
     protected ?int $user_id = null;
+    protected ?int $is_active = null;
+
+    public function getIsReserved(): ?int
+    {
+        return $this->is_reserved;
+    }
+
+    public function setIsReserved(?int $is_reserved): void
+    {
+        $this->is_reserved = $is_reserved;
+    }
+
+    public function getIsActive(): ?int
+    {
+        return $this->is_active;
+    }
+
+    public function setIsActive(?int $is_active): void
+    {
+        $this->is_active = $is_active;
+    }
+
     protected ?int $book_copy_id = null;
-    protected ?string $created_at = null; // TIMESTAMP as string
+    protected ?string $created_at = null;
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function setId(?int $id): void
+    {
+        $this->id = $id;
+    }
+
+    public function getReserved(): ?string
+    {
+        return $this->reserved;
+    }
+
+    public function setReserved(?string $reserved): void
+    {
+        $this->reserved = $reserved;
+    }
+
+    public function getUserId(): ?int
+    {
+        return $this->user_id;
+    }
+
+    public function setUserId(?int $user_id): void
+    {
+        $this->user_id = $user_id;
+    }
+
+    public function getBookCopyId(): ?int
+    {
+        return $this->book_copy_id;
+    }
+
+    public function setBookCopyId(?int $book_copy_id): void
+    {
+        $this->book_copy_id = $book_copy_id;
+    }
+
+    public function getCreatedAt(): ?string
+    {
+        return $this->created_at;
+    }
+
+    public function setCreatedAt(?string $created_at): void
+    {
+        $this->created_at = $created_at;
+    }
+
+
 }

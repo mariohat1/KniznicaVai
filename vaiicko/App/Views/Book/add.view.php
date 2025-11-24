@@ -50,12 +50,22 @@
                         <option value="<?= htmlspecialchars($c->getId()) ?>"><?= htmlspecialchars($c->getName()) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <small class="text-muted">Add new category below.</small>
-                <div class="input-group mt-2">
-                    <input type="text" id="new_category_name" aria-label="New category name" class="form-control" placeholder="New category name">
-                    <button type="button" id="createCategoryBtn" class="btn btn-outline-secondary">Add</button>
+                <small class="text-muted">
+                    <span id="showCategoryAdd" role="button"
+                          style="cursor:pointer; text-decoration:underline;">
+                        Iné
+                    </span>
+                </small>
+
+                <!-- hidden by default; will be shown when user clicks 'Iné' -->
+                <div id="categoryAddContainer" style="display:none" class="mt-2">
+                    <div class="input-group">
+                        <input type="text" id="new_category_name" aria-label="New category name" class="form-control"
+                               placeholder="New category name">
+                        <button type="button" id="createCategoryBtn" class="btn btn-outline-secondary">Add</button>
+                    </div>
+                    <div id="categoryFeedback" class="form-text text-danger mt-1" style="display:none"></div>
                 </div>
-                <div id="categoryFeedback" class="form-text text-danger mt-1" style="display:none"></div>
             </div>
 
             <div class="mb-3">
@@ -66,12 +76,21 @@
                         <option value="<?= htmlspecialchars($g->getId()) ?>"><?= htmlspecialchars($g->getName()) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <small class="text-muted">Add new genre below.</small>
-                <div class="input-group mt-2">
-                    <input type="text" id="new_genre_name" aria-label="New genre name" class="form-control" placeholder="New genre name">
-                    <button type="button" id="createGenreBtn" class="btn btn-outline-secondary">Add</button>
+                <small class="text-muted">
+                    <span id="showGenreAdd" role="button"
+                          style="cursor:pointer; text-decoration:underline;">Iné
+                    </span>
+                </small>
+
+                <!-- hidden by default; will be shown when user clicks 'Iné' -->
+                <div id="genreAddContainer" style="display:none" class="mt-2">
+                    <div class="input-group">
+                        <input type="text" id="new_genre_name" aria-label="New genre name" class="form-control"
+                               placeholder="New genre name">
+                        <button type="button" id="createGenreBtn" class="btn btn-outline-secondary">Add</button>
+                    </div>
+                    <div id="genreFeedback" class="form-text text-danger mt-1" style="display:none"></div>
                 </div>
-                <div id="genreFeedback" class="form-text text-danger mt-1" style="display:none"></div>
             </div>
 
             <div class="mb-3 text-end">

@@ -53,7 +53,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
                             <button class="btn btn-secondary dropdown-toggle" type="button" id="adminMenu" data-bs-toggle="dropdown" aria-expanded="false">Správa</button>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminMenu">
                                 <li><a class="dropdown-item" href="<?= $link->url('author.index') ?>">Správa autorov</a></li>
-                                <li><a class="dropdown-item" href="<?= $link->url('book.index') ?>">Správa kníh</a></li>
+                                <li><a class="dropdown-item" href="<?= $link->url('book.manage') ?>">Správa kníh</a></li>
                                 <li><a class="dropdown-item" href="<?= $link->url('admin.index') ?>">Nastavenia</a></li>
                             </ul>
                         </div>
