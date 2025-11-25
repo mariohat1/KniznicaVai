@@ -54,13 +54,35 @@ $isAdmin = AuthView::canAddAuthor($auth);
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminMenu">
                                 <li><a class="dropdown-item" href="<?= $link->url('author.index') ?>">Správa autorov</a></li>
                                 <li><a class="dropdown-item" href="<?= $link->url('book.manage') ?>">Správa kníh</a></li>
+                                <li><a class="dropdown-item" href="<?= $link->url('reservation.manage') ?>">Správa rezervácií</a></li>
                                 <li><a class="dropdown-item" href="<?= $link->url('admin.index') ?>">Nastavenia</a></li>
                             </ul>
                         </div>
                     <?php endif; ?>
 
-                    <span class="navbar-text me-3">Prihlásený: <b><?= $displayNameEsc ?></b></span>
-                    <ul class="navbar-nav"><li class="nav-item"><a class="nav-link" href="<?= $link->url('auth.logout') ?>">Odhlásiť sa</a></li></ul>
+                    <?php if ($isAdmin): ?>
+                        <div class="dropdown user-menu me-3">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenuAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="small text-muted">Prihlásený:</span>
+                                <b class="ms-2"><?= $displayNameEsc ?></b>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuAdmin">
+                                <li><a class="dropdown-item" href="<?= $link->url('auth.logout') ?>">Odhlásiť sa</a></li>
+                            </ul>
+                        </div>
+                    <?php else: ?>
+                        <div class="dropdown user-menu me-3">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="small text-muted">Prihlásený:</span>
+                                <b class="ms-2"><?= $displayNameEsc ?></b>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                                <li><a class="dropdown-item" href="<?= $link->url('reservation.index') ?>">Moje rezervácie</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="<?= $link->url('auth.logout') ?>">Odhlásiť sa</a></li>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
                 </div>
             <?php else: ?>
                 <div class="ms-auto">
@@ -183,7 +205,6 @@ $isAdmin = AuthView::canAddAuthor($auth);
     document.addEventListener('DOMContentLoaded', function() {
         var loginForm = document.getElementById('modalLoginForm');
         var registerForm = document.getElementById('modalRegisterForm');
-        var loginModalEl = document.getElementById('loginModal');
 
         // Toggle login/register forms
         document.getElementById('showLogin').addEventListener('click', function() {

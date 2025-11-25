@@ -4,8 +4,10 @@ namespace App\Controllers;
 
 use App\Models\Book;
 use App\Models\Author;
+use App\Models\BookCopy;
 use App\Models\Category;
 use App\Models\Genre;
+use App\Models\Reservation;
 use App\Support\AuthView;
 use Framework\Core\BaseController;
 use Framework\Http\Request;
@@ -43,31 +45,35 @@ class BookController extends BaseController
         return false;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function index(Request $request): Response
     {
         $books = Book::getAll();
-        // compute available copies per book using model counts (controller handles logic)
         $copies = [];
         foreach ($books as $b) {
             $bookId = $b->getId();
-            $total = \App\Models\BookCopy::getCount('book_id = ?', [$bookId]);
-            $reserved = \App\Models\Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ?) AND is_active = 1', [$bookId]);
+            $total = BookCopy::getCount('book_id = ?', [$bookId]);
+            $reserved = Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ?) AND is_active = 1', [$bookId]);
             $available = max(0, $total - $reserved);
             $copies[$bookId] = ['total' => $total, 'available' => $available];
         }
         return $this->html(['books' => $books, 'copies' => $copies], 'index');
     }
 
-    // Admin-only management page (classic list). Protected via authorize() since action != 'index'.
+
+    /**
+     * @throws \Exception
+     */
     public function manage(Request $request): Response
     {
         $books = Book::getAll();
-        // compute available copies per book using model counts (controller handles logic)
         $copies = [];
         foreach ($books as $b) {
             $bookId = $b->getId();
-            $total = \App\Models\BookCopy::getCount('book_id = ?', [$bookId]);
-            $reserved = \App\Models\Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ?) AND is_active = 1', [$bookId]);
+            $total = BookCopy::getCount('book_id = ?', [$bookId]);
+            $reserved = Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ?) AND is_active = 1', [$bookId]);
             $available = max(0, $total - $reserved);
             $copies[$bookId] = ['total' => $total, 'available' => $available];
         }
@@ -84,11 +90,6 @@ class BookController extends BaseController
         $book = Book::getOne($id);
 
         if ($book === null) {
-            // not found -> flash + redirect
-            $session = $this->app->getSession();
-            $items = $session->get('flash_messages', []);
-            $items[] = ['type' => 'warning', 'message' => 'Kniha nebola nájdená.'];
-            $session->set('flash_messages', $items);
             return $this->redirect($this->url('book.index'));
         }
 
@@ -100,25 +101,30 @@ class BookController extends BaseController
             if ($book->getCategoryId()) $category = Category::getOne($book->getCategoryId());
             if ($book->getGenreId()) $genre = Genre::getOne($book->getGenreId());
         } catch (\Throwable $e) {
-            // ignore related load errors
         }
-
-        return $this->html(['book' => $book, 'author' => $author, 'category' => $category, 'genre' => $genre], 'bookView');
+        $reserved = $request->value('reserved') !== null ? (int)$request->value('reserved') : null;
+        return $this->html([
+            'book' => $book,
+            'author' => $author,
+            'category' => $category,
+            'genre' => $genre,
+            'reserved' => $reserved,
+        ], 'bookView');
     }
 
+    /**
+     * @throws \Exception
+     */
     public function add(Request $request): Response
     {
-        // Load lists needed by the add view so it can render selects/checkboxes
         $authors = Author::getAll();
         $categories = Category::getAll();
         $genres = Genre::getAll();
-
         return $this->html(['authors' => $authors, 'categories' => $categories, 'genres' => $genres]);
     }
 
     public function store(Request $request): Response
     {
-        // Only accept POST
         if (!$request->isPost()) {
             if ($request->isAjax()) {
                 return (new JsonResponse(['success' => false, 'message' => 'Method not allowed']))->setStatusCode(405);
@@ -128,9 +134,6 @@ class BookController extends BaseController
 
         try {
             $book = new Book();
-
-            // If the request contains JSON (AJAX), populate the model from JSON body so setFromRequest
-            // (which reads $_POST) doesn't miss values.
             if ($request->isJson()) {
                 try {
                     $data = $request->json();
@@ -138,44 +141,25 @@ class BookController extends BaseController
                     $data = null;
                 }
 
-                if (is_array($data) || is_object($data)) {
-                    foreach ((array)$data as $k => $v) {
-                        // Build setter name from key (e.g. year_published -> setYearPublished)
-                        $setter = 'set' . str_replace(' ', '', ucwords(str_replace('_', ' ', $k)));
-                        if (method_exists($book, $setter)) {
-                            $book->{$setter}($v);
-                        } elseif (property_exists($book, $k)) {
-                            $book->{$k} = $v;
-                        }
+                foreach ($data as $key => $value) {
+                    if (!property_exists($this, $key)) {
+                        continue;
                     }
+                    $this->{$key} = $value;
                 }
             } else {
-                // regular form POST: existing helper
                 $book->setFromRequest($request);
             }
 
             $book->save();
-
-            // If AJAX request, return JSON with created id
             if ($request->isAjax()) {
                 return (new JsonResponse(['success' => true, 'id' => $book->getId(), 'message' => 'Book saved']))->setStatusCode(201);
             }
-
-            // non-AJAX: set a flash and redirect to index
-            $session = $this->app->getSession();
-            $items = $session->get('flash_messages', []);
-            $items[] = ['type' => 'success', 'message' => 'Book saved'];
-            $session->set('flash_messages', $items);
-
             return $this->redirect($this->url('book.index'));
         } catch (\Throwable $e) {
             if ($request->isAjax()) {
                 return (new JsonResponse(['success' => false, 'message' => 'Save failed: ' . $e->getMessage()]))->setStatusCode(500);
             }
-            $session = $this->app->getSession();
-            $items = $session->get('flash_messages', []);
-            $items[] = ['type' => 'danger', 'message' => 'Save failed: ' . $e->getMessage()];
-            $session->set('flash_messages', $items);
             return $this->redirect($this->url('book.add'));
         }
     }

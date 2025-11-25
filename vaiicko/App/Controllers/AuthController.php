@@ -57,37 +57,25 @@ class AuthController extends BaseController
             $logged = $this->app->getAuth()->login($loginField, $password);
             $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
 
-            if ($logged) {
-                // Always return JSON success for AJAX usage
-                return new JsonResponse(['success' => true, 'redirect' => $referer]);
+            if ($request->isAjax()) {
+                if ($logged) {
+                    return new JsonResponse(['success' => true, 'redirect' => $referer]);
+                }
+                return new JsonResponse(['success' => false, 'message' => 'Neplatné meno alebo heslo']);
             }
 
-            // Always return JSON error for failed login
-            return new JsonResponse([
-                'success' => false,
-                'message' => 'Neplatné meno alebo heslo'
-            ]);
+            // Non-AJAX flow: redirect on success, otherwise render login view with message
+            if ($logged) {
+                return $this->redirect($referer);
+            }
 
+            $message = 'Neplatné meno alebo heslo';
+            return $this->html(['message' => $message]);
         }
-        return new JsonResponse([
-            'success' => false,
-            'message' => 'Neplatné meno alebo heslo'
-        ]);
 
+        // GET: render login view
+        return $this->html();
     }
-
-    /**
-     * Registers a new user and handles the registration request.
-     *
-     * This action processes user registration attempts. If the registration form is submitted, it validates the
-     * provided data, creates a new User model, hashes the password, and saves the user. Upon successful
-     * registration, the user is redirected to the login page. If registration fails, an error message is displayed
-     * on the registration page.
-     *
-     * @return Response The response object which can either redirect to the login page on success or render the
-     *                  registration view with an error message on failure.
-     */
-
 
     /**
      * Logs out the current user.

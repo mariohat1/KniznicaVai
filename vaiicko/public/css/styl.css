@@ -107,3 +107,12 @@ main {
     padding-bottom: 10px;
 }
 
+/* User menu hover behaviour (moved from layout inline style) */
+@media (hover: hover) {
+    .user-menu:hover > .dropdown-menu {
+        display: block;
+    }
+    .user-menu .dropdown-menu {
+        margin-top: 0;
+    }
+}

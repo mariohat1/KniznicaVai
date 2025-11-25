@@ -24,16 +24,8 @@ class UserController extends BaseController
             $email = trim($request->value('email') ?? '');
             $password = $request->value('password') ?? '';
             $password2 = $request->value('password2') ?? '';
-
-            // basic validation
             if ($username === '' || $password === '' || $password !== $password2) {
                 $message = 'Skontrolujte polia (username a heslá musí byť rovnaké).';
-                $session = $this->app->getSession();
-                $items = $session->get('flash_messages', []);
-                $items[] = ['type' => 'danger', 'message' => $message];
-                $session->set('flash_messages', $items);
-
-                // If AJAX, return JSON error so client can show it without relying on server-driven modal
                 if ($request->isAjax()) {
                     return new JsonResponse(['success' => false, 'message' => $message]);
                 }
@@ -43,14 +35,9 @@ class UserController extends BaseController
             }
 
             try {
-                // check username uniqueness
                 $exists = User::getCount('username = ?', [$username]);
                 if ($exists > 0) {
                     $message = 'Používateľ s týmto menom už existuje.';
-                    $session = $this->app->getSession();
-                    $items = $session->get('flash_messages', []);
-                    $items[] = ['type' => 'danger', 'message' => $message];
-                    $session->set('flash_messages', $items);
 
                     if ($request->isAjax()) {
                         return new JsonResponse(['success' => false, 'message' => $message]);
@@ -59,8 +46,6 @@ class UserController extends BaseController
                     $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
                     return $this->redirect($referer);
                 }
-
-                // create and save user
                 $user = new User();
                 $user->setUsername($username);
                 $user->setPassword(password_hash($password, PASSWORD_BCRYPT));
@@ -72,39 +57,20 @@ class UserController extends BaseController
                 if (method_exists($user, 'setLastName')) {
                     $user->setLastName($last);
                 }
-
                 $user->save();
-
-                // attempt to auto-login the newly registered user
-
                 $auth = $this->app->getAuth();
                 $auth?->login($username, $password);
-
-
-                // success flash
-                $session = $this->app->getSession();
-                $items = $session->get('flash_messages', []);
-                $items[] = ['type' => 'success', 'message' => 'Registrácia prebehla úspešne.'];
-                $session->set('flash_messages', $items);
-
                 $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
                 return $this->redirect($referer);
             } catch (Exception $e) {
                 $message = 'Registrácia zlyhala: ' . $e->getMessage();
-                $session = $this->app->getSession();
-                $items = $session->get('flash_messages', []);
-                $items[] = ['type' => 'danger', 'message' => $message];
-                $session->set('flash_messages', $items);
-
                 if ($request->isAjax()) {
                     return new JsonResponse(['success' => false, 'message' => $message]);
                 }
-
                 $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
                 return $this->redirect($referer);
             }
         }
-
         return $this->html(compact('message'));
     }
 
