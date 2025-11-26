@@ -15,26 +15,28 @@
                 $r = $it['reservation'];
                 $book = $it['book'];
                 $copy = $it['copy'];
-            ?>
+                ?>
                 <div class="list-group-item d-flex justify-content-between align-items-start">
                     <div>
                         <div class="fw-bold">
                             <?php if ($book): ?>
-                                <a href="<?= $link->url(['book', 'view', 'id' => $book->getId()]) ?>" class="text-decoration-none"><?= htmlspecialchars((string)$book->getTitle()) ?></a>
+                                <a href="<?= $link->url(['book', 'view', 'id' => $book->getId()]) ?>"
+                                   class="text-decoration-none"><?= htmlspecialchars((string)$book->getTitle()) ?></a>
                             <?php else: ?>
                                 Neznáma kniha
                             <?php endif; ?>
                         </div>
                         <div class="small text-muted">
                             Kópia: <?= $copy ? htmlspecialchars((string)$copy->getId()) : '—' ?>
-                            &nbsp;•&nbsp; Rezervované: <?= htmlspecialchars((string)$r->getCreatedAt()) ?>
-                            &nbsp;•&nbsp; Aktívne: <?= $r->getIsActive() ? 'Áno' : 'Nie' ?>
+                            Rezervované: <?= htmlspecialchars((string)$r->getCreatedAt()) ?>
+                            Rezervované (flag): <?= $r->getIsReserved() ? 'Áno' : 'Nie' ?>
                         </div>
                     </div>
                     <div class="text-end">
-                        <?php if ($r->getIsActive()): ?>
-                            <form method="post" action="<?= $link->url('reservation.cancel') ?>" style="display:inline">
+                        <?php if ($r->getIsReserved()): ?>
+                            <form method="post" action="<?= $link->url('reservation.update') ?>" style="display:inline">
                                 <input type="hidden" name="id" value="<?= htmlspecialchars((string)$r->getId()) ?>">
+                                <input type="hidden" name="action" value="cancel">
                                 <button class="btn btn-sm btn-outline-danger">Zrušiť</button>
                             </form>
                         <?php endif; ?>
@@ -44,4 +46,3 @@
         </div>
     <?php endif; ?>
 </div>
-

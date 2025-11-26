@@ -16,7 +16,6 @@ class Reservation extends Model
     protected ?int $id = null;
     protected ?int $is_reserved = null;
     protected ?int $user_id = null;
-    protected ?int $is_active = null;
 
     public function getIsReserved(): ?int
     {
@@ -28,15 +27,6 @@ class Reservation extends Model
         $this->is_reserved = $is_reserved;
     }
 
-    public function getIsActive(): ?int
-    {
-        return $this->is_active;
-    }
-
-    public function setIsActive(?int $is_active): void
-    {
-        $this->is_active = $is_active;
-    }
 
     protected ?int $book_copy_id = null;
     protected ?string $created_at = null;

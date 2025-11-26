@@ -15,8 +15,6 @@ class ReservationController extends BaseController
 {
     public function authorize(Request $request, string $action): bool
     {
-        // Allow logged-in users to view their reservations (index).
-        // Allow create only for logged-in non-admin users (existing behavior).
         $auth = $this->app->getAuth();
         if ($action === 'index') {
             return $auth?->isLogged() ? true : false;
@@ -32,7 +30,18 @@ class ReservationController extends BaseController
             return true;
         }
         if ($action === 'manage') {
-            // only admin can access manage
+            if (!$auth?->isLogged()) return false;
+            $user = $auth->getUser();
+            if (is_object($user)) {
+                if (method_exists($user, 'getRole')) return strtolower((string)$user->getRole()) === 'admin';
+                $vars = get_object_vars($user);
+                return isset($vars['role']) && strtolower((string)$vars['role']) === 'admin';
+            }
+            return false;
+        }
+
+        // allow admin to call update (AJAX actions)
+        if ($action === 'update') {
             if (!$auth?->isLogged()) return false;
             $user = $auth->getUser();
             if (is_object($user)) {
@@ -61,21 +70,14 @@ class ReservationController extends BaseController
             return $this->redirect($this->url('book.index'));
         }
         $user = $auth->getUser();
-        $role = null;
-        $userId = null;
         $role = $user->getRole();
         $userId = $user->getId();
-
-
         if (strtolower((string)$role) === 'admin') {
-            // admins cannot reserve; silently redirect to book index
             return $this->redirect($this->url('book.index'));
         }
-
         $id = $request->value('id');
         $book = Book::getOne($id);
         if ($book === null) {
-            // book missing -> redirect to book index
             return $this->redirect($this->url('book.index'));
         }
 
@@ -83,7 +85,8 @@ class ReservationController extends BaseController
         $allCopies = BookCopy::getAll('book_id = ?', [$book->getId()]);
         $copy = null;
         foreach ($allCopies as $c) {
-            $reservedCount = Reservation::getCount('book_copy_id = ? AND is_active = 1', [$c->getId()]);
+            // treat is_reserved as indicator of an active reservation that blocks a copy
+            $reservedCount = Reservation::getCount('book_copy_id = ? AND is_reserved = 1', [$c->getId()]);
             if ($reservedCount === 0) {
                 $copy = $c;
                 break;
@@ -96,18 +99,14 @@ class ReservationController extends BaseController
 
         try {
             $reservation = new Reservation();
-            // mark as reserved and active, set user and copy and created timestamp
+            // mark reservation as reserved
             $reservation->setIsReserved(1);
-            $reservation->setIsActive(1);
             $reservation->setUserId($userId);
             $reservation->setBookCopyId($copy->getId());
             $reservation->setCreatedAt(date('Y-m-d H:i:s'));
             $reservation->save();
-
-            // reservation saved successfully -> redirect with success flag and reserved copy id
             return $this->redirect($this->url('book.view', ['id' => $book->getId(), 'reserved' => 1]));
         } catch (\Throwable $e) {
-            // reservation failed
             return $this->redirect($this->url('book.view', ['id' => $book->getId()]));
         }
     }
@@ -131,8 +130,6 @@ class ReservationController extends BaseController
         if ($userId === null) {
             return $this->redirect($this->url('book.index'));
         }
-
-        // Fetch reservations for this user (active and historical). Controller composes related info.
         $reservations = Reservation::getAll('user_id = ?', [$userId]);
         $items = [];
         foreach ($reservations as $r) {
@@ -196,13 +193,12 @@ class ReservationController extends BaseController
             $whereParts[] = "book_copy_id IN ($cpPlace)";
             $whereParams = array_merge($whereParams, $copyIds);
         }
-
-        // status filter
         if ($status === 'active') {
-            $whereParts[] = 'is_active = ?';
+            // 'active' means currently reserved
+            $whereParts[] = 'is_reserved = ?';
             $whereParams[] = 1;
         } elseif ($status === 'finished') {
-            $whereParts[] = 'is_active = ?';
+            $whereParts[] = 'is_reserved = ?';
             $whereParams[] = 0;
         }
 
@@ -214,7 +210,9 @@ class ReservationController extends BaseController
         $reservations = Reservation::getAll($where, $whereParams, 'created_at DESC');
         $items = [];
         foreach ($reservations as $r) {
-            $copy = null; $book = null; $u = null;
+            $copy = null;
+            $book = null;
+            $u = null;
             try {
                 $copy = BookCopy::getOne($r->getBookCopyId());
                 if ($copy) $book = Book::getOne($copy->getBookId());
@@ -226,6 +224,107 @@ class ReservationController extends BaseController
 
         $isAjax = $request->isAjax();
         return $this->html(['items' => $items, 'q' => $q, 'status' => $status, 'ajax' => $isAjax], 'manage');
+    }
+
+    public function update(Request $request): Response
+    {
+
+        // accept POST only
+        if (!$request->isPost()) {
+            return $this->redirect($this->url('reservation.manage'));
+        }
+
+        // read id/action directly from request (covers POST form-encoded and GET params)
+        $id = $request->value('id');
+        $action = $request->value('action');
+        $id = $id !== null ? (int)$id : null;
+        $action = $action ? (string)$action : null;
+
+        if ($id === null || $action === null) {
+            // bad request
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => 'Neplatné údaje.'])->setStatusCode(400);
+            }
+            return $this->redirect($this->url('reservation.manage'));
+        }
+
+        $reservation = Reservation::getOne($id);
+        if ($reservation === null) {
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => 'Rezervácia nenájdená.'])->setStatusCode(404);
+            }
+            return $this->redirect($this->url('reservation.manage'));
+        }
+
+        try {
+            if ($action === 'cancel') {
+                // cancel reservation: mark as not reserved (is_reserved = 0)
+                $reservation->setIsReserved(0);
+                $reservation->save();
+            } elseif ($action === 'restore') {
+                // restore reservation: mark as reserved (is_reserved = 1)
+                $reservation->setIsReserved(1);
+                $reservation->save();
+            } else {
+                // unknown action
+                if ($request->isAjax()) {
+                    return $this->json(['success' => false, 'message' => 'Neznáma akcia.'])->setStatusCode(400);
+                }
+                return $this->redirect($this->url('reservation.manage'));
+            }
+        } catch (\Throwable $e) {
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => 'Server error.'])->setStatusCode(500);
+            }
+            return $this->redirect($this->url('reservation.manage'));
+        }
+
+        // For AJAX: return JSON with success and optionally updated row HTML (or indicate deletion)
+        if ($request->isAjax()) {
+            // If cancelled (deleted) return success and id so client can remove row
+            if ($action === 'cancel') {
+                return $this->json(['success' => true, 'id' => $id]);
+            }
+
+            // otherwise reload reservation and related models and render row HTML fragment
+            $copy = null;
+            $book = null;
+            $user = null;
+            try {
+                $copy = BookCopy::getOne($reservation->getBookCopyId());
+                if ($copy) $book = Book::getOne($copy->getBookId());
+                $user = User::getOne($reservation->getUserId());
+            } catch (\Throwable $e) {
+            }
+
+            // build a minimal row fragment that uses is_reserved status
+            $safeTitle = $book ? htmlspecialchars($book->getTitle(), ENT_QUOTES, 'UTF-8') : '';
+            ob_start();
+            ?>
+            <div class="list-group-item d-flex justify-content-between align-items-start reservation-item" data-title="<?= $safeTitle ?>" data-reservation-id="<?= htmlspecialchars((string)$reservation->getId()) ?>">
+                <div>
+                    <div class="fw-bold"><?php echo $book ? htmlspecialchars($book->getTitle()) : 'Neznáma kniha'; ?></div>
+                    <div class="small text-muted">
+                        Kópia: <?= $copy ? htmlspecialchars((string)$copy->getId()) : '—' ?>
+                        Používateľ: <?= $user ? htmlspecialchars($user->getUsername() ?? $user->getId()) : '—' ?>
+                        Rezervované: <?= $reservation->getIsReserved() ? 'Áno' : 'Nie' ?>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <?php if ($reservation->getIsReserved()): ?>
+                        <button class="btn btn-sm btn-warning me-1 reservation-action" data-action="cancel" data-id="<?= htmlspecialchars((string)$reservation->getId()) ?>">Zrušiť rezerváciu</button>
+                    <?php else: ?>
+                        <button class="btn btn-sm btn-success me-1 reservation-action" data-action="restore" data-id="<?= htmlspecialchars((string)$reservation->getId()) ?>">Obnoviť rezerváciu</button>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php
+            $html = ob_get_clean();
+            return $this->json(['success' => true, 'id' => $reservation->getId(), 'rowHtml' => $html]);
+        }
+
+        // Non-AJAX: redirect back to manage
+        return $this->redirect($this->url('reservation.manage'));
     }
 
 }

@@ -17,6 +17,18 @@ class Book extends Model
     protected ?int $author_id = null;
     protected ?int $category_id = null;
     protected ?int $genre_id = null;
+    protected ?string $photo = null;
+
+    public function getPhoto(): ?string
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(?string $photo): void
+    {
+        $this->photo = $photo;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -98,4 +110,3 @@ class Book extends Model
     }
 
 }
-

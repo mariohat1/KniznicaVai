@@ -149,3 +149,4 @@ class UploadedFile
         return move_uploaded_file($this->getFileTempPath(), $fileName);
     }
 }
+

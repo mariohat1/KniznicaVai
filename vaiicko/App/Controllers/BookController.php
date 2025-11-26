@@ -55,7 +55,7 @@ class BookController extends BaseController
         foreach ($books as $b) {
             $bookId = $b->getId();
             $total = BookCopy::getCount('book_id = ?', [$bookId]);
-            $reserved = Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ?) AND is_active = 1', [$bookId]);
+            $reserved = Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ?) AND is_reserved = 1', [$bookId]);
             $available = max(0, $total - $reserved);
             $copies[$bookId] = ['total' => $total, 'available' => $available];
         }
@@ -73,7 +73,7 @@ class BookController extends BaseController
         foreach ($books as $b) {
             $bookId = $b->getId();
             $total = BookCopy::getCount('book_id = ?', [$bookId]);
-            $reserved = Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ?) AND is_active = 1', [$bookId]);
+            $reserved = Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ?) AND is_reserved = 1', [$bookId]);
             $available = max(0, $total - $reserved);
             $copies[$bookId] = ['total' => $total, 'available' => $available];
         }
@@ -151,6 +151,12 @@ class BookController extends BaseController
                 $book->setFromRequest($request);
             }
 
+            // attach uploaded photo path if present
+            $photoPath = $request->value('photo_path');
+            if ($photoPath && method_exists($book, 'setPhoto')) {
+                $book->setPhoto($photoPath);
+            }
+
             $book->save();
             if ($request->isAjax()) {
                 return (new JsonResponse(['success' => true, 'id' => $book->getId(), 'message' => 'Book saved']))->setStatusCode(201);
@@ -162,5 +168,49 @@ class BookController extends BaseController
             }
             return $this->redirect($this->url('book.add'));
         }
+    }
+
+    /**
+     * AJAX endpoint: upload a PNG photo for a book.
+     */
+    public function uploadPhoto(Request $request): Response
+    {
+        if (!$request->isPost()) {
+            return $this->json(['success' => false, 'message' => 'Method not allowed'])->setStatusCode(405);
+        }
+        $file = $request->file('photo');
+        if (!$file || !$file->isOk()) {
+            $msg = $file ? $file->getErrorMessage() : 'No file uploaded';
+            return $this->json(['success' => false, 'message' => 'No file uploaded or upload error', 'detail' => $msg])->setStatusCode(400);
+        }
+        $maxBytes = 5 * 1024 * 1024;
+        if ($file->getSize() > $maxBytes) {
+            return $this->json(['success' => false, 'message' => 'File too large'])->setStatusCode(400);
+        }
+        $tmp = $file->getFileTempPath();
+        $info = @getimagesize($tmp);
+        if (!is_array($info) || empty($info['mime'])) {
+            return $this->json(['success' => false, 'message' => 'Invalid image'])->setStatusCode(400);
+        }
+        $mime = $info['mime'];
+        if ($mime !== 'image/png') {
+            return $this->json(['success' => false, 'message' => 'Only PNG images are allowed', 'detected' => $mime])->setStatusCode(400);
+        }
+
+        // store into public/uploads/book
+        $projectRoot = dirname(__DIR__, 2);
+        $uploadDir = $projectRoot . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'book';
+        if (!is_dir($uploadDir)) {
+            if (!mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+                return $this->json(['success' => false, 'message' => 'Unable to create upload directory: ' . $uploadDir])->setStatusCode(500);
+            }
+        }
+        $filename = uniqid('book_', true) . '.png';
+        $dest = $uploadDir . DIRECTORY_SEPARATOR . $filename;
+        if (!$file->store($dest)) {
+            return $this->json(['success' => false, 'message' => 'Failed to save uploaded file'])->setStatusCode(500);
+        }
+        $relative = '/uploads/book/' . $filename;
+        return $this->json(['success' => true, 'path' => $relative, 'filename' => $filename, 'original' => $file->getName()]);
     }
 }

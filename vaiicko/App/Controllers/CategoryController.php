@@ -33,8 +33,6 @@ class CategoryController extends BaseController
         if (!$request->isPost()) {
             return (new JsonResponse(['error' => 'Method not allowed']))->setStatusCode(405);
         }
-
-        // Accept JSON body or form data. Use isJson() to detect JSON payloads instead of relying on isAjax().
         $data = null;
         if ($request->isJson()) {
             try {
@@ -56,8 +54,6 @@ class CategoryController extends BaseController
         if ($name === '') {
             return (new JsonResponse(['error' => 'Missing name']))->setStatusCode(400);
         }
-
-        // Create and save category
         $category = new Category();
         $category->setName($name);
         $category->save();

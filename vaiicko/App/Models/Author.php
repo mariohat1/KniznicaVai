@@ -14,6 +14,18 @@ class Author extends Model
     protected ?string $last_name = null;
     protected ?string $nationality = null;
     protected ?string $birth_date = null;
+    protected ?string $photo = null;
+
+    public function getPhoto(): ?string
+    {
+        return $this->photo;
+    }
+
+    public function setPhoto(?string $photo): void
+    {
+        $this->photo = $photo;
+    }
+
     public function getId(): ?int
     {
         return $this->id;

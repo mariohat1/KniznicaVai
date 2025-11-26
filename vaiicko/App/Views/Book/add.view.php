@@ -1,106 +1,134 @@
 <?php
-/** @var \App\Models\Author[] $authors */
-/** @var \App\Models\Category[] $categories */
-/** @var \App\Models\Genre[] $genres */
 /** @var \Framework\Support\LinkGenerator $link */
+/** @var \App\Models\Book|null $book */
+/** @var array $authors */
+/** @var array $categories */
+/** @var array $genres */
 ?>
+
 <div class="container">
-    <h1>Add book</h1>
-    <div id="bookAddRoot"
-         data-category-url="<?= htmlspecialchars($link->url('category.store')) ?>"
-         data-genre-url="<?= htmlspecialchars($link->url('genre.store')) ?>">
-    </div>
-    <div id="bookFormContainer">
-        <form id="bookForm" method="post" action="<?= $link->url('book.store') ?>">
-            <div class="mb-3">
-                <label class="form-label" for="title">Title</label>
-                <input id="title" type="text" name="title" class="form-control" required>
-            </div>
+    <h1 class="mb-4"><?= isset($book) ? 'Editovať knihu' : 'Pridať knihu' ?></h1>
 
-            <div class="mb-3">
-                <label class="form-label" for="isbn">ISBN</label>
-                <input id="isbn" type="text" name="isbn" class="form-control">
-            </div>
+    <form method="post" action="<?= $link->url('book.store') ?>">
+        <?php if (isset($book)): ?>
+            <input type="hidden" name="id" value="<?= htmlspecialchars($book->getId()) ?>">
+        <?php endif; ?>
 
-            <div class="mb-3">
-                <label class="form-label" for="year_published">Year published</label>
-                <input id="year_published" type="date" name="year_published" class="form-control">
-            </div>
+        <div class="mb-3">
+            <label for="title" class="form-label">Názov</label>
+            <input id="title" name="title" type="text" class="form-control" required
+                   value="<?= isset($book) ? htmlspecialchars($book->getTitle()) : '' ?>">
+        </div>
 
-            <div class="mb-3">
-                <label class="form-label" for="description">Description</label>
-                <textarea id="description" name="description" class="form-control" rows="4"></textarea>
+        <div class="mb-3 row">
+            <div class="col-md-6">
+                <label for="isbn" class="form-label">ISBN</label>
+                <input id="isbn" name="isbn" type="text" class="form-control" value="<?= isset($book) ? htmlspecialchars($book->getIsbn()) : '' ?>">
             </div>
-
-            <div class="mb-3">
-                <label class="form-label" for="author_id">Author</label>
-                <select id="author_id" name="author_id" class="form-select">
-                    <option value="">-- choose author --</option>
-                    <?php foreach ($authors ?? [] as $a): ?>
-                        <option value="<?= htmlspecialchars($a->getId()) ?>"><?= htmlspecialchars($a->getFirstName() . ' ' . $a->getLastName()) ?></option>
-                    <?php endforeach; ?>
-                </select>
+            <div class="col-md-6">
+                <label for="year_published" class="form-label">Rok vydania</label>
+                <input id="year_published" name="year_published" type="date" class="form-control" value="<?= isset($book) ? htmlspecialchars($book->getYearPublished()) : '' ?>">
             </div>
+        </div>
 
-            <div class="mb-3">
-                <label class="form-label" for="category_id">Category</label>
+        <div class="mb-3">
+            <label for="author_id" class="form-label">Autor</label>
+            <select id="author_id" name="author_id" class="form-select">
+                <option value="">-- vybrať --</option>
+                <?php foreach ($authors as $a): ?>
+                    <?php $aid = $a->getId(); $selected = (isset($book) && $book->getAuthorId() == $aid) ? 'selected' : '';?>
+                    <option value="<?= htmlspecialchars($aid) ?>" <?= $selected ?>><?= htmlspecialchars($a->getFirstName() . ' ' . $a->getLastName()) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div class="mb-3 row">
+            <div class="col-md-6">
+                <label for="category_id" class="form-label">Kategória</label>
                 <select id="category_id" name="category_id" class="form-select">
-                    <option value="">-- choose category --</option>
-                    <?php foreach ($categories ?? [] as $c): ?>
-                        <option value="<?= htmlspecialchars($c->getId()) ?>"><?= htmlspecialchars($c->getName()) ?></option>
+                    <option value="">-- vybrať --</option>
+                    <?php foreach ($categories as $c): ?>
+                        <?php $cid = $c->getId(); $selected = (isset($book) && $book->getCategoryId() == $cid) ? 'selected' : '';?>
+                        <option value="<?= htmlspecialchars($cid) ?>" <?= $selected ?>><?= htmlspecialchars($c->getName()) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <small class="text-muted">
-                    <span id="showCategoryAdd" role="button"
-                          style="cursor:pointer; text-decoration:underline;">
-                        Iné
-                    </span>
-                </small>
-
-                <!-- hidden by default; will be shown when user clicks 'Iné' -->
-                <div id="categoryAddContainer" style="display:none" class="mt-2">
-                    <div class="input-group">
-                        <input type="text" id="new_category_name" aria-label="New category name" class="form-control"
-                               placeholder="New category name">
-                        <button type="button" id="createCategoryBtn" class="btn btn-outline-secondary">Add</button>
-                    </div>
-                    <div id="categoryFeedback" class="form-text text-danger mt-1" style="display:none"></div>
-                </div>
             </div>
-
-            <div class="mb-3">
-                <label class="form-label" for="genre_id">Genre</label>
+            <div class="col-md-6">
+                <label for="genre_id" class="form-label">Žáner</label>
                 <select id="genre_id" name="genre_id" class="form-select">
-                    <option value="">-- choose genre --</option>
-                    <?php foreach ($genres ?? [] as $g): ?>
-                        <option value="<?= htmlspecialchars($g->getId()) ?>"><?= htmlspecialchars($g->getName()) ?></option>
+                    <option value="">-- vybrať --</option>
+                    <?php foreach ($genres as $g): ?>
+                        <?php $gid = $g->getId(); $selected = (isset($book) && $book->getGenreId() == $gid) ? 'selected' : '';?>
+                        <option value="<?= htmlspecialchars($gid) ?>" <?= $selected ?>><?= htmlspecialchars($g->getName()) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <small class="text-muted">
-                    <span id="showGenreAdd" role="button"
-                          style="cursor:pointer; text-decoration:underline;">Iné
-                    </span>
-                </small>
-
-                <!-- hidden by default; will be shown when user clicks 'Iné' -->
-                <div id="genreAddContainer" style="display:none" class="mt-2">
-                    <div class="input-group">
-                        <input type="text" id="new_genre_name" aria-label="New genre name" class="form-control"
-                               placeholder="New genre name">
-                        <button type="button" id="createGenreBtn" class="btn btn-outline-secondary">Add</button>
-                    </div>
-                    <div id="genreFeedback" class="form-text text-danger mt-1" style="display:none"></div>
-                </div>
             </div>
+        </div>
 
-            <div class="mb-3 text-end">
-                <a class="btn btn-secondary me-2" href="<?= $link->url('book.index') ?>">Cancel</a>
-                <button class="btn btn-primary" type="submit">Save</button>
+        <div class="mb-3">
+            <label for="description" class="form-label">Popis</label>
+            <textarea id="description" name="description" class="form-control" rows="4"><?= isset($book) ? htmlspecialchars($book->getDescription()) : '' ?></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Obal knihy (PNG) — potiahni sem alebo klikni</label>
+            <div id="book-photo-drop" class="border rounded p-3 text-center" style="min-height:120px; display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                <div id="book-photo-placeholder">Potiahni sem PNG alebo klikni pre výber súboru</div>
+                <img id="book-photo-preview" src="<?= isset($book) ? htmlspecialchars($book->getPhoto()) : '' ?>" alt="" style="max-height:120px; display:none; margin:auto;">
             </div>
-        </form>
+            <input id="book-photo-input" type="file" accept="image/png" style="display:none">
+            <input type="hidden" name="photo_path" id="photo_path" value="<?= isset($book) ? htmlspecialchars($book->getPhoto()) : '' ?>">
+            <div class="form-text">Max 5 MB. Použiť PNG pre najlepšiu kvalitu.</div>
+        </div>
 
-        <div id="bookFormResult" style="display:none" class="mt-3"></div>
-    </div>
+        <div class="mb-3">
+            <button class="btn btn-primary"><?= isset($book) ? 'Uložiť zmeny' : 'Pridať knihu' ?></button>
+            <a href="<?= $link->url('book.index') ?>" class="btn btn-link">Zrušiť</a>
+        </div>
+    </form>
+
+    <script>
+        (function(){
+            var drop = document.getElementById('book-photo-drop');
+            var input = document.getElementById('book-photo-input');
+            var placeholder = document.getElementById('book-photo-placeholder');
+            var preview = document.getElementById('book-photo-preview');
+            var hidden = document.getElementById('photo_path');
+
+            function showPreviewUrl(url){
+                if(!url) return;
+                preview.src = url;
+                preview.style.display = '';
+                placeholder.style.display = 'none';
+            }
+
+            if(hidden.value) showPreviewUrl(hidden.value);
+
+            drop.addEventListener('click', function(){ input.click(); });
+            drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.classList.add('bg-light'); });
+            drop.addEventListener('dragleave', function(){ drop.classList.remove('bg-light'); });
+            drop.addEventListener('drop', function(e){ e.preventDefault(); drop.classList.remove('bg-light'); var f = (e.dataTransfer.files && e.dataTransfer.files[0]) || null; if(f) handleFile(f); });
+            input.addEventListener('change', function(e){ var f = e.target.files && e.target.files[0]; if(f) handleFile(f); });
+
+            async function handleFile(file){
+                if(!file) return;
+                if(file.type !== 'image/png') { alert('Only PNG allowed'); return; }
+                if(file.size > 5*1024*1024) { alert('File too large'); return; }
+
+                var fd = new FormData(); fd.append('photo', file);
+                try{
+                    var resp = await fetch('<?= $link->url('book.uploadPhoto') ?>', { method: 'POST', body: fd, headers: {'X-Requested-With':'XMLHttpRequest'}, credentials: 'same-origin' });
+                    if(!resp.ok) { alert('Upload failed'); return; }
+                    var json = await resp.json();
+                    if(json && json.success && json.path){
+                        hidden.value = json.path;
+                        showPreviewUrl(json.path);
+                    } else {
+                        alert(json && json.message ? json.message : 'Upload failed');
+                    }
+                }catch(err){ console.error(err); alert('Upload error'); }
+            }
+        })();
+    </script>
 </div>
 
-<script src="<?= $link->asset('js/bookAdd.js') ?>"></script>
