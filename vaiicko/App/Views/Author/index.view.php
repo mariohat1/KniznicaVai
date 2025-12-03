@@ -1,74 +1,65 @@
 <?php
 /** @var array $authors */
-/** @var \Framework\Support\LinkGenerator $link */
 /** @var \Framework\Core\IAuthenticator $auth */
-
-use App\Support\AuthView;
+/** @var \Framework\Support\LinkGenerator $link */
 ?>
 
 <div class="container">
-    <h1>Authors</h1>
-    <?php
-    // Determine whether the current user may add authors: require explicit role 'admin'
-    $canAddAuthor = AuthView::canAddAuthor($auth);
-    ?>
-
-    <?php if ($canAddAuthor): ?>
-        <div class="mb-3">
-            <a class="btn btn-primary" href="<?= $link->url('author.add') ?>">Add author</a>
-        </div>
-    <?php endif; ?>
+    <h1 class="mb-4">Autori</h1>
 
     <?php if (empty($authors)): ?>
-        <p>No authors found.</p>
+        <div class="alert alert-info">Žiadni autori.</div>
     <?php else: ?>
-        <div class="table-responsive"> <!-- allows horizontal scroll on small screens -->
-        <table class="table table-striped table-sm mt-3 mb-3 authors-table">
-            <thead>
-                <tr>
-                    <th scope="col">First name</th>
-                    <th scope="col">Last name</th>
-                    <th scope="col">Nationality</th>
-                    <th scope="col">Birth date</th>
-                    <?php if ($canAddAuthor): ?><th scope="col" class="d-none d-sm-table-cell">Actions</th><?php endif; ?>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($authors as $a): ?>
-                    <tr>
-                        <td data-label="First name"><?= htmlspecialchars($a->getFirstName()) ?></td>
-                        <td data-label="Last name"><?= htmlspecialchars($a->getLastName()) ?></td>
-                        <td data-label="Nationality"><?= htmlspecialchars($a->getNationality()) ?></td>
-                        <td data-label="Birth date"><?= htmlspecialchars($a->getBirthDate()) ?></td>
-                        <?php if ($canAddAuthor): ?>
-                        <td class="d-none d-sm-table-cell">
-                            <!-- Edit link navigates to the add page with id param so it can prefill -->
-                            <a class="btn btn-sm btn-outline-secondary" href="<?= $link->url('author.add', ['id' => $a->getId()]) ?>">Edit</a>
+        <div class="list-group list-group-flush">
+            <?php foreach ($authors as $a): ?>
+                <div class="list-group-item border-bottom py-3">
+                    <div class="row g-3 align-items-stretch">
 
-                            <form method="post" action="<?= $link->url('author.delete') ?>" class="d-inline-block author-delete-form">
-                                <input type="hidden" name="id" value="<?= htmlspecialchars($a->getId()) ?>">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                        <?php endif; ?>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                        <div class="col-12 col-md-2 col-lg-1 text-center">
+                            <?php $photo = $a->getPhoto(); ?>
+                            <?php if (!empty($photo)): ?>
+                                <div class="bg-light d-flex align-items-center justify-content-center border rounded" style="height:100px; width:100%; min-width:80px; overflow:hidden;">
+                                    <img src="<?= htmlspecialchars($photo) ?>" alt="<?= htmlspecialchars($a->getFirstName() . ' ' . $a->getLastName()) ?>" style="width:100%; height:100%; object-fit:cover; object-position:center; display:block;">
+                                </div>
+                            <?php else: ?>
+                                <div class="bg-light d-flex align-items-center justify-content-center border rounded" style="height:100px; width:100%; min-width:80px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="text-secondary bi bi-person" viewBox="0 0 16 16" style="flex:0 0 auto;">
+                                        <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                                        <path fill-rule="evenodd" d="M14 14s-1-4-6-4-6 4-6 4 1 0 6 0 6 0 6 0z"/>
+                                    </svg>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="col-12 col-lg-8">
+                            <h4 class="mb-1">
+                                <a href="<?= $link->url('author.view', ['id' => $a->getId()]) ?>" class="text-decoration-none text-primary">
+                                    <?= htmlspecialchars(trim($a->getFirstName() . ' ' . $a->getLastName()) ?: 'Bez mena') ?>
+                                </a>
+                            </h4>
+
+                            <p class="mb-1 text-muted"><small>
+                                <strong>Národnosť:</strong> <?= htmlspecialchars((string)$a->getNationality()) ?>
+                                <span class="mx-1">|</span>
+                                <strong>Dátum narodenia:</strong> <?= htmlspecialchars((string)$a->getBirthDate()) ?>
+                            </small></p>
+
+                            <?php // no description field on author model; show placeholder or nothing ?>
+                            <p class="mb-2 text-secondary">&nbsp;</p>
+
+                        </div>
+
+                        <div class="col-12 col-md-3 col-lg-2 d-flex flex-md-column">
+                            <?php if ($auth?->isLogged()): ?>
+                                <a class="btn btn-primary mt-auto align-self-end me-3" href="<?= $link->url('author.view', ['id' => $a->getId()]) ?>">Zobraziť</a>
+                            <?php else: ?>
+                                <button class="btn btn-primary mt-auto align-self-end me-3" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">Zobraziť</button>
+                            <?php endif; ?>
+                        </div>
+
+                    </div>
+                </div>
+            <?php endforeach; ?>
         </div>
     <?php endif; ?>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('.author-delete-form').forEach(function(f){
-    f.addEventListener('submit', function(e){
-      if (!confirm('Are you sure you want to delete this author?')) {
-        e.preventDefault();
-      }
-    });
-  });
-});
-</script>

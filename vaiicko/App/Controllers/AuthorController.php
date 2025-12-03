@@ -11,12 +11,18 @@ class AuthorController extends BaseController
 {
     public function authorize(Request $request, string $action): bool
     {
-        // Allow public viewing of the index (authors list)
         if ($action === 'index') {
             return true;
         }
-
-        // For other actions (add/store) require explicit admin role
+        if ($action === 'manage') {
+            $auth = $this->app->getAuth();
+            if (!$auth || !$auth->isLogged()) return false;
+            $user = $auth->getUser();
+            if (is_object($user) && ($user instanceof \App\Models\User) && method_exists($user, 'getRole')) {
+                return (strtolower((string)$user->getRole()) === 'admin');
+            }
+            return false;
+        }
         $auth = $this->app->getAuth();
         if (!$auth->isLogged()) {
             return false;
@@ -36,7 +42,16 @@ class AuthorController extends BaseController
         $authors = Author::getAll();
 
         // Pass authors to the view (view path will be Author/index)
-        return $this->html(['authors' => $authors]);
+        return $this->html(['authors' => $authors], 'index');
+    }
+
+    /**
+     * Admin management page for authors (list with actions)
+     */
+    public function manage(Request $request): Response
+    {
+        $authors = Author::getAll();
+        return $this->html(['authors' => $authors], 'manage');
     }
 
     public function add(Request $request): Response
@@ -126,8 +141,9 @@ class AuthorController extends BaseController
         $originalName = $file->getName();
         $clientMime = $file->getType();
         $tmp = $file->getFileTempPath();
-        $info = $file->getSize();
-        if ($info) || empty($info['mime'])) {
+        // Use getimagesize to discover MIME type reliably from the temporary uploaded file
+        $info = @getimagesize($tmp);
+        if ($info === false || empty($info['mime'])) {
             return $this->json(['success' => false, 'message' => 'Invalid image'])->setStatusCode(400);
         }
         $mime = $info['mime'];
@@ -136,6 +152,11 @@ class AuthorController extends BaseController
         }
         $projectRoot = dirname(__DIR__, 2);
         $uploadDir = $projectRoot . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'author';
+
+        // ensure upload directory exists
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0755, true);
+        }
 
         $filename = uniqid('author_', true) . '.png';
         $dest = $uploadDir . DIRECTORY_SEPARATOR . $filename;

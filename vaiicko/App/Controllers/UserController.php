@@ -24,12 +24,22 @@ class UserController extends BaseController
             $email = trim($request->value('email') ?? '');
             $password = $request->value('password') ?? '';
             $password2 = $request->value('password2') ?? '';
+            // Basic validation: username, password match, and min length for password
             if ($username === '' || $password === '' || $password !== $password2) {
                 $message = 'Skontrolujte polia (username a heslá musí byť rovnaké).';
                 if ($request->isAjax()) {
                     return new JsonResponse(['success' => false, 'message' => $message]);
                 }
 
+                $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
+                return $this->redirect($referer);
+            }
+
+            if (strlen((string)$password) < 8) {
+                $message = 'Heslo musí mať najmenej 8 znakov.';
+                if ($request->isAjax()) {
+                    return new JsonResponse(['success' => false, 'message' => $message]);
+                }
                 $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
                 return $this->redirect($referer);
             }

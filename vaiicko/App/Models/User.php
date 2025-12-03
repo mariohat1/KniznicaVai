@@ -13,6 +13,17 @@ class User extends Model implements IIdentity
     protected ?string $password = null;
     protected ?string $email = null;
     protected ?string $role = null;
+    protected ?string $created_at = null;
+
+    public function getCreatedAt(): ?string
+    {
+        return $this->created_at;
+    }
+
+    public function setCreatedAt(?string $created_at): void
+    {
+        $this->created_at = $created_at;
+    }
 
     public function getId(): ?int
     {
@@ -59,6 +70,7 @@ class User extends Model implements IIdentity
         return $this->role;
     }
 
+
     public function setRole(?string $role): void
     {
         $this->role = $role;
@@ -66,4 +78,3 @@ class User extends Model implements IIdentity
 
 
 }
-

@@ -148,6 +148,7 @@ class ReservationController extends BaseController
 
     /**
      * Admin: show all reservations (manage)
+     * @throws \Exception
      */
     public function manage(Request $request): Response
     {
@@ -162,39 +163,57 @@ class ReservationController extends BaseController
             return $this->redirect($this->url('book.index'));
         }
 
-        // Filters via GET: q (query for book title), status (active|finished|all)
         $q = trim((string)$request->value('q'));
         $status = $request->value('status'); // expected: 'active'|'finished'|'all' or null
-
+        $searchBy = $request->value('searchBy');
+        $searchBy = is_string($searchBy) ? strtolower($searchBy) : '';
+        // pagination
+        $page = (int)$request->value('page');
+        if ($page < 1) $page = 1;
+        $limit = 10; // items per page
+        $offset = ($page - 1) * $limit;
         $whereParts = [];
         $whereParams = [];
 
-        // If query present, find book ids matching title -> then find book_copy ids
-        if ($q !== '') {
-            // search books by title
-            $like = '%' . $q . '%';
-            $books = Book::getAll('title LIKE ?', [$like]);
-            $bookIds = array_filter(array_map(fn($b) => $b->getId(), $books));
-            if (empty($bookIds)) {
-                $items = [];
-                $isAjax = $request->isAjax();
-                return $this->html(['items' => $items, 'q' => $q, 'status' => $status, 'ajax' => $isAjax], 'manage');
+        if ($searchBy !== 'user' && $searchBy !== 'book') {
+            $searchBy = ($q !== '') ? 'book' : 'book';
+        }
+
+        if ($searchBy === 'user') {
+            if ($q !== '') {
+                $like = '%' . $q . '%';
+                $usersFound = User::getAll('username LIKE ?', (array)$like);
+                $userIds = array_values(array_unique(array_filter(array_map(fn($u) => $u->getId(), $usersFound))));
+                if (empty($userIds)) {
+                    $items = [];
+                    return $this->html(['items' => $items, 'q' => $q, 'status' => $status, 'searchBy' => $searchBy], 'manage');
+                }
+                $place = implode(',', array_fill(0, count($userIds), '?'));
+                $whereParts[] = "user_id IN ($place)";
+                $whereParams = array_merge($whereParams, $userIds);
             }
-            // find copies for these books
-            $placeholders = implode(',', array_fill(0, count($bookIds), '?'));
-            $copies = BookCopy::getAll("book_id IN ($placeholders)", $bookIds);
-            $copyIds = array_filter(array_map(fn($c) => $c->getId(), $copies));
-            if (empty($copyIds)) {
-                $items = [];
-                $isAjax = $request->isAjax();
-                return $this->html(['items' => $items, 'q' => $q, 'status' => $status, 'ajax' => $isAjax], 'manage');
+        } else {
+            if ($q !== '') {
+                $like = '%' . $q . '%';
+                $books = Book::getAll('title LIKE ?', [$like]);
+                $bookIds = array_filter(array_map(fn($b) => $b->getId(), $books));
+                if (empty($bookIds)) {
+                    $items = [];
+                    return $this->html(['items' => $items, 'q' => $q, 'status' => $status, 'searchBy' => $searchBy], 'manage');
+                }
+                $placeholders = implode(',', array_fill(0, count($bookIds), '?'));
+                $copies = BookCopy::getAll("book_id IN ($placeholders)", $bookIds);
+                $copyIds = array_filter(array_map(fn($c) => $c->getId(), $copies));
+                if (empty($copyIds)) {
+                    $items = [];
+                    return $this->html(['items' => $items, 'q' => $q, 'status' => $status, 'searchBy' => $searchBy], 'manage');
+                }
+                $cpPlace = implode(',', array_fill(0, count($copyIds), '?'));
+                $whereParts[] = "book_copy_id IN ($cpPlace)";
+                $whereParams = array_merge($whereParams, $copyIds);
             }
-            $cpPlace = implode(',', array_fill(0, count($copyIds), '?'));
-            $whereParts[] = "book_copy_id IN ($cpPlace)";
-            $whereParams = array_merge($whereParams, $copyIds);
         }
         if ($status === 'active') {
-            // 'active' means currently reserved
             $whereParts[] = 'is_reserved = ?';
             $whereParams[] = 1;
         } elseif ($status === 'finished') {
@@ -207,7 +226,8 @@ class ReservationController extends BaseController
             $where = implode(' AND ', $whereParts);
         }
 
-        $reservations = Reservation::getAll($where, $whereParams, 'created_at DESC');
+        $total = Reservation::getCount($where, $whereParams);
+        $reservations = Reservation::getAll($where, $whereParams, 'created_at DESC', $limit, $offset);
         $items = [];
         foreach ($reservations as $r) {
             $copy = null;
@@ -222,8 +242,21 @@ class ReservationController extends BaseController
             $items[] = ['reservation' => $r, 'copy' => $copy, 'book' => $book, 'user' => $u];
         }
 
-        $isAjax = $request->isAjax();
-        return $this->html(['items' => $items, 'q' => $q, 'status' => $status, 'ajax' => $isAjax], 'manage');
+        $pages = ($total > 0) ? (int)ceil($total / $limit) : 1;
+
+        $pagination = [
+            'page' => $page,
+            'pages' => $pages,
+            'total' => $total
+        ];
+
+        return $this->html([
+            'items' => $items,
+            'q' => $q,
+            'status' => $status,
+            'searchBy' => $searchBy,
+            'pagination' => $pagination
+        ], 'manage');
     }
 
     public function update(Request $request): Response
@@ -278,18 +311,10 @@ class ReservationController extends BaseController
             }
             return $this->redirect($this->url('reservation.manage'));
         }
-
-        // For AJAX: return JSON with success and optionally updated row HTML (or indicate deletion)
         if ($request->isAjax()) {
-            // If cancelled (deleted) return success and id so client can remove row
             if ($action === 'cancel') {
                 return $this->json(['success' => true, 'id' => $id]);
             }
-
-            // otherwise reload reservation and related models and render row HTML fragment
-            $copy = null;
-            $book = null;
-            $user = null;
             try {
                 $copy = BookCopy::getOne($reservation->getBookCopyId());
                 if ($copy) $book = Book::getOne($copy->getBookId());
@@ -297,30 +322,7 @@ class ReservationController extends BaseController
             } catch (\Throwable $e) {
             }
 
-            // build a minimal row fragment that uses is_reserved status
-            $safeTitle = $book ? htmlspecialchars($book->getTitle(), ENT_QUOTES, 'UTF-8') : '';
-            ob_start();
-            ?>
-            <div class="list-group-item d-flex justify-content-between align-items-start reservation-item" data-title="<?= $safeTitle ?>" data-reservation-id="<?= htmlspecialchars((string)$reservation->getId()) ?>">
-                <div>
-                    <div class="fw-bold"><?php echo $book ? htmlspecialchars($book->getTitle()) : 'Neznáma kniha'; ?></div>
-                    <div class="small text-muted">
-                        Kópia: <?= $copy ? htmlspecialchars((string)$copy->getId()) : '—' ?>
-                        Používateľ: <?= $user ? htmlspecialchars($user->getUsername() ?? $user->getId()) : '—' ?>
-                        Rezervované: <?= $reservation->getIsReserved() ? 'Áno' : 'Nie' ?>
-                    </div>
-                </div>
-                <div class="text-end">
-                    <?php if ($reservation->getIsReserved()): ?>
-                        <button class="btn btn-sm btn-warning me-1 reservation-action" data-action="cancel" data-id="<?= htmlspecialchars((string)$reservation->getId()) ?>">Zrušiť rezerváciu</button>
-                    <?php else: ?>
-                        <button class="btn btn-sm btn-success me-1 reservation-action" data-action="restore" data-id="<?= htmlspecialchars((string)$reservation->getId()) ?>">Obnoviť rezerváciu</button>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <?php
-            $html = ob_get_clean();
-            return $this->json(['success' => true, 'id' => $reservation->getId(), 'rowHtml' => $html]);
+            return $this->json(['success' => true, 'id' => $reservation->getId()]);
         }
 
         // Non-AJAX: redirect back to manage

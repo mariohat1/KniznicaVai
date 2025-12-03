@@ -157,6 +157,45 @@ class BookController extends BaseController
                 $book->setPhoto($photoPath);
             }
 
+            // ISBN validation if provided
+            $isbn = $book->getIsbn();
+            if (!empty($isbn)) {
+                $normalized = preg_replace('/[^0-9Xx]/', '', (string)$isbn);
+
+                $isValidIsbn = false;
+                if (strlen($normalized) === 13 && ctype_digit($normalized)) {
+                    // ISBN-13 validation (MOD 10)
+                    $sum = 0;
+                    for ($i = 0; $i < 13; $i++) {
+                        $digit = (int)$normalized[$i];
+                        $sum += ($i % 2 === 0) ? $digit : $digit * 3;
+                    }
+                    $isValidIsbn = ($sum % 10) === 0;
+                } elseif (strlen($normalized) === 10) {
+                    // ISBN-10 validation (allow X/x as check digit)
+                    $sum = 0;
+                    for ($i = 0; $i < 9; $i++) {
+                        if (!isset($normalized[$i]) || !ctype_digit($normalized[$i])) { $sum = null; break; }
+                        $sum += (10 - $i) * (int)$normalized[$i];
+                    }
+                    if ($sum !== null) {
+                        $check = $normalized[9];
+                        $checkVal = ($check === 'X' || $check === 'x') ? 10 : (ctype_digit($check) ? (int)$check : -1);
+                        if ($checkVal >= 0) {
+                            $sum += 1 * $checkVal;
+                            $isValidIsbn = ($sum % 11) === 0;
+                        }
+                    }
+                }
+
+                if (!$isValidIsbn) {
+                    if ($request->isAjax()) {
+                        return (new JsonResponse(['success' => false, 'message' => 'Neplatné ISBN']))->setStatusCode(400);
+                    }
+                    return $this->redirect($this->url('book.add'));
+                }
+            }
+
             $book->save();
             if ($request->isAjax()) {
                 return (new JsonResponse(['success' => true, 'id' => $book->getId(), 'message' => 'Book saved']))->setStatusCode(201);
@@ -197,7 +236,6 @@ class BookController extends BaseController
             return $this->json(['success' => false, 'message' => 'Only PNG images are allowed', 'detected' => $mime])->setStatusCode(400);
         }
 
-        // store into public/uploads/book
         $projectRoot = dirname(__DIR__, 2);
         $uploadDir = $projectRoot . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'book';
         if (!is_dir($uploadDir)) {
