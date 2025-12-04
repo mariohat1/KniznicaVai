@@ -10,24 +10,17 @@
 .site-hero {
     background-image: linear-gradient(90deg, rgba(0,123,255,0.08), rgba(0,123,255,0.04));
 }
-.site-hero .hero-logo {
-    width: 72px;
-    height: auto;
-    border-radius: 6px;
-}
+
 
 /* Main content */
 .web-content {
     min-height: 40vh;
 }
 
-/* Footer */
 .site-footer {
-    background: linear-gradient(180deg, #2b2b2b 0%, #232323 100%);
+    background-color: #2b2b2b;
     color: #d9d9d9;
-    border-top: 1px solid rgba(255,255,255,0.04);
-    padding-top: 48px;
-    padding-bottom: 40px;
+    padding: 40px 20px 40px;
 }
 .site-footer h5 {
     color: #ffffff;
@@ -37,13 +30,12 @@
     text-transform: uppercase;
 }
 .site-footer p,
-.site-footer li,
-.site-footer .text-muted {
+.site-footer li {
     color: #cfcfcf;
     opacity: 0.95;
 }
 .site-footer .opening-hours li {
-    line-height: 1.8;
+    line-height: 1.5;
 }
 .site-footer a {
     color: #cfcfcf;
@@ -62,28 +54,6 @@
     border-top: 1px solid rgba(255,255,255,0.03);
     padding-top: 22px;
 }
-.site-footer .footer-links-row ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    gap: 18px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-.site-footer .footer-links-row li {
-    font-size: 0.83rem;
-    color: #bfbfbf;
-}
-.site-footer .footer-links-row li a { color: #bfbfbf; }
-
-.site-footer .copyright {
-    margin-top: 18px;
-    font-size: 0.78rem;
-    color: #9f9f9f;
-    text-align: center;
-}
-
 html, body {
     height: 100%;
     margin: 0;
@@ -101,10 +71,60 @@ main {
     position: relative;
 }
 
+.site-header {
+    background-color: #6fbf86; /* light green similar to sample */
+}
 .site-header .navbar {
-    background-color: #4aa567;
+    /* ensure navbar is transparent so the header background is a single color */
+    background: transparent;
     padding-top: 10px;
     padding-bottom: 10px;
+}
+.site-header .container-fluid {
+    position: relative; /* allow absolute centering of brand without covering nav */
+    display: flex;
+    justify-content: space-between; /* left nav, centered brand (absolute), right user/menu */
+    align-items: center;
+    height: 64px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+/* Ensure logo is visible in the left corner (do not center .navbar-brand) */
+.site-header .navbar-brand img {
+    display: inline-block;
+    width: 50px;
+}
+.site-header .navbar-brand {
+    /* keep brand left-aligned and part of document flow */
+    position: static;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+}
+/* if a brand-text element exists, hide it so it doesn't interfere */
+.site-header .navbar-brand .brand-text {
+    display: none !important;
+}
+
+/* show nav links and user menu on desktop (visible) */
+.site-header .navbar-nav {
+    display: flex; /* show nav */
+    gap: 12px;
+    align-items: center;
+}
+.site-header .nav-link {
+    color: #ffffff !important; /* ensure visible */
+}
+.site-header .user-menu,
+.site-header .ms-auto {
+    display: flex; /* show user menu/login */
+    align-items: center;
+}
+.site-header .user-menu .nav-link,
+.site-header .user-menu b {
+    color: #ffffff !important;
+    pointer-events: auto; /* allow interacting with user menu */
 }
 
 /* User menu hover behaviour (moved from layout inline style) */
@@ -115,4 +135,20 @@ main {
     .user-menu .dropdown-menu {
         margin-top: 0;
     }
+}
+
+/* user label and username styling: muted label, readable bold username */
+.site-header .user-label {
+    color: rgba(255,255,255,0.85); /* subtle white for the "Prihlásený:" label */
+    font-size: 0.85rem;
+}
+.site-header .username,
+.site-header .user-menu b {
+    color: rgba(255,255,255,1); /* white username */
+    font-weight: 600;
+}
+
+/* Ensure dropdown toggle caret is visible (kept) */
+.site-header .dropdown-toggle::after {
+    color: #ffffff;
 }

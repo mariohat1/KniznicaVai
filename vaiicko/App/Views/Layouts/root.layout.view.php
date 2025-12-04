@@ -33,7 +33,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
 <body>
 
 <header class="site-header">
-    <nav class="navbar navbar-expand-sm bg-light">
+    <nav class="navbar navbar-expand-sm">
         <div class="container-fluid">
             <a class="navbar-brand" href="<?= $link->url('home.index') ?>">
                 <img src="<?= $link->asset('images/vaiicko_logo.png') ?>" title="<?= App\Configuration::APP_NAME ?>" alt="Framework Logo">
@@ -63,8 +63,8 @@ $isAdmin = AuthView::canAddAuthor($auth);
                     <?php if ($isAdmin): ?>
                         <div class="dropdown user-menu me-3">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenuAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span class="small text-muted">Prihlásený:</span>
-                                <b class="ms-2"><?= $displayNameEsc ?></b>
+                                <span class="small">Prihlásený:</span>
+                                <b class="ms-2 text-white fw-bold"><?= $displayNameEsc ?></b>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuAdmin">
                                 <li><a class="dropdown-item" href="<?= $link->url('auth.logout') ?>">Odhlásiť sa</a></li>
@@ -74,7 +74,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
                         <div class="dropdown user-menu me-3">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <span class="small text-muted">Prihlásený:</span>
-                                <b class="ms-2"><?= $displayNameEsc ?></b>
+                                <b class="ms-2 text-white fw-bold"><?= $displayNameEsc ?></b>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
                                 <li><a class="dropdown-item" href="<?= $link->url('reservation.index') ?>">Moje rezervácie</a></li>
@@ -168,7 +168,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
     </div>
 </main>
 
-<footer class="site-footer bg-light border-top py-4">
+<footer class="site-footer">
     <div class="container">
         <div class="row">
             <div class="col-md-4">
@@ -188,7 +188,6 @@ $isAdmin = AuthView::canAddAuthor($auth);
                 <p class="small mb-0">E-mail: info@kniznica.example<br>Tel: +421 2 123 4567</p>
             </div>
         </div>
-        <div class="text-center small text-muted mt-3">© <?= date('Y') ?> <?= App\Configuration::APP_NAME ?></div>
     </div>
 
 </footer>

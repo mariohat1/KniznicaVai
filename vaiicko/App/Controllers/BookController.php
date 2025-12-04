@@ -150,14 +150,11 @@ class BookController extends BaseController
             } else {
                 $book->setFromRequest($request);
             }
-
-            // attach uploaded photo path if present
             $photoPath = $request->value('photo_path');
             if ($photoPath && method_exists($book, 'setPhoto')) {
                 $book->setPhoto($photoPath);
             }
 
-            // ISBN validation if provided
             $isbn = $book->getIsbn();
             if (!empty($isbn)) {
                 $normalized = preg_replace('/[^0-9Xx]/', '', (string)$isbn);
