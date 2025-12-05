@@ -17,6 +17,7 @@ class Reservation extends Model
     protected ?int $is_reserved = null;
     protected ?int $user_id = null;
 
+
     public function getIsReserved(): ?int
     {
         return $this->is_reserved;

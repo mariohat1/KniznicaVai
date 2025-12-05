@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS authors (
   first_name VARCHAR(50),
   last_name VARCHAR(50),
   nationality VARCHAR(50),
-  birth_date DATETIME
+  birth_date DATETIME,
+  photo VARCHAR(255) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Categories
@@ -23,11 +24,12 @@ CREATE TABLE IF NOT EXISTS books (
   id INT AUTO_INCREMENT PRIMARY KEY,
   isbn VARCHAR(50),
   year_published DATE,
-  description VARCHAR(100),
+  description TEXT,
   title VARCHAR(100) NOT NULL,
   author_id INT NULL,
   category_id INT NULL,
   genre_id INT NULL,
+  photo VARCHAR(255) NULL,
  FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE SET NULL ON UPDATE CASCADE,
   FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL ON UPDATE CASCADE,
    FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE SET NULL ON UPDATE CASCADE
@@ -60,7 +62,7 @@ CREATE TABLE IF NOT EXISTS reservation (
     user_id INT,
     book_copy_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (book_copy_id) REFERENCES book_copy(id) ON DELETE SET NULL,
+    FOREIGN KEY (book_copy_id) REFERENCES book_copy(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

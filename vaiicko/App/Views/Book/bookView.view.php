@@ -33,14 +33,14 @@
             </div>
         </div>
         <div class="col-md-9">
-            <h1><?= htmlspecialchars($book->getTitle()) ?></h1>
-            <p class="text-muted mb-1">Autor: <?= $author ? htmlspecialchars($author->getFirstName() . ' ' . $author->getLastName()) : 'Neznámy' ?></p>
+            <h1 class="book-title"><?= htmlspecialchars($book->getTitle()) ?></h1>
+            <p class="text-muted mb-1">Autor: <span class="author-link"><?= $author ? htmlspecialchars($author->getFirstName() . ' ' . $author->getLastName()) : 'Neznámy' ?></span></p>
             <p class="text-muted small mb-2">
-                <?= $category ? 'Kategória: ' . htmlspecialchars($category->getName()) . ' | ' : '' ?>
-                <?= $genre ? 'Žáner: ' . htmlspecialchars($genre->getName()) . ' | ' : '' ?>
-                <strong>ISBN:</strong> <?= htmlspecialchars((string)$book->getIsbn()) ?>
+                <?php if ($category): ?><span class="category-label">Kategória: <?= htmlspecialchars($category->getName()) ?></span><?php endif; ?>
+                <?php if ($genre): ?><span class="category-label">Žáner: <?= htmlspecialchars($genre->getName()) ?></span><?php endif; ?>
+                <span class="meta-label"><strong>ISBN:</strong> <?= htmlspecialchars((string)$book->getIsbn()) ?></span>
                 <span class="mx-1">|</span>
-                <strong>Rok:</strong> <?= htmlspecialchars((string)$book->getYearPublished()) ?>
+                <span class="meta-label"><strong>Rok:</strong> <?= htmlspecialchars((string)$book->getYearPublished()) ?></span>
             </p>
 
             <hr>

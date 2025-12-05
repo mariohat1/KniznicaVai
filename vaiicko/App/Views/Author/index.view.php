@@ -5,7 +5,7 @@
 ?>
 
 <div class="container">
-    <h1 class="mb-4">Autori</h1>
+    <h1 class="mb-4 section-title">Autori</h1>
 
     <?php if (empty($authors)): ?>
         <div class="alert alert-info">Žiadni autori.</div>
@@ -19,7 +19,7 @@
                             <?php $photo = $a->getPhoto(); ?>
                             <?php if (!empty($photo)): ?>
                                 <div class="bg-light d-flex align-items-center justify-content-center border rounded" style="height:100px; width:100%; min-width:80px; overflow:hidden;">
-                                    <img src="<?= htmlspecialchars($photo) ?>" alt="<?= htmlspecialchars($a->getFirstName() . ' ' . $a->getLastName()) ?>" style="width:100%; height:100%; object-fit:cover; object-position:center; display:block;">
+                                    <img src="<?= htmlspecialchars($photo) ?>" alt="<?= htmlspecialchars($a->getFirstName() . ' ' . $a->getLastName()) ?>" class="avatar-author" style="width:100%; height:100%; object-fit:cover; object-position:center; display:block;">
                                 </div>
                             <?php else: ?>
                                 <div class="bg-light d-flex align-items-center justify-content-center border rounded" style="height:100px; width:100%; min-width:80px;">
@@ -33,7 +33,7 @@
 
                         <div class="col-12 col-lg-8">
                             <h4 class="mb-1">
-                                <a href="<?= $link->url('author.view', ['id' => $a->getId()]) ?>" class="text-decoration-none text-primary">
+                                <a href="<?= $link->url('author.view', ['id' => $a->getId()]) ?>" class="text-decoration-none text-primary author-link">
                                     <?= htmlspecialchars(trim($a->getFirstName() . ' ' . $a->getLastName()) ?: 'Bez mena') ?>
                                 </a>
                             </h4>

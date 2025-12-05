@@ -1,18 +1,8 @@
+/*ciara*/
 .navbar {
     border-bottom: 1px solid grey;
 }
 
-.navbar-brand img {
-    width: 50px;
-}
-
-/* Site hero */
-.site-hero {
-    background-image: linear-gradient(90deg, rgba(0,123,255,0.08), rgba(0,123,255,0.04));
-}
-
-
-/* Main content */
 .web-content {
     min-height: 40vh;
 }
@@ -29,31 +19,16 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
 }
+/*jemnejsie pismo*/
 .site-footer p,
 .site-footer li {
     color: #cfcfcf;
-    opacity: 0.95;
+    opacity: 80%;
 }
 .site-footer .opening-hours li {
     line-height: 1.5;
 }
-.site-footer a {
-    color: #cfcfcf;
-    text-decoration: none;
-    transition: color 160ms ease, transform 120ms ease;
-}
-.site-footer a:hover,
-.site-footer a:focus {
-    color: #ffd166; /* warm accent on hover */
-    text-decoration: none;
-}
 
-/* bottom small utility links row */
-.site-footer .footer-links-row {
-    margin-top: 34px;
-    border-top: 1px solid rgba(255,255,255,0.03);
-    padding-top: 22px;
-}
 html, body {
     height: 100%;
     margin: 0;
@@ -72,10 +47,9 @@ main {
 }
 
 .site-header {
-    background-color: #6fbf86; /* light green similar to sample */
+    background-color: #6fbf86;
 }
 .site-header .navbar {
-    /* ensure navbar is transparent so the header background is a single color */
     background: transparent;
     padding-top: 10px;
     padding-bottom: 10px;
@@ -89,66 +63,117 @@ main {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
 }
-
-/* Ensure logo is visible in the left corner (do not center .navbar-brand) */
+/*obrazok*/
 .site-header .navbar-brand img {
     display: inline-block;
     width: 50px;
 }
 .site-header .navbar-brand {
-    /* keep brand left-aligned and part of document flow */
     position: static;
     padding: 4px 8px;
     display: flex;
     align-items: center;
 }
-/* if a brand-text element exists, hide it so it doesn't interfere */
-.site-header .navbar-brand .brand-text {
-    display: none !important;
-}
 
-/* show nav links and user menu on desktop (visible) */
+
 .site-header .navbar-nav {
-    display: flex; /* show nav */
     gap: 12px;
-    align-items: center;
 }
 .site-header .nav-link {
-    color: #ffffff !important; /* ensure visible */
-}
-.site-header .user-menu,
-.site-header .ms-auto {
-    display: flex; /* show user menu/login */
-    align-items: center;
-}
-.site-header .user-menu .nav-link,
-.site-header .user-menu b {
-    color: #ffffff !important;
-    pointer-events: auto; /* allow interacting with user menu */
+    color: #ffffff ;
 }
 
-/* User menu hover behaviour (moved from layout inline style) */
+
+
 @media (hover: hover) {
-    .user-menu:hover > .dropdown-menu {
+    .site-header .user-menu .dropdown-menu.show {
         display: block;
     }
-    .user-menu .dropdown-menu {
-        margin-top: 0;
-    }
 }
 
-/* user label and username styling: muted label, readable bold username */
-.site-header .user-label {
-    color: rgba(255,255,255,0.85); /* subtle white for the "Prihlásený:" label */
-    font-size: 0.85rem;
-}
-.site-header .username,
-.site-header .user-menu b {
-    color: rgba(255,255,255,1); /* white username */
-    font-weight: 600;
+
+
+.card-book {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border-radius: 8px;
+  background: #fff;
+  padding: 1rem;
+  margin-bottom: 1rem;
 }
 
-/* Ensure dropdown toggle caret is visible (kept) */
-.site-header .dropdown-toggle::after {
-    color: #ffffff;
+.avatar-author {
+  border-radius: 50%;
+  object-fit: cover;
+  width: 70px;
+  height: 70px;
+  border: 2px solid #6fbf86;
+}
+
+.meta-label {
+  color: #6b7280;
+  font-size: 0.95em;
+  font-weight: 600;
+}
+
+.section-title {
+  font-family: Georgia, serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #234;
+  margin-bottom: 0.5em;
+}
+
+.author-link {
+  color: #1a7f37;
+  font-weight: 600;
+  text-decoration: none;
+}
+.author-link:hover {
+  text-decoration: underline;
+}
+
+.book-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0d3b66;
+}
+
+.muted-small {
+  color: #888;
+  font-size: 0.85em;
+}
+
+.btn-outline-contrast {
+  background: transparent;
+  color: #6fbf86;
+  border: 2px solid #6fbf86;
+  border-radius: 6px;
+  font-weight: 600;
+  padding: 0.4rem 1rem;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-outline-contrast:hover {
+  background: #6fbf86;
+  color: #fff;
+}
+
+.list-item-hover:hover {
+  background: #e6f9ed;
+  transition: background 0.15s;
+}
+
+.highlight-reservation {
+  background: #fffbe6;
+  border-left: 4px solid #ffd166;
+  padding: 0.5rem 1rem;
+}
+
+.category-label {
+  background: #e6f9ed;
+  color: #1a7f37;
+  font-size: 0.95em;
+  border-radius: 4px;
+  padding: 0.2em 0.6em;
+  margin-right: 0.5em;
+  display: inline-block;
 }

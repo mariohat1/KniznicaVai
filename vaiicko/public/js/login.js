@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var loginForm = document.getElementById('loginForm');
     if (!loginForm) return;
 
-    // Simple helper to show an inline error message inside the form
     function showError(msg) {
         var box = loginForm.querySelector('.ajax-error');
         if (!box) {
@@ -17,14 +16,11 @@ document.addEventListener('DOMContentLoaded', function () {
     loginForm.addEventListener('submit', function (event) {
         event.preventDefault(); // stop the normal form submit
 
-        // create XHR
         var xhr = new XMLHttpRequest();
 
-        // Use the form action so it works for your routing (don't hardcode '/login')
         var url = loginForm.action || window.location.href;
         xhr.open('POST', url, true);
 
-        // Tell the server this is an AJAX request
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         xhr.setRequestHeader('Accept', 'application/json');
 
@@ -47,17 +43,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 if (json && json.success) {
-                    // redirect if server provided a URL, otherwise reload
                     window.location.href = json.redirect || window.location.href;
                     return;
                 }
 
-                // show server-provided message or generic message
                 showError((json && json.message) ? json.message : 'Neplatné meno alebo heslo');
                 return;
             }
 
-                       // non-2xx
             showError('Chyba servera (' + xhr.status + ').');
         };
 

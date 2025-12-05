@@ -6,7 +6,7 @@
 ?>
 
 <div class="container">
-    <h1 class="mb-4">Knihy</h1>
+    <h1 class="mb-4 section-title">Knihy</h1>
 
     <?php if (empty($books)): ?>
         <div class="alert alert-info">Žiadne knihy nenájdené.</div>
@@ -16,7 +16,7 @@
             <?php foreach ($books as $b): ?>
                 <?php $bid = (int)$b->getId();
                 $meta = $copies[$bid] ?? ['total' => 0, 'available' => 0]; ?>
-                <div class="list-group-item border-bottom py-3">
+                <div class="list-group-item border-bottom py-3 card-book">
                     <div class="row g-3 align-items-stretch">
 
                         <div class="col-12 col-md-2 col-lg-1 text-center">
@@ -42,16 +42,16 @@
                         <div class="col-12 col-lg-8">
                             <h4 class="mb-1">
                                 <a href="<?= $link->url('book.view', ['id' => $b->getId()]) ?>"
-                                   class="text-decoration-none text-primary">
+                                   class="text-decoration-none text-primary book-title">
                                     <?= htmlspecialchars((string)$b->getTitle() ?: 'Bez názvu') ?>
                                 </a>
                             </h4>
 
                             <p class="mb-1 text-muted">
                                 <small>
-                                    <strong>ISBN:</strong> <?= htmlspecialchars((string)$b->getIsbn()) ?>
+                                    <span class="meta-label"><strong>ISBN:</strong> <?= htmlspecialchars((string)$b->getIsbn()) ?></span>
                                     <span class="mx-1">|</span>
-                                    <strong>Rok:</strong> <?= htmlspecialchars((string)$b->getYearPublished()) ?>
+                                    <span class="meta-label"><strong>Rok:</strong> <?= htmlspecialchars((string)$b->getYearPublished()) ?></span>
                                 </small>
                             </p>
 
@@ -60,7 +60,7 @@
                             </p>
 
                             <div>
-                                <span class="badge bg-success bg-opacity-10 text-success border border-success">
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success category-label">
                                     <i class="bi bi-check-circle me-1"></i> Dostupné
                                     <span class="ms-2 small text-dark">(<?= htmlspecialchars((string)$meta['available']) ?> /
                                         <?= htmlspecialchars((string)$meta['total']) ?>)</span>
@@ -73,11 +73,11 @@
                             <?php if ($auth?->isLogged()): ?>
                                 <form method="post" action="<?= $link->url('reservation.create') ?>" class="d-flex w-100 justify-content-end">
                                     <input type="hidden" name="id" value="<?= htmlspecialchars((string)$b->getId()) ?>">
-                                    <button class="btn btn-primary mt-auto align-self-end me-3" style="padding:0.5rem 1rem;" type="submit">Získať</button>
+                                    <button class="btn btn-primary mt-auto align-self-end me-3 btn-outline-contrast" style="padding:0.5rem 1rem;" type="submit">Získať</button>
                                 </form>
                             <?php else: ?>
                                 <div class="d-flex w-100 justify-content-end">
-                                    <button class="btn btn-primary mt-auto align-self-end me-3" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">Získať</button>
+                                    <button class="btn btn-primary mt-auto align-self-end me-3 btn-outline-contrast" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">Získať</button>
                                 </div>
                             <?php endif; ?>
                         </div>

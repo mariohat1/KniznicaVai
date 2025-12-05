@@ -117,11 +117,27 @@ class BookController extends BaseController
      */
     public function add(Request $request): Response
     {
+        // If an id is provided, load the book so the add view can be reused for editing
+        $id = $request->value('id');
+        $book = null;
+        if ($id !== null && trim((string)$id) !== '') {
+            $book = Book::getOne($id);
+            if ($book === null) {
+                // If the requested book does not exist, redirect back to manage
+                return $this->redirect($this->url('book.manage'));
+            }
+        }
+
         $authors = Author::getAll();
         $categories = Category::getAll();
         $genres = Genre::getAll();
-        return $this->html(['authors' => $authors, 'categories' => $categories, 'genres' => $genres]);
+        return $this->html(['book' => $book, 'authors' => $authors, 'categories' => $categories, 'genres' => $genres]);
     }
+
+    /**
+     * @throws \Exception
+     */
+
 
     public function store(Request $request): Response
     {
@@ -133,77 +149,157 @@ class BookController extends BaseController
         }
 
         try {
-            $book = new Book();
-            if ($request->isJson()) {
-                try {
-                    $data = $request->json();
-                } catch (\JsonException $e) {
-                    $data = null;
-                }
+            // Load existing book (for edit) or create new one
+            $book = $this->loadOrCreateBook($request);
 
-                foreach ($data as $key => $value) {
-                    if (!property_exists($this, $key)) {
-                        continue;
-                    }
-                    $this->{$key} = $value;
-                }
-            } else {
-                $book->setFromRequest($request);
-            }
-            $photoPath = $request->value('photo_path');
-            if ($photoPath && method_exists($book, 'setPhoto')) {
-                $book->setPhoto($photoPath);
+            $this->setBookDataFromRequest($request, $book);
+
+            // Apply photo path if provided
+            $this->applyPhotoPath($request, $book);
+
+            // Validate ISBN format and uniqueness. If invalid, this returns a Response we must send.
+            $isbnValidationResponse = $this->validateIsbnAndUniqueness($book, $request);
+            if ($isbnValidationResponse instanceof Response) {
+                return $isbnValidationResponse;
             }
 
-            $isbn = $book->getIsbn();
-            if (!empty($isbn)) {
-                $normalized = preg_replace('/[^0-9Xx]/', '', (string)$isbn);
-
-                $isValidIsbn = false;
-                if (strlen($normalized) === 13 && ctype_digit($normalized)) {
-                    // ISBN-13 validation (MOD 10)
-                    $sum = 0;
-                    for ($i = 0; $i < 13; $i++) {
-                        $digit = (int)$normalized[$i];
-                        $sum += ($i % 2 === 0) ? $digit : $digit * 3;
-                    }
-                    $isValidIsbn = ($sum % 10) === 0;
-                } elseif (strlen($normalized) === 10) {
-                    // ISBN-10 validation (allow X/x as check digit)
-                    $sum = 0;
-                    for ($i = 0; $i < 9; $i++) {
-                        if (!isset($normalized[$i]) || !ctype_digit($normalized[$i])) { $sum = null; break; }
-                        $sum += (10 - $i) * (int)$normalized[$i];
-                    }
-                    if ($sum !== null) {
-                        $check = $normalized[9];
-                        $checkVal = ($check === 'X' || $check === 'x') ? 10 : (ctype_digit($check) ? (int)$check : -1);
-                        if ($checkVal >= 0) {
-                            $sum += 1 * $checkVal;
-                            $isValidIsbn = ($sum % 11) === 0;
-                        }
-                    }
-                }
-
-                if (!$isValidIsbn) {
-                    if ($request->isAjax()) {
-                        return (new JsonResponse(['success' => false, 'message' => 'Neplatné ISBN']))->setStatusCode(400);
-                    }
-                    return $this->redirect($this->url('book.add'));
-                }
-            }
-
+            // Save and respond
             $book->save();
+
             if ($request->isAjax()) {
-                return (new JsonResponse(['success' => true, 'id' => $book->getId(), 'message' => 'Book saved']))->setStatusCode(201);
+                return new JsonResponse(['success' => true, 'redirect' => $this->url('book.manage')]);
             }
-            return $this->redirect($this->url('book.index'));
+
+            return $this->redirect($this->url('book.manage'));
         } catch (\Throwable $e) {
             if ($request->isAjax()) {
                 return (new JsonResponse(['success' => false, 'message' => 'Save failed: ' . $e->getMessage()]))->setStatusCode(500);
             }
             return $this->redirect($this->url('book.add'));
         }
+    }
+
+    /**
+     * Load an existing Book if id provided in request, otherwise return a new Book instance.
+     */
+    private function loadOrCreateBook(Request $request): Book
+    {
+        $id = $request->value('id');
+        $book = null;
+        if ($id !== null && trim((string)$id) !== '') {
+            $loaded = Book::getOne($id);
+            if ($loaded !== null) {
+                $book = $loaded;
+            }
+        }
+        if ($book === null) {
+            $book = new Book();
+        }
+
+        return $book;
+    }
+
+    /**
+     * Set book properties from request body (JSON) or form POST.
+     */
+    private function setBookDataFromRequest(Request $request, Book $book): void
+    {
+        if ($request->isJson()) {
+            try {
+                $data = $request->json();
+            } catch (\JsonException $e) {
+                $data = null;
+            }
+
+            if (is_array($data)) {
+                foreach ($data as $key => $value) {
+                    // Set only known properties on the Book instance
+                    if (!property_exists($book, $key)) {
+                        continue;
+                    }
+                    $book->{$key} = $value;
+                }
+            }
+        } else {
+            $book->setFromRequest($request);
+        }
+    }
+
+    /**
+     * Apply photo_path value from request to the Book if available.
+     */
+    private function applyPhotoPath(Request $request, Book $book): void
+    {
+        $photoPath = $request->value('photo_path');
+        if (method_exists($book, 'setPhoto') && $photoPath !== null) {
+            if (trim((string)$photoPath) !== '') {
+                $book->setPhoto($photoPath);
+            } else {
+                $book->setPhoto(null);
+            }
+        }
+    }
+
+    /**
+     * Validate ISBN format and uniqueness. Returns null when OK or a Response instance to return immediately.
+     */
+    private function validateIsbnAndUniqueness(Book $book, Request $request): ?Response
+    {
+        $isbn = $book->getIsbn();
+        if (empty($isbn)) {
+            return null;
+        }
+
+        $normalized = preg_replace('/[^0-9Xx]/', '', (string)$isbn);
+
+        $isValidIsbn = false;
+        if (strlen($normalized) === 13 && ctype_digit($normalized)) {
+            $sum = 0;
+            for ($i = 0; $i < 13; $i++) {
+                $digit = (int)$normalized[$i];
+                $sum += ($i % 2 === 0) ? $digit : $digit * 3;
+            }
+            $isValidIsbn = ($sum % 10) === 0;
+        } elseif (strlen($normalized) === 10) {
+            $sum = 0;
+            for ($i = 0; $i < 9; $i++) {
+                if (!isset($normalized[$i]) || !ctype_digit($normalized[$i])) { $sum = null; break; }
+                $sum += (10 - $i) * (int)$normalized[$i];
+            }
+            if ($sum !== null) {
+                $check = $normalized[9];
+                $checkVal = ($check === 'X' || $check === 'x') ? 10 : (ctype_digit($check) ? (int)$check : -1);
+                if ($checkVal >= 0) {
+                    $sum += 1 * $checkVal;
+                    $isValidIsbn = ($sum % 11) === 0;
+                }
+            }
+        }
+
+        if (!$isValidIsbn) {
+            if ($request->isAjax()) {
+                return (new JsonResponse(['success' => false, 'message' => 'Neplatné ISBN']))->setStatusCode(400);
+            }
+            return $this->redirect($this->url('book.add'));
+        }
+
+        // Check uniqueness (ignore case and spaces). Exclude current book when editing.
+        $normalizedIsbn = trim(strtolower($isbn));
+        $where = 'TRIM(LOWER(isbn)) = ?';
+        $params = [$normalizedIsbn];
+        if ($book->getId() !== null) {
+            $where .= ' AND `id` <> ?';
+            $params[] = $book->getId();
+        }
+        $conflictCount = Book::getCount($where, $params);
+        if ($conflictCount > 0) {
+            if ($request->isAjax()) {
+                return (new JsonResponse(['success' => false, 'message' => 'ISBN musí být jedinečné']))->setStatusCode(400);
+            }
+            return $this->redirect($this->url('book.add'));
+        }
+
+        return null;
     }
 
     /**
@@ -247,5 +343,47 @@ class BookController extends BaseController
         }
         $relative = '/uploads/book/' . $filename;
         return $this->json(['success' => true, 'path' => $relative, 'filename' => $filename, 'original' => $file->getName()]);
+    }
+
+    public function delete(Request $request): Response
+    {
+        if (!$request->isPost()) {
+            if ($request->isAjax()) {
+                return (new JsonResponse(['success' => false, 'message' => 'Method not allowed']))->setStatusCode(405);
+            }
+            return $this->redirect($this->url('book.manage'));
+        }
+
+        $id = $request->value('id');
+        if ($id === null) {
+            if ($request->isAjax()) {
+                return (new JsonResponse(['success' => false, 'message' => 'Missing id']))->setStatusCode(400);
+            }
+            return $this->redirect($this->url('book.manage'));
+        }
+
+        $book = Book::getOne($id);
+        if ($book === null) {
+            if ($request->isAjax()) {
+                return (new JsonResponse(['success' => false, 'message' => 'Book not found']))->setStatusCode(404);
+            }
+            return $this->redirect($this->url('book.manage'));
+        }
+
+        try {
+            // Delete the book. DB foreign keys (ON DELETE CASCADE) will remove book_copy rows.
+            $book->delete();
+
+            if ($request->isAjax()) {
+                return new JsonResponse(['success' => true, 'message' => 'Deleted']);
+            }
+            return $this->redirect($this->url('book.manage'));
+        } catch (\Throwable $e) {
+            if ($request->isAjax()) {
+                return (new JsonResponse(['success' => false, 'message' => 'Delete failed: ' . $e->getMessage()]))->setStatusCode(500);
+            }
+            // On failure, go back to manage with a generic message (could be improved to show flash messages)
+            return $this->redirect($this->url('book.manage'));
+        }
     }
 }

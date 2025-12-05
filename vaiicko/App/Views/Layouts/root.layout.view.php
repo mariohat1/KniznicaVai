@@ -40,7 +40,6 @@ $isAdmin = AuthView::canAddAuthor($auth);
             </a>
 
             <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="<?= $link->url('home.contact') ?>">Contact</a></li>
                 <li class="nav-item"><a class="nav-link" href="<?= $link->url('author.index') ?>">Autori</a></li>
                 <li class="nav-item"><a class="nav-link" href="<?= $link->url('book.index') ?>">Knihy</a></li>
 
@@ -63,8 +62,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
                     <?php if ($isAdmin): ?>
                         <div class="dropdown user-menu me-3">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenuAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span class="small">Prihlásený:</span>
-                                <b class="ms-2 text-white fw-bold"><?= $displayNameEsc ?></b>
+                                <b class="ms-2 "><?= $displayNameEsc ?></b>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuAdmin">
                                 <li><a class="dropdown-item" href="<?= $link->url('auth.logout') ?>">Odhlásiť sa</a></li>
@@ -73,8 +71,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
                     <?php else: ?>
                         <div class="dropdown user-menu me-3">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span class="small text-muted">Prihlásený:</span>
-                                <b class="ms-2 text-white fw-bold"><?= $displayNameEsc ?></b>
+                                <b class="ms-2"><?= $displayNameEsc ?></b>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
                                 <li><a class="dropdown-item" href="<?= $link->url('reservation.index') ?>">Moje rezervácie</a></li>
@@ -86,7 +83,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
                 </div>
             <?php else: ?>
                 <div class="ms-auto">
-                    <button id="loginToggle" class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">Prihlásiť sa</button>
+                    <button id="loginToggle" class="btn btn-dark " type="button" data-bs-toggle="modal" data-bs-target="#loginModal">Prihlásiť sa</button>
                 </div>
             <?php endif; ?>
         </div>

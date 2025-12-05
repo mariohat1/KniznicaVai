@@ -5,7 +5,7 @@
 
 ?>
 <div class="container">
-    <h1 class="mb-4">Moje rezervácie</h1>
+    <h1 class="mb-4 section-title">Moje rezervácie</h1>
 
     <?php if (empty($items)): ?>
         <div class="alert alert-info">Nemáte žiadne rezervácie.</div>
@@ -16,17 +16,17 @@
                 $book = $it['book'];
                 $copy = $it['copy'];
                 ?>
-                <div class="list-group-item d-flex justify-content-between align-items-start">
+                <div class="list-group-item d-flex justify-content-between align-items-start<?php if ($r->getIsReserved()): ?> highlight-reservation<?php endif; ?>">
                     <div>
-                        <div class="fw-bold">
+                        <div class="fw-bold book-title">
                             <?php if ($book): ?>
                                 <a href="<?= $link->url(['book', 'view', 'id' => $book->getId()]) ?>"
-                                   class="text-decoration-none"><?= htmlspecialchars((string)$book->getTitle()) ?></a>
+                                   class="text-decoration-none author-link"><?= htmlspecialchars((string)$book->getTitle()) ?></a>
                             <?php else: ?>
                                 Neznáma kniha
                             <?php endif; ?>
                         </div>
-                        <div class="small text-muted">
+                        <div class="small text-muted muted-small">
                             Kópia: <?= $copy ? htmlspecialchars((string)$copy->getId()) : '—' ?>
                             Rezervované: <?= htmlspecialchars((string)$r->getCreatedAt()) ?>
                             Rezervované (flag): <?= $r->getIsReserved() ? 'Áno' : 'Nie' ?>

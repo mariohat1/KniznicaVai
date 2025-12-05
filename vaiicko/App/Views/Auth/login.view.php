@@ -30,7 +30,7 @@ $view->setLayout('auth');
                         </div>
 
                         <div class="text-center">
-                            <button class="btn btn-primary" type="submit" name="submit">Prihlásiť</button>
+                            <button class="btn btn-contrast" type="submit" name="submit">Prihlásiť</button>
                         </div>
                     </form>
 
