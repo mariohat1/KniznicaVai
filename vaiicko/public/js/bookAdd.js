@@ -29,21 +29,18 @@
                 try {
                     data = await res.json();
                 } catch (e) {
-                    // malformed JSON
                     text = await res.text().catch(() => null);
                 }
             } else {
-                // not JSON (could be HTML redirect to login, or plain text error)
                 text = await res.text().catch(() => null);
             }
 
             return {status: res.status, ok: res.ok, data, text};
         } catch (e) {
-            // network error
-            console.error('postJson network error', e);
             return {status: 0, ok: false, data: null, text: e.message || String(e)};
         }
     }
+
     function toggleContainer(btnId, containerId, inputId) {
         const trigger = document.getElementById(btnId);
         if (!trigger) return;

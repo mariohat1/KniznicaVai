@@ -18,13 +18,11 @@ class UserController extends BaseController
     {
         $message = null;
         if ($request->isPost()) {
-            $first = trim($request->value('first_name') ?? '');
-            $last = trim($request->value('last_name') ?? '');
+
             $username = trim($request->value('username') ?? '');
             $email = trim($request->value('email') ?? '');
             $password = $request->value('password') ?? '';
             $password2 = $request->value('password2') ?? '';
-            // Basic validation: username, password match, and min length for password
             if ($username === '' || $password === '' || $password !== $password2) {
                 $message = 'Skontrolujte polia (username a heslá musí byť rovnaké).';
                 if ($request->isAjax()) {
@@ -44,6 +42,16 @@ class UserController extends BaseController
                 return $this->redirect($referer);
             }
 
+            // Validate email format if provided
+            if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $message = 'Neplatný e-mail.';
+                if ($request->isAjax()) {
+                    return new JsonResponse(['success' => false, 'message' => $message]);
+                }
+                $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
+                return $this->redirect($referer);
+            }
+
             try {
                 $exists = User::getCount('username = ?', [$username]);
                 if ($exists > 0) {
@@ -56,17 +64,24 @@ class UserController extends BaseController
                     $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
                     return $this->redirect($referer);
                 }
+
+                if ($email !== '') {
+                    $existsEmail = User::getCount('email = ?', [$email]);
+                    if ($existsEmail > 0) {
+                        $message = 'Používateľ s týmto emailom už existuje.';
+                        if ($request->isAjax()) {
+                            return new JsonResponse(['success' => false, 'message' => $message]);
+                        }
+                        $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
+                        return $this->redirect($referer);
+                    }
+                }
+
                 $user = new User();
                 $user->setUsername($username);
                 $user->setPassword(password_hash($password, PASSWORD_BCRYPT));
                 $user->setEmail($email ?: null);
                 $user->setRole('user');
-                if (method_exists($user, 'setFirstName')) {
-                    $user->setFirstName($first);
-                }
-                if (method_exists($user, 'setLastName')) {
-                    $user->setLastName($last);
-                }
                 $user->save();
                 $auth = $this->app->getAuth();
                 $auth?->login($username, $password);

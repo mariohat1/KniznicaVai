@@ -49,13 +49,6 @@
 
                         </div>
 
-                        <div class="col-12 col-md-3 col-lg-2 d-flex flex-md-column">
-                            <?php if ($auth?->isLogged()): ?>
-                                <a class="btn btn-primary mt-auto align-self-end me-3" href="<?= $link->url('author.view', ['id' => $a->getId()]) ?>">Zobraziť</a>
-                            <?php else: ?>
-                                <button class="btn btn-primary mt-auto align-self-end me-3" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">Zobraziť</button>
-                            <?php endif; ?>
-                        </div>
 
                     </div>
                 </div>

@@ -6,7 +6,6 @@
 
 use App\Support\AuthView;
 
-// Use centralized helper for auth-related display values
 $displayNameEsc = AuthView::displayNameEsc($auth);
 $isAdmin = AuthView::canAddAuthor($auth);
 
@@ -128,7 +127,6 @@ $isAdmin = AuthView::canAddAuthor($auth);
              </form>
          </div>
 
-         <!-- Register form (hidden by default) -->
          <div id="modalRegisterForm" style="display:none;">
             <form method="post" action="<?= $link->url('user.add') ?>">
                 <input type="hidden" name="auth_form" value="register">
@@ -138,7 +136,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
                  </div>
                  <div class="mb-3">
                      <label for="reg_email" class="form-label">Email</label>
-                     <input id="reg_email" name="email" type="email" class="form-control">
+                     <input id="reg_email" name="email" type="email" class="form-control" required>
                  </div>
                  <div class="mb-3">
                      <label for="reg_password" class="form-label">Heslo</label>
@@ -189,32 +187,32 @@ $isAdmin = AuthView::canAddAuthor($auth);
 
 </footer>
 
-<script>
-
-
-    // Server-driven auto-open disabled. Modal will open only when user clicks the button.
-
-    // No custom fetch submit — rely on normal form POST so cookies/session are sent by the browser.
-</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var loginForm = document.getElementById('modalLoginForm');
         var registerForm = document.getElementById('modalRegisterForm');
 
-        // Toggle login/register forms
-        document.getElementById('showLogin').addEventListener('click', function() {
-            if(loginForm) loginForm.style.display = 'block';
-            if(registerForm) registerForm.style.display = 'none';
-        });
+        var showLoginBtn = document.getElementById('showLogin');
+        var showRegisterBtn = document.getElementById('showRegister');
 
-        document.getElementById('showRegister').addEventListener('click', function() {
-            if(loginForm) loginForm.style.display = 'none';
-            if(registerForm) registerForm.style.display = 'block';
-        });
 
-        // No server-driven auto-open: modal opens only when user clicks the button.
-        // Keep client-side toggles for switching login/register views.
+        if (showLoginBtn) {
+            showLoginBtn.addEventListener('click', function() {
+                if(loginForm) loginForm.style.display = 'block';
+                if(registerForm) registerForm.style.display = 'none';
+                var fb = document.getElementById('modalRegisterFeedback');
+                if (fb) fb.style.display = 'none';
+            });
+        }
+
+        if (showRegisterBtn) {
+            showRegisterBtn.addEventListener('click', function() {
+                if(loginForm) loginForm.style.display = 'none';
+                if(registerForm) registerForm.style.display = 'block';
+            });
+        }
+
     });
 </script>
 

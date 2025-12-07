@@ -69,16 +69,10 @@
                         </div>
 
                         <div class="col-12 col-md-3 col-lg-2 d-flex flex-md-column">
-                            <!-- show POST form only for logged-in users; guests get login modal button -->
                             <?php if ($auth?->isLogged()): ?>
                                 <form method="post" action="<?= $link->url('reservation.create') ?>" class="d-flex w-100 justify-content-end">
                                     <input type="hidden" name="id" value="<?= htmlspecialchars((string)$b->getId()) ?>">
-                                    <button class="btn btn-primary mt-auto align-self-end me-3 btn-outline-contrast" style="padding:0.5rem 1rem;" type="submit">Získať</button>
                                 </form>
-                            <?php else: ?>
-                                <div class="d-flex w-100 justify-content-end">
-                                    <button class="btn btn-primary mt-auto align-self-end me-3 btn-outline-contrast" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">Získať</button>
-                                </div>
                             <?php endif; ?>
                         </div>
 

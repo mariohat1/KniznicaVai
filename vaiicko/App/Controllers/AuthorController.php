@@ -68,14 +68,11 @@ class AuthorController extends BaseController
 
     public function store(Request $request): Response
     {
-        // Create author from POST and save
         $author = new Author();
         $id = $request->value('id');
         if (!empty($id)) {
             $author = Author::getOne($id);
-
         }
-
         $author->setFirstName($request->value('first_name'));
         $author->setLastName($request->value('last_name'));
         $author->setNationality($request->value('nationality'));
@@ -86,26 +83,9 @@ class AuthorController extends BaseController
             $author->setPhoto($photoPath);
         }
         $author->save();
-        return $this->redirect($this->url('author.index'));
+        return $this->redirect($this->url('author.manage'));
     }
-    public function update(Request $request, int $id): Response
-    {
-        // Update author with given ID from POST data
-        try {
-            $author = Author::getOne($id);
-        } catch (\Exception $e) {
 
-        }
-        if ($author) {
-            $author->setFromRequest($request);
-            try {
-                $author->save();
-            } catch (\Exception $e) {
-
-            }
-        }
-        return $this->redirect($this->url('author.index'));
-    }
     public function delete(Request $request, ?int $id = null): Response
     {
         // Accept id either from route param ($id) or from POST 'id'
@@ -121,18 +101,16 @@ class AuthorController extends BaseController
                 // ignore and redirect
             }
         }
-        return $this->redirect($this->url('author.index'));
+        return $this->redirect($this->url('author.manage'));
     }
     public function uploadPhoto(Request $request): Response
     {
-        // Handle photo upload for author
         $file = $request->file('photo');
         if (!$file || !$file->isOk()) {
             $msg = $file ? $file->getErrorMessage() : 'No file uploaded';
             return $this->json(['success' => false, 'message' => 'No file uploaded or upload error', 'detail' => $msg])->setStatusCode(400);
         }
 
-        // Basic validation: size limit and MIME check (PNG only as requested)
         $maxBytes = 5 * 1024 * 1024; // 5 MB
         if ($file->getSize() > $maxBytes) {
             return $this->json(['success' => false, 'message' => 'File too large'])->setStatusCode(400);

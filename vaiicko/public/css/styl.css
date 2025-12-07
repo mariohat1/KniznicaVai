@@ -101,14 +101,8 @@ main {
   margin-bottom: 1rem;
 }
 
-.avatar-author {
-  border-radius: 50%;
-  object-fit: cover;
-  width: 70px;
-  height: 70px;
-  border: 2px solid #6fbf86;
-}
 
+/*kniha isbn*/
 .meta-label {
   color: #6b7280;
   font-size: 0.95em;
@@ -124,11 +118,10 @@ main {
 }
 
 .author-link {
-  color: #1a7f37;
+  color: black;
   font-weight: 600;
   text-decoration: none;
-}
-.author-link:hover {
+}.author-link:hover {
   text-decoration: underline;
 }
 
@@ -154,7 +147,6 @@ main {
 }
 .btn-outline-contrast:hover {
   background: #6fbf86;
-  color: #fff;
 }
 
 .list-item-hover:hover {
@@ -177,3 +169,5 @@ main {
   margin-right: 0.5em;
   display: inline-block;
 }
+
+

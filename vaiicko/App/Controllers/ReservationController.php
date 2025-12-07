@@ -181,8 +181,8 @@ class ReservationController extends BaseController
 
         if ($searchBy === 'user') {
             if ($q !== '') {
-                $like = '%' . $q . '%';
-                $usersFound = User::getAll('username LIKE ?', (array)$like);
+                $like = $q . '%';
+                $usersFound = User::getAll('username LIKE ?', [$like]);
                 $userIds = array_values(array_unique(array_filter(array_map(fn($u) => $u->getId(), $usersFound))));
                 if (empty($userIds)) {
                     $items = [];
@@ -194,7 +194,7 @@ class ReservationController extends BaseController
             }
         } else {
             if ($q !== '') {
-                $like = '%' . $q . '%';
+                $like = $q . '%';
                 $books = Book::getAll('title LIKE ?', [$like]);
                 $bookIds = array_filter(array_map(fn($b) => $b->getId(), $books));
                 if (empty($bookIds)) {

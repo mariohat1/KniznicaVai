@@ -1,52 +1,40 @@
 <?php
 /** @var \Framework\Support\LinkGenerator $link */
 /** @var \App\Models\Author|null $author */
+
+// ensure $author is defined when creating a new author (no model passed)
+if (!isset($author)) $author = null;
 ?>
 
 <div class="container">
     <h1><?= isset($author) ? 'Edit author' : 'Add author' ?></h1>
     <form method="post" action="<?= $link->url('author.store') ?>">
-        <?php if (isset($author)) { ?>
-            <input type="hidden" name="id" value="<?= htmlspecialchars($author->getId()) ?>">
-        <?php } ?>
+            <input type="hidden" name="id" value="<?= isset($author) ? htmlspecialchars((string)$author->getId()) : '' ?>">
         <div class="mb-3">
             <label class="form-label">First name</label>
-            <input type="text" name="first_name" class="form-control" required value="<?= isset($author) ? htmlspecialchars($author->getFirstName()) : '' ?>">
+            <input type="text" name="first_name" class="form-control" required value="<?= isset($author) ? htmlspecialchars((string)$author->getFirstName()) : '' ?>">
         </div>
         <div class="mb-3">
             <label class="form-label">Last name</label>
-            <input type="text" name="last_name" class="form-control" required value="<?= isset($author) ? htmlspecialchars($author->getLastName()) : '' ?>">
+            <input type="text" name="last_name" class="form-control" required value="<?= isset($author) ? htmlspecialchars((string)$author->getLastName()) : '' ?>">
         </div>
         <div class="mb-3">
             <label class="form-label">Nationality</label>
-            <input type="text" name="nationality" class="form-control" value="<?= isset($author) ? htmlspecialchars($author->getNationality()) : '' ?>">
+            <input type="text" name="nationality" class="form-control" required value="<?= isset($author) ? htmlspecialchars((string)$author->getNationality()) : '' ?>">
         </div>
         <div class="mb-3">
             <label class="form-label">Birth date</label>
-            <?php
-            // Ensure the date input gets a YYYY-MM-DD value when editing.
-            $birthValue = '';
-            if (isset($author) && $author->getBirthDate()) {
-                try {
-                    $dt = new \DateTime($author->getBirthDate());
-                    $birthValue = $dt->format('Y-m-d');
-                } catch (\Exception $e) {
-                    // fallback: leave empty if date parsing fails
-                    $birthValue = '';
-                }
-            }
-            ?>
-            <input type="date" name="birth_date" class="form-control" value="<?= htmlspecialchars($birthValue) ?>">
+            <input id="birth_date" name="birth_date" type="date" class="form-control" value="<?= htmlspecialchars(isset($author) ? ($author->getBirthDate() ?? '') : '') ?>">
         </div>
 
         <div class="mb-3">
             <label class="form-label">Fotka autora (PNG) — potiahni sem</label>
             <div id="author-photo-drop" class="border rounded p-3 text-center" style="min-height:120px; display:flex;align-items:center;justify-content:center;cursor:pointer;">
                 <div id="author-photo-placeholder">Potiahni sem PNG alebo klikni pre vybratie súboru</div>
-                <img id="author-photo-preview" src="<?= isset($author) && method_exists($author, 'getPhoto') ? htmlspecialchars($author->getPhoto()) : '' ?>" alt="" style="max-height:100px; display:none; margin:auto;">
+                <img id="author-photo-preview" src="<?= isset($author) && method_exists($author, 'getPhoto') ? htmlspecialchars((string)$author->getPhoto()) : '' ?>" alt="" style="max-height:100px; display:none; margin:auto;">
             </div>
             <input id="author-photo-input" type="file" accept="image/png" style="display:none">
-            <input type="hidden" name="photo_path" id="photo_path" value="<?= isset($author) && method_exists($author, 'getPhoto') ? htmlspecialchars($author->getPhoto()) : '' ?>">
+            <input type="hidden" name="photo_path" id="photo_path" value="<?= isset($author) && method_exists($author, 'getPhoto') ? htmlspecialchars((string)$author->getPhoto()) : '' ?>">
             <small class="form-text text-muted">Max 5 MB. Len PNG.</small>
         </div>
         <button class="btn btn-primary"><?= isset($author) ? 'Update' : 'Save' ?></button>
@@ -65,9 +53,7 @@
                 preview.style.display = '';
                 placeholder.style.display = 'none';
             }
-
-            // init preview if value present
-            if(hidden.value) showPreviewUrl(hidden.value);
+            if(hidden && hidden.value) showPreviewUrl(hidden.value);
 
             drop.addEventListener('click', function(){ input.click(); });
             drop.addEventListener('dragover', function(e){ e.preventDefault(); drop.classList.add('bg-light'); });

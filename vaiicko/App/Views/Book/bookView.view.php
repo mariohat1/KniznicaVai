@@ -23,11 +23,10 @@
             <div class="d-grid gap-2">
                 <?php if ($auth?->isLogged()): ?>
                     <form method="post" action="<?= $link->url('reservation.create', ['id' => $book->getId()]) ?>">
-                        <button class="btn btn-primary" type="submit">Rezervovať</button>
+                        <button class="btn btn-primary mt-auto btn-outline-contrast" style="padding:0.5rem 1rem;" type="submit">Získať</button>
                     </form>
                 <?php else: ?>
-                    <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">Získať</button>
-                    <div class="small text-muted mt-2">Pre rezerváciu sa musíš najprv prihlásiť.</div>
+                    <button class="btn btn-primary mt-auto btn-outline-contrast" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">Získať</button>
                 <?php endif; ?>
                 <a class="btn btn-outline-secondary" href="<?= $link->url('book.index') ?>">Späť na zoznam</a>
             </div>
