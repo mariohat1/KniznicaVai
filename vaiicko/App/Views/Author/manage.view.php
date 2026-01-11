@@ -1,4 +1,7 @@
 <?php
+if (isset($view) && method_exists($view, 'setLayout')) {
+    $view->setLayout('admin');
+}
 /** @var array $authors */
 /** @var \Framework\Support\LinkGenerator $link */
 ?>
@@ -12,38 +15,40 @@
     <?php if (empty($authors)): ?>
         <p>Žiadni autori.</p>
     <?php else: ?>
+        <div class="table-responsive">
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th class="d-none d-sm-table-cell">ID</th>
                     <th>Meno</th>
                     <th>Priezvisko</th>
-                    <th>Národnosť</th>
-                    <th>Dátum narodenia</th>
+                    <th class="d-none d-md-table-cell">Dátum narodenia</th>
                     <th>Akcie</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($authors as $a): ?>
                     <tr>
-                        <td><?= htmlspecialchars((string)$a->getId()) ?></td>
+                        <td class="d-none d-sm-table-cell"><?= htmlspecialchars((string)$a->getId()) ?></td>
                         <td><?= htmlspecialchars($a->getFirstName()) ?></td>
                         <td><?= htmlspecialchars($a->getLastName()) ?></td>
-                        <td><?= htmlspecialchars($a->getNationality()) ?></td>
-                        <td><?= htmlspecialchars($a->getBirthDate()) ?></td>
+                        <td class="d-none d-md-table-cell"><?= htmlspecialchars($a->getBirthDate()) ?></td>
                         <td>
-                            <a class="btn btn-sm btn-outline-primary" href="<?= $link->url('author.index') ?>">Zobraziť</a>
-                            <a class="btn btn-sm btn-outline-secondary" href="<?= $link->url('author.add', ['id' => $a->getId()]) ?>">Upraviť</a>
+                            <div class="d-flex gap-1 flex-wrap">
+                                <a class="btn btn-sm btn-outline-primary" href="<?= $link->url('author.index') ?>">Zobraziť</a>
+                                <a class="btn btn-sm btn-outline-secondary" href="<?= $link->url('author.add', ['id' => $a->getId()]) ?>">Upraviť</a>
 
-                            <form method="post" action="<?= $link->url('author.delete') ?>" class="d-inline-block author-delete-form">
-                                <input type="hidden" name="id" value="<?= htmlspecialchars($a->getId()) ?>">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Zmazať</button>
-                            </form>
+                                <form method="post" action="<?= $link->url('author.delete') ?>" class="d-inline-block author-delete-form">
+                                    <input type="hidden" name="id" value="<?= htmlspecialchars($a->getId()) ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Zmazať</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
     <?php endif; ?>
 </div>
 

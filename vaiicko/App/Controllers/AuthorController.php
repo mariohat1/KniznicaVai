@@ -3,15 +3,20 @@
 namespace App\Controllers;
 
 use App\Models\Author;
+use App\Models\Book;
+use App\Models\BookCopy;
+use App\Models\Reservation;
 use Framework\Core\BaseController;
 use Framework\Http\Request;
 use Framework\Http\Responses\Response;
+use Framework\Http\Responses\JsonResponse;
+use App\Support\Validator;
 
 class AuthorController extends BaseController
 {
     public function authorize(Request $request, string $action): bool
     {
-        if ($action === 'index') {
+        if ($action === 'index' || $action === 'view') {
             return true;
         }
         if ($action === 'manage') {
@@ -46,6 +51,46 @@ class AuthorController extends BaseController
     }
 
     /**
+     * Public single author view + their books
+     */
+    public function view(Request $request, ?int $id = null): Response
+    {
+        $useId = $id ?? ($request->value('id') !== null ? (int)$request->value('id') : null);
+        if (empty($useId)) {
+            return $this->redirect($this->url('author.index'));
+        }
+
+        $author = null;
+        try {
+            $author = Author::getOne((int)$useId);
+        } catch (\Throwable $e) {
+            // ignore and redirect
+        }
+
+        if (!$author) {
+            return $this->redirect($this->url('author.index'));
+        }
+
+        $books = Book::getAll('author_id = ?', [(int)$useId]);
+
+        $copies = [];
+        foreach ($books as $b) {
+            try {
+                $bookId = $b->getId();
+                $total = BookCopy::getCount('book_id = ?', [$bookId]);
+                $reserved = Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ?) AND is_reserved = 1', [$bookId]);
+                $available = max(0, $total - $reserved);
+                $copies[$bookId] = ['total' => $total, 'available' => $available];
+            } catch (\Throwable $ex) {
+                // on error, fallback to zeros
+                $copies[$b->getId()] = ['total' => 0, 'available' => 0];
+            }
+        }
+
+        return $this->html(['author' => $author, 'books' => $books, 'copies' => $copies], 'view');
+    }
+
+    /**
      * Admin management page for authors (list with actions)
      */
     public function manage(Request $request): Response
@@ -56,7 +101,6 @@ class AuthorController extends BaseController
 
     public function add(Request $request): Response
     {
-        // If an id is provided, load the author and pass to view for editing
         $id = $request->value('id');
         if (!empty($id)) {
             $author = Author::getOne((int)$id);
@@ -68,22 +112,47 @@ class AuthorController extends BaseController
 
     public function store(Request $request): Response
     {
+        $first = $request->value('first_name');
+        $last = $request->value('last_name');
+        $birth_date = $request->value('birth_date');
+        $errors = [];
+
+        if ($err = Validator::validatePersonName($first, 'first name')) {
+            $errors[] = $err;
+        }
+
+        if ($err = Validator::validatePersonName($last, 'last name')) {
+            $errors[] = $err;
+        }
+
+        if ($err = Validator::validateBirthDate($birth_date, 'birth_date')) {
+            $errors[] = $err;
+        }
+        if (!empty($errors)) {
+            return $this->json(['success' => false, 'errors' => $errors]);
+        }
+
         $author = new Author();
         $id = $request->value('id');
         if (!empty($id)) {
             $author = Author::getOne($id);
         }
-        $author->setFirstName($request->value('first_name'));
-        $author->setLastName($request->value('last_name'));
-        $author->setNationality($request->value('nationality'));
+        $author->setFirstName($first);
+        $author->setLastName($last);
+        $author->setDescription($request->value('description'));
         $author->setBirthDate($request->value('birth_date'));
-        // If an uploaded photo path was provided by the uploader, attach it to the model
         $photoPath = $request->value('photo_path');
         if ($photoPath && method_exists($author, 'setPhoto')) {
             $author->setPhoto($photoPath);
         }
         $author->save();
+
+        if ($request->isAjax()) {
+            return $this->json(['success' => true, 'redirect' => $this->url('author.manage')]);
+        }
+
         return $this->redirect($this->url('author.manage'));
+
     }
 
     public function delete(Request $request, ?int $id = null): Response
@@ -103,6 +172,7 @@ class AuthorController extends BaseController
         }
         return $this->redirect($this->url('author.manage'));
     }
+
     public function uploadPhoto(Request $request): Response
     {
         $file = $request->file('photo');
@@ -111,7 +181,7 @@ class AuthorController extends BaseController
             return $this->json(['success' => false, 'message' => 'No file uploaded or upload error', 'detail' => $msg])->setStatusCode(400);
         }
 
-        $maxBytes = 5 * 1024 * 1024; // 5 MB
+        $maxBytes = 5 * 1024 * 1024;
         if ($file->getSize() > $maxBytes) {
             return $this->json(['success' => false, 'message' => 'File too large'])->setStatusCode(400);
         }
@@ -119,7 +189,7 @@ class AuthorController extends BaseController
         $originalName = $file->getName();
         $clientMime = $file->getType();
         $tmp = $file->getFileTempPath();
-        // Use getimagesize to discover MIME type reliably from the temporary uploaded file
+        // validate image
         $info = @getimagesize($tmp);
         if ($info === false || empty($info['mime'])) {
             return $this->json(['success' => false, 'message' => 'Invalid image'])->setStatusCode(400);
@@ -131,18 +201,14 @@ class AuthorController extends BaseController
         $projectRoot = dirname(__DIR__, 2);
         $uploadDir = $projectRoot . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'author';
 
-        // ensure upload directory exists
-        if (!is_dir($uploadDir)) {
-            @mkdir($uploadDir, 0755, true);
-        }
-
         $filename = uniqid('author_', true) . '.png';
         $dest = $uploadDir . DIRECTORY_SEPARATOR . $filename;
         if (!$file->store($dest)) {
             return $this->json(['success' => false, 'message' => 'Failed to save uploaded file'])->setStatusCode(500);
         }
-        $relative = '/uploads/author/' . $filename;
+        // Return public path for client
+        $publicPath = '/uploads/author/' . $filename;
+        return $this->json(['success' => true, 'path' => $publicPath]);
 
-        return $this->json(['success' => true, 'path' => $relative, 'filename' => $filename, 'original' => $originalName]);
     }
 }

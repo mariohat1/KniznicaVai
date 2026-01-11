@@ -50,21 +50,18 @@ class AuthController extends BaseController
         $message = null;
 
         if ($request->isPost()) {
-            // accept either 'login' or 'username' field for compatibility
             $loginField = $request->value('login') ?? $request->value('username');
             $password = $request->value('password');
 
             $logged = $this->app->getAuth()->login($loginField, $password);
             $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
 
-            if ($request->isAjax()) {
+            if ($request->isAjax() || $request->wantsJson()) {
                 if ($logged) {
                     return new JsonResponse(['success' => true, 'redirect' => $referer]);
                 }
                 return new JsonResponse(['success' => false, 'message' => 'Neplatné meno alebo heslo']);
             }
-
-            // Non-AJAX flow: redirect on success, otherwise render login view with message
             if ($logged) {
                 return $this->redirect($referer);
             }
@@ -72,8 +69,6 @@ class AuthController extends BaseController
             $message = 'Neplatné meno alebo heslo';
             return $this->html(['message' => $message]);
         }
-
-        // GET: render login view
         return $this->html();
     }
 
@@ -88,6 +83,7 @@ class AuthController extends BaseController
     public function logout(Request $request): Response
     {
         $this->app->getAuth()->logout();
-        return $this->html();
+        $redirect = $request->server('HTTP_REFERER') ?: $this->url('home.index');
+        return $this->redirect($redirect);
     }
 }

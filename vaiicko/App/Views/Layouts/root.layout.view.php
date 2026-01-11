@@ -14,6 +14,8 @@ $isAdmin = AuthView::canAddAuthor($auth);
 <html lang="sk">
 <head>
     <title><?= App\Configuration::APP_NAME ?></title>
+    <!-- Responsive viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <!-- Favicons -->
@@ -30,61 +32,49 @@ $isAdmin = AuthView::canAddAuthor($auth);
     <link rel="stylesheet" href="<?= $link->asset('css/styl.css') ?>">
 </head>
 <body>
+<div class="site-wrap d-flex flex-column min-vh-100">
 
 <header class="site-header">
-    <nav class="navbar navbar-expand-sm">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="<?= $link->url('home.index') ?>">
-                <img src="<?= $link->asset('images/vaiicko_logo.png') ?>" title="<?= App\Configuration::APP_NAME ?>" alt="Framework Logo">
+    <nav class="navbar navbar-expand-md navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="<?= $link->url('home.index') ?>">
+                <img src="<?= $link->asset('images/vaiicko_logo.png') ?>" alt="<?= App\Configuration::APP_NAME ?>" class="me-2" style="height:36px;">
+                <span class="text-white fs-5 d-none d-md-inline">DNN Knižnica</span>
             </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="<?= $link->url('author.index') ?>">Autori</a></li>
-                <li class="nav-item"><a class="nav-link" href="<?= $link->url('book.index') ?>">Knihy</a></li>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                    <li class="nav-item"><a class="nav-link" href="<?= $link->url('category.index') ?>">Kategórie</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= $link->url('genre.index') ?>">Žánre</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= $link->url('author.index') ?>">Autori</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= $link->url('book.index') ?>">Knihy</a></li>
+                </ul>
 
-            </ul>
-
-            <?php if ($auth?->isLogged()): ?>
-                <div class="d-flex align-items-center ms-auto">
-                    <?php if ($isAdmin): ?>
-                        <div class="dropdown me-3">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="adminMenu" data-bs-toggle="dropdown" aria-expanded="false">Správa</button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminMenu">
-                                <li><a class="dropdown-item" href="<?= $link->url('author.manage') ?>">Správa autorov</a></li>
-                                <li><a class="dropdown-item" href="<?= $link->url('book.manage') ?>">Správa kníh</a></li>
-                                <li><a class="dropdown-item" href="<?= $link->url('reservation.manage') ?>">Správa rezervácií</a></li>
-                                <li><a class="dropdown-item" href="<?= $link->url('admin.index') ?>">Nastavenia</a></li>
-                            </ul>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if ($isAdmin): ?>
-                        <div class="dropdown user-menu me-3">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenuAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <b class="ms-2 "><?= $displayNameEsc ?></b>
+                <div class="d-flex align-items-center">
+                    <?php if ($auth?->isLogged()): ?>
+                        <?php if ($isAdmin): ?>
+                            <!-- Bootstrap-only responsive admin button (no custom CSS required) -->
+                            <a class="btn btn-outline-light me-2 d-inline-flex align-items-center" href="<?= $link->url('reservation.manage') ?>" role="button" aria-label="Správa">
+                                <i class="bi bi-gear-fill" aria-hidden="true"></i>
+                                <span class="d-none d-sm-inline ms-1">Správa</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuAdmin">
-                                <li><a class="dropdown-item" href="<?= $link->url('auth.logout') ?>">Odhlásiť sa</a></li>
-                            </ul>
-                        </div>
-                    <?php else: ?>
-                        <div class="dropdown user-menu me-3">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <b class="ms-2"><?= $displayNameEsc ?></b>
-                            </a>
+                        <?php endif; ?>
+                        <div class="dropdown">
+                            <a class="btn btn-light dropdown-toggle" href="#" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false"><b><?= $displayNameEsc ?></b></a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
-                                <li><a class="dropdown-item" href="<?= $link->url('reservation.index') ?>">Moje rezervácie</a></li>
+                                <?php if (!$isAdmin): ?><li><a class="dropdown-item" href="<?= $link->url('reservation.index') ?>">Moje rezervácie</a></li><?php endif; ?>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="<?= $link->url('auth.logout') ?>">Odhlásiť sa</a></li>
                             </ul>
                         </div>
+                    <?php else: ?>
+                        <button id="loginToggle" class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">Prihlásiť sa</button>
                     <?php endif; ?>
                 </div>
-            <?php else: ?>
-                <div class="ms-auto">
-                    <button id="loginToggle" class="btn btn-dark " type="button" data-bs-toggle="modal" data-bs-target="#loginModal">Prihlásiť sa</button>
-                </div>
-            <?php endif; ?>
+            </div>
         </div>
     </nav>
 </header>
@@ -157,7 +147,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
   </div>
 </div>
 
-<main id="main" class="container mt-4 mb-5">
+<main id="main" class="container mt-4 mb-5 flex-fill">
     <div class="web-content">
         <?= $contentHTML ?>
     </div>
@@ -186,6 +176,8 @@ $isAdmin = AuthView::canAddAuthor($auth);
     </div>
 
 </footer>
+
+</div> <!-- .site-wrap -->
 
 
 <script>

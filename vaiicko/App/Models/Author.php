@@ -12,8 +12,8 @@ class Author extends Model
     protected ?int $id = null;
     protected ?string $first_name = null;
     protected ?string $last_name = null;
-    protected ?string $nationality = null;
     protected ?string $birth_date = null;
+    protected ?string $description = null;
     protected ?string $photo = null;
 
     public function getPhoto(): ?string
@@ -24,6 +24,16 @@ class Author extends Model
     public function setPhoto(?string $photo): void
     {
         $this->photo = $photo;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): void
+    {
+        $this->description = $description;
     }
 
     public function getId(): ?int
@@ -54,16 +64,6 @@ class Author extends Model
     public function setLastName(?string $last_name): void
     {
         $this->last_name = $last_name;
-    }
-
-    public function getNationality(): ?string
-    {
-        return $this->nationality;
-    }
-
-    public function setNationality(?string $nationality): void
-    {
-        $this->nationality = $nationality;
     }
 
     public function getBirthDate(): ?string

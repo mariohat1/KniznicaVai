@@ -184,4 +184,48 @@ abstract class BaseController
     ): string {
         return $this->app->getLinkGenerator()->url($destination, $parameters, $absolute, $appendParameters);
     }
+
+    /**
+     * Convenience accessor for the current Request instance.
+     *
+     * @return Request The current request object from the application.
+     */
+    protected function getRequest(): Request
+    {
+        return $this->app->getRequest();
+    }
+
+    /**
+     * Shortcuts to common request checks so controllers can be cleaner.
+     */
+    protected function isPost(): bool
+    {
+        return $this->getRequest()->isPost();
+    }
+
+    protected function isAjax(): bool
+    {
+        return $this->getRequest()->isAjax();
+    }
+
+    protected function wantsJson(): bool
+    {
+        return $this->getRequest()->wantsJson();
+    }
+
+    protected function value(string $key): mixed
+    {
+        return $this->getRequest()->value($key);
+    }
+
+    /**
+     * Proxy to Request::server to access server variables from controllers.
+     *
+     * @param string|null $key The server key to retrieve, or null for all.
+     * @return mixed
+     */
+    protected function server(?string $key = null): mixed
+    {
+        return $this->getRequest()->server($key);
+    }
 }

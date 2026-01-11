@@ -41,8 +41,6 @@ class UserController extends BaseController
                 $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
                 return $this->redirect($referer);
             }
-
-            // Validate email format if provided
             if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $message = 'Neplatný e-mail.';
                 if ($request->isAjax()) {

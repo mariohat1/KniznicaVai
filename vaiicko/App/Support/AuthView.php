@@ -30,8 +30,6 @@ class AuthView
             if (method_exists($user, 'getRole')) {
                 return (strtolower((string)$user->getRole()) === 'admin');
             }
-
-            // fallback: try public property 'role' if present
             if (isset($user->role)) {
                 return (strtolower((string)$user->role) === 'admin');
             }

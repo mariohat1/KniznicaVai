@@ -164,7 +164,7 @@ class ReservationController extends BaseController
         }
 
         $q = trim((string)$request->value('q'));
-        $status = $request->value('status'); // expected: 'active'|'finished'|'all' or null
+        $status = $request->value('status');
         $searchBy = $request->value('searchBy');
         $searchBy = is_string($searchBy) ? strtolower($searchBy) : '';
         // pagination

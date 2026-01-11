@@ -1,4 +1,7 @@
 <?php
+if (isset($view) && method_exists($view, 'setLayout')) {
+    $view->setLayout('admin');
+}
 /** @var \Framework\Support\LinkGenerator $link */
 /** @var \App\Models\Book|null $book */
 /** @var array $authors */

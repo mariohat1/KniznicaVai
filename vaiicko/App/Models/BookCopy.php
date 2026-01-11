@@ -13,6 +13,8 @@ class BookCopy extends Model
 
     protected ?int $id = null;
     protected ?int $book_id = null;
+    protected ?int $available = null;
+
     protected static function getTableName(): string
     {
         return 'book_copy';
@@ -36,5 +38,15 @@ class BookCopy extends Model
     public function setBookId(?int $book_id): void
     {
         $this->book_id = $book_id;
+    }
+
+    public function getAvailable(): ?int
+    {
+        return $this->available;
+    }
+
+    public function setAvailable(?int $available): void
+    {
+        $this->available = $available;
     }
 }

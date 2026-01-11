@@ -5,6 +5,10 @@
     const categoryUrl = root.dataset.categoryUrl;
     const genreUrl = root.dataset.genreUrl;
 
+    // prevent duplicate submissions
+    let creatingCategory = false;
+    let creatingGenre = false;
+
     // zobrazenie feedbacku podla spravy
     function showFeedback(el, msg, ok) {
         if (!el) return;
@@ -13,31 +17,23 @@
         el.textContent = msg;
     }
 
+
     async function postJson(url, payload) {
         try {
-            const res = await fetch(url, {
+            const response = await fetch(url, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'include', // important for session auth (admin)
                 body: JSON.stringify(payload)
             });
-
-            const contentType = res.headers.get('content-type') || '';
-            let data = null;
-            let text = null;
-            if (contentType.includes('application/json')) {
-                try {
-                    data = await res.json();
-                } catch (e) {
-                    text = await res.text().catch(() => null);
-                }
-            } else {
-                text = await res.text().catch(() => null);
-            }
-
-            return {status: res.status, ok: res.ok, data, text};
-        } catch (e) {
-            return {status: 0, ok: false, data: null, text: e.message || String(e)};
+            const data = await response.json()
+            return {status: response.status, ok: response.ok, data};
+        } catch (err) {
+            return {status: 0, ok: false, data: null, error: err.message || String(err)};
         }
     }
 
@@ -59,6 +55,7 @@
     toggleContainer('showGenreAdd', 'genreAddContainer', 'new_genre_name');
 
     async function handleCreateCategory() {
+        if (creatingCategory) return; // guard against double calls
         const nameInput = document.getElementById('new_category_name');
         const fb = document.getElementById('categoryFeedback');
         const btn = document.getElementById('createCategoryBtn');
@@ -69,11 +66,13 @@
             showFeedback(fb, 'Zadaj názov kategórie', false);
             return;
         }
+
+        creatingCategory = true;
         btn.disabled = true;
         try {
             const res = await postJson(categoryUrl, {name});
             console.log('create category response', res);
-            if (res.ok && res.status === 201 && res.data && res.data.id) {
+            if (res.ok) {
                 const categorySelect = document.getElementById('category_id');
                 const newOption = document.createElement('option');
                 newOption.value = res.data.id;
@@ -83,18 +82,20 @@
                 nameInput.value = '';
                 showFeedback(fb, 'Kategória pridaná', true);
             } else {
-                const msg = (res.data && (res.data.error || res.data.message)) || res.text || ('Server error: ' + res.status);
+                const msg = (res.data && (res.data.error || res.data.message)) || (res.error || 'Server error');
                 showFeedback(fb, msg, false);
             }
         } catch (e) {
             console.error('handleCreateCategory error', e);
-            showFeedback(fb, 'Chyba spojenia: ' + (e.message || e), false);
+            showFeedback(fb, 'Chyba spojenia', false);
         } finally {
+            creatingCategory = false;
             btn.disabled = false;
         }
     }
 
     async function handleCreateGenre() {
+        if (creatingGenre) return; // guard
         const nameInput = document.getElementById('new_genre_name');
         const feedBack = document.getElementById('genreFeedback');
         const button = document.getElementById('createGenreBtn');
@@ -105,29 +106,30 @@
             showFeedback(feedBack, 'Zadaj názov žánru', false);
             return;
         }
+
+        creatingGenre = true;
         button.disabled = true;
         try {
-            const resposnse = await postJson(genreUrl, {name});
-            console.log('create genre response', resposnse);
-            if (resposnse.ok && resposnse.status === 201 && resposnse.data && resposnse.data.id) {
-                //select form
+            const response = await postJson(genreUrl, {name});
+            console.log('create genre response', response);
+            if (response.ok) {
                 const genreSelect = document.getElementById('genre_id');
-                // nova option
                 const newOption = document.createElement('option');
-                newOption.value = resposnse.data.id;
-                newOption.textContent = resposnse.data.name;
+                newOption.value = response.data.id;
+                newOption.textContent = response.data.name;
                 genreSelect.appendChild(newOption);
-                genreSelect.value = resposnse.data.id;
+                genreSelect.value = response.data.id;
                 nameInput.value = '';
                 showFeedback(feedBack, 'Žáner pridaný', true);
             } else {
-                const msg = (resposnse.data && (resposnse.data.error || resposnse.data.message)) || resposnse.text || ('Server error: ' + resposnse.status);
+                const msg = (response.data && (response.data.error || response.data.message)) || (response.error || 'Server error');
                 showFeedback(feedBack, msg, false);
             }
         } catch (e) {
             console.error('handleCreateGenre error', e);
-            showFeedback(feedBack, 'Chyba spojenia: ' + (e.message || e), false);
+            showFeedback(feedBack, 'Chyba spojenia', false);
         } finally {
+            creatingGenre = false;
             button.disabled = false;
         }
     }
@@ -137,18 +139,6 @@
 
     const genBtn = document.getElementById('createGenreBtn');
     if (genBtn) genBtn.addEventListener('click', handleCreateGenre);
-
-    // Delegation fallback
-    document.addEventListener('click', function (e) {
-        const eventTarget = e.target;
-        if (!eventTarget) return;
-        if (eventTarget.matches && eventTarget.matches('#createCategoryBtn')) {
-            handleCreateCategory();
-        }
-        if (eventTarget.matches && eventTarget.matches('#createGenreBtn')) {
-            handleCreateGenre();
-        }
-    });
 
     (function attachBookFormHandler() {
         try {
@@ -172,10 +162,14 @@
                         method: 'POST',
                         body: fd,
                         credentials: 'include',
-                        headers: {'X-Requested-With': 'XMLHttpRequest'}
+                        headers: {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}
                     });
 
-                    let data = await resp.json();
+                    const contentType = resp.headers.get('content-type') || '';
+                    let data = null;
+                    if (contentType.includes('application/json')) {
+                        data = await resp.json().catch(() => null);
+                    }
 
                     if (data) {
                         if (!data.success) {
@@ -188,7 +182,7 @@
                     } else {
                         feedbackEl.style.display = 'block';
                         feedbackEl.className = 'ajax-error alert alert-danger mt-2';
-                        feedbackEl.textContent = text || ('Server error: ' + resp.status);
+                        feedbackEl.textContent = 'Server error: ' + resp.status;
                     }
                 } catch (err) {
                     console.error('Book save failed', err);

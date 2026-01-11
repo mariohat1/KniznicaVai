@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     loginForm.addEventListener('submit', async function (event) {
-        event.preventDefault(); // prevent default form submission
+        event.preventDefault();
         var url = loginForm.action || window.location.href;
         var formData = new FormData(loginForm);
         try {
@@ -132,8 +132,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     window.location.href = json.redirect || window.location.href;
                     return;
                 }
-
-                // show server message or generic
                 showRegisterError((json && json.message) ? json.message : 'Registrácia zlyhala.');
 
             } catch (err) {

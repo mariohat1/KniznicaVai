@@ -3,48 +3,100 @@
 namespace App\Auth;
 
 use App\Models\User;
-use Framework\Auth\DummyAuthenticator;
 use Framework\Core\App;
-use Framework\DB\Connection;
+use Framework\Core\IAuthenticator;
+use Framework\Core\IIdentity;
 use Framework\Http\Session;
-use PDO;
 
-class Authenticator extends DummyAuthenticator
+class Authenticator implements IAuthenticator
 {
 
     private Session $session;
+    private ?IIdentity $user = null;
 
     public function __construct(App $app)
     {
-        parent::__construct($app);
         $this->session = $app->getSession();
     }
 
+    /**
+     * @throws \Exception
+     */
     public function login(string $username, string $password): bool
     {
-        $sql = 'SELECT * FROM `users` WHERE `username` = :username LIMIT 1';
-        $stmt = Connection::getInstance()->prepare($sql);
-        $stmt->execute(['username' => $username]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $username = trim($username);
+        if ($username === '') return false;
 
-        if (!$row) return false;
-
-        if (empty($row['password']) || !password_verify($password, $row['password'])) {
+        try {
+            $users = User::getAll('username = ?', [$username], null, 1, 0);
+        } catch (\Throwable $ex) {
             return false;
         }
 
-        $displayName = trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
-        if ($displayName === '') {
-            $displayName = $row['username'] ?? $username;
+        $userRow = $users[0] ?? null;
+        if ($userRow === null) return false;
+
+        $storedHash = $userRow->getPassword();
+        if (empty($storedHash) || !password_verify($password, $storedHash)) {
+            return false;
+        }
+        $this->user = $userRow;
+        if ($userRow->getId() !== null) {
+            $this->session->set('user_id', $userRow->getId());
+            $this->session->remove('user');
+        }
+        return true;
+    }
+
+    public function logout(): void
+    {
+        $this->user = null;
+        $this->session->destroy();
+    }
+
+    public function isLogged(): bool
+    {
+        return $this->getUser() instanceof IIdentity;
+    }
+
+    public function getUser(): ?IIdentity
+    {
+        if ($this->user instanceof IIdentity) {
+            return $this->user;
         }
 
-        $user = new User();
-        $user->setId((int)$row['id']);
-        $user->setUsername($row['username']);
-        $user->setEmail($row['email'] ?? null);
-        $user->setRole($row['role'] ?? null);
+        $sessionValue = $this->session->get('user');
+        if (is_string($sessionValue) && $sessionValue !== '') {
+            $u = new User();
+            $u->setUsername($sessionValue);
+            $this->user = $u;
+            $this->session->set('user', $this->user);
+            return $this->user;
+        }
 
-        $this->session->set('user', $user);
-        return true;
+        if ($sessionValue instanceof User) {
+            $this->user = $sessionValue;
+            return $this->user;
+        }
+
+        $uid = $this->session->get('user_id');
+        if ($uid !== null) {
+            $u = User::getOne((int)$uid);
+            if ($u !== null) {
+                $this->user = $u;
+                return $this->user;
+
+            }
+        }
+        return null;
+    }
+
+
+    public function __get(string $name): mixed
+    {
+        if ($name === 'user') {
+            return $this->getUser();
+        }
+        return null;
     }
 }

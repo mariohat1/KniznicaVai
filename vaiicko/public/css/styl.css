@@ -1,73 +1,57 @@
-/*ciara*/
-.navbar {
-    border-bottom: 1px solid grey;
-}
-
-.web-content {
-    min-height: 40vh;
-}
-
-.site-footer {
-    background-color: #2b2b2b;
-    color: #d9d9d9;
-    padding: 40px 20px 40px;
-}
-.site-footer h5 {
-    color: #ffffff;
-    font-size: 0.95rem;
-    margin-bottom: 14px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-/*jemnejsie pismo*/
-.site-footer p,
-.site-footer li {
-    color: #cfcfcf;
-    opacity: 80%;
-}
-.site-footer .opening-hours li {
-    line-height: 1.5;
-}
-
+/* ===========================
+   BASE LAYOUT & FLEX
+=========================== */
 html, body {
     height: 100%;
     margin: 0;
 }
-body {
+
+.site-wrap {
     display: flex;
     flex-direction: column;
+    min-height: 100vh; /* ensures footer sticks to bottom */
 }
-main {
-    flex: 1;
+
+main.flex-fill {
+    flex: 1 1 auto; /* main expands to take available space */
 }
 
 .site-footer {
-    clear: both;
-    position: relative;
+    flex-shrink: 0; /* prevent shrinking */
+    background-color: #2b2b2b;
+    color: #d9d9d9;
+    padding: 40px 20px;
 }
 
+/* Prevent any layout-transition flicker */
+.web-content, .site-footer {
+    transition: none !important;
+}
+
+/* ===========================
+   HEADER / NAVBAR
+=========================== */
 .site-header {
     background-color: #6fbf86;
 }
+
 .site-header .navbar {
     background: transparent;
+    border-bottom: 1px solid grey;
     padding-top: 10px;
     padding-bottom: 10px;
 }
+
 .site-header .container-fluid {
-    position: relative; /* allow absolute centering of brand without covering nav */
+    position: relative;
     display: flex;
-    justify-content: space-between; /* left nav, centered brand (absolute), right user/menu */
+    justify-content: space-between;
     align-items: center;
     height: 64px;
     padding-left: 0.5rem;
     padding-right: 0.5rem;
 }
-/*obrazok*/
-.site-header .navbar-brand img {
-    display: inline-block;
-    width: 50px;
-}
+
 .site-header .navbar-brand {
     position: static;
     padding: 4px 8px;
@@ -75,15 +59,19 @@ main {
     align-items: center;
 }
 
+.site-header .navbar-brand img {
+    display: inline-block;
+    width: 50px;
+    height: auto;
+}
 
 .site-header .navbar-nav {
     gap: 12px;
 }
+
 .site-header .nav-link {
-    color: #ffffff ;
+    color: #ffffff;
 }
-
-
 
 @media (hover: hover) {
     .site-header .user-menu .dropdown-menu.show {
@@ -91,83 +79,144 @@ main {
     }
 }
 
-
-
-.card-book {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-  border-radius: 8px;
-  background: #fff;
-  padding: 1rem;
-  margin-bottom: 1rem;
+/* ===========================
+   FOOTER STYLING
+=========================== */
+.site-footer h5 {
+    color: #ffffff;
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
 
+.site-footer p,
+.site-footer li {
+    color: #cfcfcf;
+    opacity: 0.8;
+}
 
-/*kniha isbn*/
+.site-footer .opening-hours li {
+    line-height: 1.5;
+}
+
+/* ===========================
+   BOOK LIST / CARDS
+=========================== */
+
 .meta-label {
-  color: #6b7280;
-  font-size: 0.95em;
-  font-weight: 600;
+    color: #6b7280;
+    font-size: 0.95em;
+    font-weight: 600;
 }
 
 .section-title {
-  font-family: Georgia, serif;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #234;
-  margin-bottom: 0.5em;
+    font-family: Georgia, serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #234;
+    margin-bottom: 0.5em;
 }
 
 .author-link {
-  color: black;
-  font-weight: 600;
-  text-decoration: none;
-}.author-link:hover {
-  text-decoration: underline;
+    color: black;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.author-link:hover {
+    text-decoration: underline;
 }
 
 .book-title {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #0d3b66;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #0d3b66;
 }
 
 .muted-small {
-  color: #888;
-  font-size: 0.85em;
+    color: #888;
+    font-size: 0.85em;
 }
 
+/* ===========================
+   BUTTONS / HIGHLIGHT
+=========================== */
 .btn-outline-contrast {
-  background: transparent;
-  color: #6fbf86;
-  border: 2px solid #6fbf86;
-  border-radius: 6px;
-  font-weight: 600;
-  padding: 0.4rem 1rem;
-  transition: background 0.2s, color 0.2s;
+    background: transparent;
+    color: #6fbf86;
+    border: 2px solid #6fbf86;
+    border-radius: 6px;
+    font-weight: 600;
+    padding: 0.4rem 1rem;
+    transition: background 0.2s, color 0.2s;
 }
+
 .btn-outline-contrast:hover {
-  background: #6fbf86;
+    background: #6fbf86;
+    color: #fff;
 }
 
 .list-item-hover:hover {
-  background: #e6f9ed;
-  transition: background 0.15s;
+    background: #e6f9ed;
+    transition: background 0.15s;
 }
 
 .highlight-reservation {
-  background: #fffbe6;
-  border-left: 4px solid #ffd166;
-  padding: 0.5rem 1rem;
+    background: #fffbe6;
+    border-left: 4px solid #ffd166;
+    padding: 0.5rem 1rem;
 }
 
 .category-label {
-  background: #e6f9ed;
-  color: #1a7f37;
-  font-size: 0.95em;
-  border-radius: 4px;
-  padding: 0.2em 0.6em;
-  margin-right: 0.5em;
-  display: inline-block;
+    background: #e6f9ed;
+    color: #1a7f37;
+    font-size: 0.95em;
+    border-radius: 4px;
+    padding: 0.2em 0.6em;
+    margin-right: 0.5em;
+    display: inline-block;
 }
+
+/* ===========================
+   IMAGE STABILITY
+=========================== */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Stabilize book cover images and prevent layout shift */
+.card-book img, .book-cover, .card-book .cover img {
+    /* Reserve aspect ratio to avoid layout jumps when image loads */
+    aspect-ratio: 3 / 4;
+    width: 100%; /* adapt to container width */
+    max-width: 160px; /* reasonable cap for covers inside cards */
+    height: auto;
+    object-fit: cover; /* crop if needed without changing layout */
+    display: block;
+    min-height: 120px;
+}
+
+/* ===========================
+   MEDIA QUERIES / RESPONSIVE
+=========================== */
+@media (max-width: 768px) {
+    .site-header .navbar-nav {
+        gap: 6px;
+    }
+    .site-header .navbar-brand img {
+        width: 40px;
+    }
+}
+
+/* ==========================
+   AUTHOR CARD / AVAILABILITY
+   ========================== */
+
+
+
+
 
 

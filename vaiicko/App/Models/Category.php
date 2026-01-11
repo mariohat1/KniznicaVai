@@ -11,6 +11,8 @@ class Category extends Model
 {
     protected ?int $id = null;
     protected ?string $name = null;
+    // optional descriptive text for the category
+    protected ?string $description = null;
 
     public function getId(): ?int
     {
@@ -20,6 +22,16 @@ class Category extends Model
     public function getName(): ?string
     {
         return $this->name;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): void
+    {
+        $this->description = $description;
     }
 
     public function setId(?int $id): void

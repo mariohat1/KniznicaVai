@@ -5,71 +5,140 @@ namespace App\Controllers;
 use App\Models\Category;
 use Framework\Core\BaseController;
 use Framework\Http\Request;
-use Framework\Http\Responses\JsonResponse;
 use Framework\Http\Responses\Response;
+use Framework\Http\Responses\JsonResponse;
+use App\Support\Validator;
 
 class CategoryController extends BaseController
 {
     public function authorize(Request $request, string $action): bool
     {
-        $auth = $this->app->getAuth();
-        if (!$auth || !$auth->isLogged()) {
+        if ($action === 'index') {
+            return true;
+        }
+        if ($action === 'manage') {
+            $auth = $this->app->getAuth();
+            if (!$auth || !$auth->isLogged()) return false;
+            $user = $auth->getUser();
+            if (is_object($user) && ($user instanceof \App\Models\User) && method_exists($user, 'getRole')) {
+                return (strtolower((string)$user->getRole()) === 'admin');
+            }
             return false;
         }
+        $auth = $this->app->getAuth();
+        if (!$auth->isLogged()) {
+            return false;
+        }
+
         $user = $auth->getUser();
-        if (is_object($user) && method_exists($user, 'getRole')) {
+        if (is_object($user) && ($user instanceof \App\Models\User) && method_exists($user, 'getRole')) {
             return (strtolower((string)$user->getRole()) === 'admin');
         }
-        $vars = is_object($user) ? get_object_vars($user) : [];
-        return (isset($vars['role']) && strtolower((string)$vars['role']) === 'admin');
+
+        return false;
+    }
+
+    public function index(Request $request): Response
+    {
+        $categories = Category::getAll();
+        return $this->html(['categories' => $categories], 'index');
+    }
+
+    public function manage(Request $request): Response
+    {
+        // Read optional search query
+        $q = trim((string)$request->value('q'));
+
+        $whereParts = [];
+        $whereParams = [];
+        if ($q !== '') {
+            $whereParts[] = 'name LIKE ?';
+            $whereParams[] = '%' . $q . '%';
+        }
+        $where = !empty($whereParts) ? implode(' AND ', $whereParts) : null;
+
+        // Pagination
+        $page = max(1, (int)($request->value('page') ?? 1));
+        $perPage = 10;
+
+        $total = Category::getCount($where, $whereParams);
+        $pages = ($perPage > 0) ? (int)ceil($total / $perPage) : 1;
+        if ($pages < 1) $pages = 1;
+        if ($page > $pages) $page = $pages;
+        $offset = ($page - 1) * $perPage;
+
+        $categories = Category::getAll($where, $whereParams, 'name ASC', $perPage, $offset);
+
+        return $this->html([
+            'categories' => $categories,
+            'filters' => ['q' => $q, 'page' => $page],
+            'pagination' => ['page' => $page, 'pages' => $pages, 'perPage' => $perPage, 'total' => $total]
+        ], 'manage');
+    }
+
+    public function add(Request $request): Response
+    {
+        $id = $request->value('id');
+        if (!empty($id)) {
+            $category = Category::getOne((int)$id);
+            return $this->html(['category' => $category]);
+        }
+        return $this->html();
     }
 
     /**
-     * Create a new category. AJAX-first JSON responses.
+     * @throws \Exception
      */
     public function store(Request $request): Response
     {
-        // Only accept POST
-        if (!$request->isPost()) {
-            return (new JsonResponse(['error' => 'Method not allowed']))->setStatusCode(405);
-        }
-        $data = null;
+
         if ($request->isJson()) {
             try {
                 $data = $request->json();
             } catch (\JsonException $e) {
-                $data = null;
+                return new JsonResponse(['error' => 'Neplatný JSON'], 400);
             }
-        } else {
-            $data = $request->post();
         }
+        $name = $data->name ?? $request->value('name');
+        $description = $request->value('description') ?? null;
+        $errors = [];
+        if ($err = Validator::validateShortName($name, 'name')) $errors['name'] = $err;
+        if ($err = Validator::validateDescription($description, 2000, 'description')) $errors['description'] = $err;
 
-        $name = null;
-        if (is_array($data)) {
-            $name = trim((string)($data['name'] ?? ''));
-        } elseif (is_object($data)) {
-            $name = trim((string)($data->name ?? ''));
-        }
-
-        if ($name === '') {
-            return (new JsonResponse(['error' => 'Missing name']))->setStatusCode(400);
+        if (!empty($errors)) {
+            if ($request->isAjax()) {
+                return new JsonResponse(['success' => false, 'errors' => $errors]);
+            }
+            $referer = $request->server('HTTP_REFERER') ?: $this->url('category.manage');
+            return $this->redirect($referer);
         }
         $category = new Category();
+        $id = $request->value('id');
+        if (!empty($id)) {
+            $loaded = Category::getOne($id);
+            if ($loaded !== null) $category = $loaded;
+        }
         $category->setName($name);
+        $category->setDescription($description);
         $category->save();
+        if ($request->isAjax()) {
+            return $this->json(['success' => true, 'id' => $category->getId(), 'name' => $category->getName()]);
+        };
 
-        $id = $category->getId();
-        $label = $category->getName();
-
-        return (new JsonResponse(['id' => $id, 'name' => $label]))->setStatusCode(201);
+        return $this->redirect($this->url('category.manage'));
     }
 
+
     /**
-     * Return list of categories as JSON (no view required).
+     * @throws \Exception
      */
-    public function index(Request $request): Response
+    public function delete(Request $request): Response
     {
-        $cats = Category::getAll();
-        return $this->json($cats);
+        $id = $request->value('id');
+        if (!empty($id)) {
+            $category = Category::getOne($id);
+            $category?->delete();
+        }
+        return $this->redirect($this->url('category.manage'));
     }
 }
