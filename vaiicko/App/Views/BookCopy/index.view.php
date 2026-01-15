@@ -14,6 +14,17 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         <a class="btn btn-outline-secondary" href="<?= $link->url('book.manage') ?>">Späť na správu kníh</a>
     </div>
 
+    <!-- Add copies form -->
+    <div class="mb-3">
+        <form method="post" action="<?= $link->url('bookcopy.updateCopies') ?>" class="d-inline-block">
+            <input type="hidden" name="id" value="<?= htmlspecialchars((string)$book->getId()) ?>">
+            <div class="input-group" style="max-width:220px;">
+                <input type="number" name="copies" min="1" class="form-control form-control-sm" value="1" aria-label="Pridať kópie">
+                <button class="btn btn-sm btn-success" type="submit">Pridať kópie</button>
+            </div>
+        </form>
+    </div>
+
     <?php if (empty($copies)): ?>
         <p>Žiadne kópie.</p>
     <?php else: ?>
@@ -45,6 +56,11 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                                     <input type="hidden" name="book_id" value="<?= htmlspecialchars((string)$book->getId()) ?>">
                                     <input type="hidden" name="available" value="<?= $avail ? '0' : '1' ?>">
                                     <button class="btn btn-sm <?= $avail ? 'btn-outline-warning' : 'btn-outline-success' ?>" type="submit"><?php echo $avail ? 'Označiť nedostupné' : 'Označiť dostupné'; ?></button>
+                                </form>
+                                <form method="post" action="<?= $link->url('bookcopy.delete') ?>" class="d-inline-block">
+                                    <input type="hidden" name="copy_id" value="<?= htmlspecialchars((string)$id) ?>">
+                                    <input type="hidden" name="book_id" value="<?= htmlspecialchars((string)$book->getId()) ?>">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Zmazať túto kópiu?')">Zmazať kópiu</button>
                                 </form>
                             </td>
                         </tr>

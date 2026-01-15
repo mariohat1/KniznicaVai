@@ -11,7 +11,7 @@ class Book extends Model
 {
     protected ?int $id = null;
     protected ?string $isbn = null;
-    protected ?string $year_published = null;
+    protected ?int $year_published = null;
     protected ?string $description = null;
     protected ?string $title = null;
     protected ?int $author_id = null;
@@ -49,12 +49,12 @@ class Book extends Model
         $this->isbn = $isbn;
     }
 
-    public function getYearPublished(): ?string
+    public function getYearPublished(): ?int
     {
         return $this->year_published;
     }
 
-    public function setYearPublished(?string $year_published): void
+    public function setYearPublished(?int $year_published): void
     {
         $this->year_published = $year_published;
     }

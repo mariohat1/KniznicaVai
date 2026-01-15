@@ -32,7 +32,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
             </div>
             <div class="col-md-6">
                 <label for="year_published" class="form-label">Rok vydania</label>
-                <input id="year_published" name="year_published" type="date" class="form-control" required value="<?= htmlspecialchars(isset($book) ? ($book->getYearPublished() ?? '') : '') ?>">
+                <input id="year_published" name="year_published" type="number" class="form-control" required min="1000" max="<?= date('Y') ?>" step="1" value="<?= htmlspecialchars(isset($book) ? ($book->getYearPublished() ?? '') : '') ?>">
             </div>
         </div>
 
@@ -58,12 +58,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                             <option value="<?= htmlspecialchars($cid) ?>" <?= $selected ?>><?= htmlspecialchars($c->getName()) ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <button type="button" class="btn btn-outline-success" id="showCategoryAdd">Nová</button>
-                </div>
-                <div id="categoryAddContainer" style="display:none; margin-top:0.5em;">
-                    <input type="text" id="new_category_name" class="form-control form-control-sm mb-1" placeholder="Názov novej kategórie">
-                    <button type="button" id="createCategoryBtn" class="btn btn-sm btn-success">Pridať</button>
-                    <div id="categoryFeedback" class="form-text text-danger" style="display:none;"></div>
+                    <button type="button" class="btn btn-outline-success" id="showCategoryAdd" data-bs-toggle="modal" data-bs-target="#categoryModal">Nová</button>
                 </div>
             </div>
             <div class="col-md-6">
@@ -76,12 +71,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                             <option value="<?= htmlspecialchars($gid) ?>" <?= $selected ?>><?= htmlspecialchars($g->getName()) ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <button type="button" class="btn btn-outline-success" id="showGenreAdd">Nový</button>
-                </div>
-                <div id="genreAddContainer" style="display:none; margin-top:0.5em;">
-                    <input type="text" id="new_genre_name" class="form-control form-control-sm mb-1" placeholder="Názov nového žánru">
-                    <button type="button" id="createGenreBtn" class="btn btn-sm btn-success">Pridať</button>
-                    <div id="genreFeedback" class="form-text text-danger" style="display:none;"></div>
+                    <button type="button" class="btn btn-outline-success" id="showGenreAdd" data-bs-toggle="modal" data-bs-target="#genreModal">Nový</button>
                 </div>
             </div>
         </div>
@@ -107,6 +97,64 @@ if (isset($view) && method_exists($view, 'setLayout')) {
             <a href="<?= $link->url('book.manage') ?>" class="btn btn-link">Zrušiť</a>
         </div>
     </form>
+    </div>
+
+    <!-- Category Modal -->
+    <div id="categoryModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nová kategória</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="categoryModalForm" action="<?= $link->url('category.store') ?>" method="post" novalidate>
+                    <div class="modal-body">
+                        <div id="categoryFeedback"></div>
+                        <div class="mb-3">
+                            <label for="new_category_name" class="form-label">Názov</label>
+                            <input type="text" id="new_category_name" name="name" class="form-control" placeholder="Názov kategórie" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_category_description" class="form-label">Popis</label>
+                            <textarea id="new_category_description" name="description" class="form-control" rows="3" placeholder="Popis kategórie"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušiť</button>
+                        <button type="submit" class="btn btn-primary">Uložiť</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Genre Modal -->
+    <div id="genreModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nový žáner</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="genreModalForm" action="<?= $link->url('genre.store') ?>" method="post" novalidate>
+                    <div class="modal-body">
+                        <div id="genreFeedback"></div>
+                        <div class="mb-3">
+                            <label for="new_genre_name" class="form-label">Názov</label>
+                            <input type="text" id="new_genre_name" name="name" class="form-control" placeholder="Názov žánru" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_genre_description" class="form-label">Popis</label>
+                            <textarea id="new_genre_description" name="description" class="form-control" rows="3" placeholder="Popis žánru"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušiť</button>
+                        <button type="submit" class="btn btn-primary">Uložiť</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -152,5 +200,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
             }
         })();
     </script>
+    <script src="<?= $link->asset('js/modalCategory.js') ?>"></script>
+    <script src="<?= $link->asset('js/modalGenre.js') ?>"></script>
     <script src="<?= $link->asset('js/bookAdd.js') ?>"></script>
 </div>

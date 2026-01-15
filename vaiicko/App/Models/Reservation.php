@@ -9,8 +9,6 @@ use Framework\Core\Model;
  */
 class Reservation extends Model
 {
-    // explicit table name (DB has singular 'reservation')
-    protected static ?string $tableName = 'reservation';
 
 
     protected ?int $id = null;
@@ -31,6 +29,7 @@ class Reservation extends Model
 
     protected ?int $book_copy_id = null;
     protected ?string $created_at = null;
+    protected ?string $reserved_until = null;
 
     public function getId(): ?int
     {
@@ -82,6 +81,15 @@ class Reservation extends Model
         $this->created_at = $created_at;
     }
 
+    public function getReservedUntil(): ?string
+    {
+        return $this->reserved_until;
+    }
+
+    public function setReservedUntil(?string $reserved_until): void
+    {
+        $this->reserved_until = $reserved_until;
+    }
+
 
 }
-

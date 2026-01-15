@@ -22,7 +22,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                     <th class="d-none d-sm-table-cell">ID</th>
                     <th>Meno</th>
                     <th>Priezvisko</th>
-                    <th class="d-none d-md-table-cell">Dátum narodenia</th>
+                    <th class="d-none d-md-table-cell">Rok narodenia</th>
                     <th>Akcie</th>
                 </tr>
             </thead>
@@ -32,7 +32,8 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                         <td class="d-none d-sm-table-cell"><?= htmlspecialchars((string)$a->getId()) ?></td>
                         <td><?= htmlspecialchars($a->getFirstName()) ?></td>
                         <td><?= htmlspecialchars($a->getLastName()) ?></td>
-                        <td class="d-none d-md-table-cell"><?= htmlspecialchars($a->getBirthDate()) ?></td>
+                        <?php $by = $a->getBirthYear(); ?>
+                        <td class="d-none d-md-table-cell"><?= htmlspecialchars($by ?: 'Neznáme') ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
                                 <a class="btn btn-sm btn-outline-primary" href="<?= $link->url('author.index') ?>">Zobraziť</a>

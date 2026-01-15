@@ -39,10 +39,9 @@
                             </h4>
 
                             <p class="mb-1 text-muted"><small>
-                                <?php if (method_exists($a, 'getBirthDate') && $a->getBirthDate()): ?>
-                                    <strong>Dátum narodenia:</strong> <?= htmlspecialchars((string)$a->getBirthDate()) ?>
-                                <?php endif; ?>
-                            </small></p>
+                                <?php $by = $a->getBirthYear(); ?>
+                                    <strong>Rok narodenia:</strong> <?= htmlspecialchars($by ?: 'Neznáme') ?>
+                             </small></p>
 
                             <?php // no description field on author model; show placeholder or nothing ?>
                             <p class="mb-2 text-secondary">&nbsp;</p>

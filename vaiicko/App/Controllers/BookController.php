@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Genre;
 use App\Models\Reservation;
 use App\Support\AuthView;
+use App\Support\Validator;
 use Framework\Core\BaseController;
 use Framework\Http\Request;
 use Framework\Http\Responses\Response;
@@ -105,10 +106,10 @@ class BookController extends BaseController
             $authorName = '';
             $categoryName = $categoriesMap[$book->getCategoryId()] ?? '';
             $genreName = $genresMap[$book->getGenreId()] ?? '';
-                $author = $book->getOneRelated(Author::class);
-                if ($author !== null) {
-                    $authorName = trim(($author->getFirstName() ?? '') . ' ' . ($author->getLastName() ?? ''));
-                }
+            $author = $book->getOneRelated(Author::class);
+            if ($author !== null) {
+                $authorName = trim(($author->getFirstName() ?? '') . ' ' . ($author->getLastName() ?? ''));
+            }
 
             $bookMeta[$id] = [
                 'author' => $authorName,
@@ -211,7 +212,7 @@ class BookController extends BaseController
     /**
      * @throws \Exception
      */
-    public    function add(Request $request): Response
+    public function add(Request $request): Response
     {
         // If an id is provided, load the book so the add view can be reused for editing
         $id = $request->value('id');
@@ -235,7 +236,7 @@ class BookController extends BaseController
      */
 
 
-    public    function store(Request $request): Response
+    public function store(Request $request): Response
     {
         if (!$request->isPost()) {
             if ($request->isAjax()) {
@@ -243,14 +244,48 @@ class BookController extends BaseController
             }
             return $this->redirect($this->url('book.add'));
         }
+        $errors = [];
+        $isbn = $request->value('isbn');
+        $year = $request->value('year');
+        $description = $request->value('description');
+        $authorId = (int)trim(($request->value('author_id') ?? ''));
+        $categoryId = (int)trim(($request->value('category_id') ?? ''));
+        $genreId = (int)trim(($request->value('genre_id') ?? ''));
+
+        if ($err = Validator::validateAuthorId($authorId)) {
+            $errors[] = $err;
+        }
+        if ($err = Validator::validateCategoryId($categoryId)) {
+            $errors[] = $err;
+        }
+        if ($err = Validator::validateGenreId($genreId)) {
+            $errors[] = $err;
+        }
+        if ($err = Validator::validateIsbn($isbn)) {
+            $errors[] = $err;
+        }
+        if ($err = Validator::validateYear($year, 'year_published')) {
+            $errors[] = $err;
+        }
+        if ($err = Validator::validateDescription($description)) {
+            $errors[] = $err;
+        }
+
+        if (!empty($errors)) {
+            if ($request->isAjax()) {
+                return (new JsonResponse(['success' => false, 'errors' => $errors]))->setStatusCode(400);
+            }
+        }
 
         $book = $this->loadOrCreateBook($request);
+        $book->setIsbn(trim((string)$isbn));
+        if ($err = $this->checkISBNUniqueness($book)) {
+            if ($request->isAjax()) {
+                return (new JsonResponse(['success' => false, 'message' => $err]))->setStatusCode(400);
+            }
+        }
         $book->setFromRequest($request);
         $this->applyPhotoPath($request, $book);
-        $isbnValidationResponse = $this->validateIsbnAndUniqueness($book, $request);
-        if ($isbnValidationResponse instanceof Response) {
-            return $isbnValidationResponse;
-        }
         $book->save();
 
         if ($request->isAjax()) {
@@ -263,7 +298,7 @@ class BookController extends BaseController
     /**
      * Load an existing Book if id provided in request, otherwise return a new Book instance.
      */
-    private     function loadOrCreateBook(Request $request): Book
+    private function loadOrCreateBook(Request $request): Book
     {
         $id = $request->value('id');
         $book = null;
@@ -278,15 +313,6 @@ class BookController extends BaseController
         }
         return $book;
     }
-
-    /**
-     * Set book properties from request body (JSON) or form POST.
-     */
-    private function setBookDataFromRequest(Request $request, Book $book): void
-    {
-        $book->setFromRequest($request);
-    }
-
     /**
      * Apply photo_path value from request to the Book if available.
      */
@@ -304,64 +330,20 @@ class BookController extends BaseController
     }
 
     /**
-     * Validate ISBN format and uniqueness. Returns null when OK or a Response instance to return immediately.
+     * Check ISBN uniqueness. Returns an error message string when not unique, or null when OK.
      */
-    private
-    function validateIsbnAndUniqueness(Book $book, Request $request): ?Response
+    private function checkISBNUniqueness(Book $book): ?string
     {
         $isbn = $book->getIsbn();
-        if (empty($isbn)) {
-            return null;
-        }
-
-        $normalized = preg_replace('/[^0-9Xx]/', '', (string)$isbn);
-
-        $isValidIsbn = false;
-        if (strlen($normalized) === 13 && ctype_digit($normalized)) {
-            $sum = 0;
-            for ($i = 0; $i < 13; $i++) {
-                $digit = (int)$normalized[$i];
-                $sum += ($i % 2 === 0) ? $digit : $digit * 3;
-            }
-            $isValidIsbn = ($sum % 10) === 0;
-        } elseif (strlen($normalized) === 10) {
-            $sum = 0;
-            for ($i = 0; $i < 9; $i++) {
-                if (!isset($normalized[$i]) || !ctype_digit($normalized[$i])) {
-                    $sum = null;
-                    break;
-                }
-                $sum += (10 - $i) * (int)$normalized[$i];
-            }
-            if ($sum !== null) {
-                $check = $normalized[9];
-                $checkVal = ($check === 'X' || $check === 'x') ? 10 : (ctype_digit($check) ? (int)$check : -1);
-                if ($checkVal >= 0) {
-                    $sum += 1 * $checkVal;
-                    $isValidIsbn = ($sum % 11) === 0;
-                }
-            }
-        }
-
-        if (!$isValidIsbn) {
-            if ($request->isAjax()) {
-                return (new JsonResponse(['success' => false, 'message' => 'Neplatné ISBN']))->setStatusCode(400);
-            }
-            return $this->redirect($this->url('book.add'));
-        }
-        $normalizedIsbn = trim(strtolower($isbn));
-        $where = 'TRIM(LOWER(isbn)) = ?';
-        $params = [$normalizedIsbn];
+        $where = 'isbn = ?';
+        $params = [$isbn];
         if ($book->getId() !== null) {
             $where .= ' AND `id` <> ?';
             $params[] = $book->getId();
         }
         $conflictCount = Book::getCount($where, $params);
         if ($conflictCount > 0) {
-            if ($request->isAjax()) {
-                return (new JsonResponse(['success' => false, 'message' => 'ISBN musí být jedinečné']))->setStatusCode(400);
-            }
-            return $this->redirect($this->url('book.add'));
+            return 'ISBN musí byť jedinečné';
         }
         return null;
     }

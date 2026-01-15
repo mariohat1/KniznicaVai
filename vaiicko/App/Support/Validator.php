@@ -2,6 +2,10 @@
 
 namespace App\Support;
 
+use App\Models\Category;
+use App\Models\Author;
+use App\Models\Genre;
+
 class Validator
 {
     /**
@@ -54,20 +58,133 @@ class Validator
     }
 
     /**
-     * Validate birth date (optional). Must be YYYY-MM-DD and not in the future.
+     * Validate birth date (optional). Accepts only a 4-digit year (YYYY) and must not be in the future.
      */
-    public static function validateBirthDate(?string $value, string $field = 'birth date'): ?string
+    public static function validateYear(?string $value, string $field): ?string
+    {
+        $v = trim(($value ?? ''));
+        if ($v === '') {
+            return null;
+        }
+
+        if (!preg_match('/^\d{1,4}$/', $v)) {
+            return ucfirst($field) . ' has invalid format (expected year).';
+        }
+
+        $year = (int)$v;
+        $current = (int)date('Y');
+
+        if ($year < 0 || $year > $current) {
+            return ucfirst($field) . " must be between 0 and $current.";
+        }
+
+        return null;
+    }
+
+    public static function validateYearRange(
+        ?string $from,
+        ?string $to,
+        int     $maxSpan = 100
+    ): ?string
+    {
+        if ($error = self::validateYear($from, 'birth year')) {
+            return $error;
+        }
+        if ($error = self::validateYear($to, 'death year')) {
+            return $error;
+        };
+        if ($from === '' || $from === null) return null;
+        if ($to === '' || $to === null) return null;
+
+        if ((int)$from > (int)$to) {
+            return 'Birth year "from" must be less than or equal to "to".';
+        }
+        if (((int)$to - (int)$from) > $maxSpan) {
+            return "Year range must not exceed $maxSpan years.";
+        }
+        return null;
+    }
+    public static function validateAuthorId(?int $authorId): ?string
+    {
+        if ($authorId === null) {
+            return 'Autor musí byť zvolený.';
+        }
+        try {
+            Author::getOne($authorId);
+        } catch (\Exception $e) {
+            return 'Zvolený autor neexistuje.';
+        }
+        return null;
+    }
+
+    public static function validateCategoryId(?int $categoryId): ?string
+    {
+        if ($categoryId === null) {
+            return 'Kategória musí byť zvolená.';
+        }
+        try {
+            Category::getOne($categoryId);
+        } catch (\Exception $e) {
+            return 'Zvolená kategória neexistuje.';
+        }
+        return null;
+    }
+
+    public static function validateGenreId(?int $genreId): ?string
+    {
+        if ($genreId === null) {
+            return 'Žáner musí byť zvolený.';
+        }
+        try {
+            Genre::getOne($genreId);
+        } catch (\Exception $e) {
+            return 'Zvolený žáner neexistuje.';
+        }
+        return null;
+    }
+
+    /**
+     * Validate ISBN (format only). Accepts ISBN-10 or ISBN-13 with or without separators.
+     * Returns null when valid or an error message string when invalid.
+     */
+    public static function validateIsbn(?string $value, string $field = 'ISBN'): ?string
     {
         $v = trim((string)($value ?? ''));
         if ($v === '') return null;
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $v)) {
-            return ucfirst($field) . ' has invalid format (expected YYYY-MM-DD).';
+
+        // remove non-digit and non-X characters
+        $normalized = preg_replace('/[^0-9Xx]/', '', $v);
+        if ($normalized === null) return ucfirst($field) . ' has invalid format.';
+
+        // ISBN-13 check
+        if (strlen($normalized) === 13 && ctype_digit($normalized)) {
+            $sum = 0;
+            for ($i = 0; $i < 13; $i++) {
+                $digit = (int)$normalized[$i];
+                $sum += ($i % 2 === 0) ? $digit : $digit * 3;
+            }
+            if (($sum % 10) === 0) return null;
+            return ucfirst($field) . ' is not a valid ISBN-13.';
         }
-        $ts = strtotime($v);
-        if ($ts === false) return ucfirst($field) . ' is not a valid date.';
-        // compare to end of today
-        $todayEnd = strtotime('today 23:59:59');
-        if ($ts > $todayEnd) return ucfirst($field) . ' cannot be in the future.';
-        return null;
+
+        // ISBN-10 check
+        if (strlen($normalized) === 10) {
+            $sum = 0;
+            for ($i = 0; $i < 9; $i++) {
+                if (!isset($normalized[$i]) || !ctype_digit($normalized[$i])) {
+                    return ucfirst($field) . ' is not a valid ISBN-10.';
+                }
+                $sum += (10 - $i) * (int)$normalized[$i];
+            }
+            $check = $normalized[9];
+            $checkVal = ($check === 'X' || $check === 'x') ? 10 : (ctype_digit($check) ? (int)$check : -1);
+            if ($checkVal < 0) return ucfirst($field) . ' is not a valid ISBN-10.';
+            $sum += 1 * $checkVal;
+            if (($sum % 11) === 0) return null;
+            return ucfirst($field) . ' is not a valid ISBN-10.';
+        }
+
+        return ucfirst($field) . ' has invalid format (expected ISBN-10 or ISBN-13).';
     }
 }
+

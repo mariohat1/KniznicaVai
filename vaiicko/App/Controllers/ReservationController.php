@@ -103,7 +103,10 @@ class ReservationController extends BaseController
             $reservation->setIsReserved(1);
             $reservation->setUserId($userId);
             $reservation->setBookCopyId($copy->getId());
-            $reservation->setCreatedAt(date('Y-m-d H:i:s'));
+            $reservation->setCreatedAt(date('Y-m-d H:i'));
+            $created = new \DateTime();
+            $reservedUntil = (clone $created)->modify('+6 days')->setTime(23, 59);
+            $reservation->setReservedUntil($reservedUntil->format('Y-m-d H:i'));
             $reservation->save();
             return $this->redirect($this->url('book.view', ['id' => $book->getId(), 'reserved' => 1]));
         } catch (\Throwable $e) {
@@ -152,25 +155,14 @@ class ReservationController extends BaseController
      */
     public function manage(Request $request): Response
     {
-        $auth = $this->app->getAuth();
-        if (!$auth?->isLogged()) return $this->redirect($this->url('book.index'));
-        $user = $auth->getUser();
-        $role = null;
-        if (is_object($user)) {
-            $role = method_exists($user, 'getRole') ? $user->getRole() : (get_object_vars($user)['role'] ?? null);
-        }
-        if (strtolower((string)$role) !== 'admin') {
-            return $this->redirect($this->url('book.index'));
-        }
 
         $q = trim((string)$request->value('q'));
         $status = $request->value('status');
         $searchBy = $request->value('searchBy');
         $searchBy = is_string($searchBy) ? strtolower($searchBy) : '';
-        // pagination
         $page = (int)$request->value('page');
         if ($page < 1) $page = 1;
-        $limit = 10; // items per page
+        $limit = 10;
         $offset = ($page - 1) * $limit;
         $whereParts = [];
         $whereParams = [];
@@ -239,7 +231,35 @@ class ReservationController extends BaseController
                 $u = User::getOne($r->getUserId());
             } catch (\Throwable $e) {
             }
-            $items[] = ['reservation' => $r, 'copy' => $copy, 'book' => $book, 'user' => $u];
+
+            // minimal guard: only create DateTimeImmutable when reserved_until exists
+            $rawUntil = $r->getReservedUntil();
+            $expDate = '';
+            $daysLeftStr = '';
+            if ($rawUntil) {
+                $until = new \DateTimeImmutable($rawUntil);
+                $now   = new \DateTimeImmutable();
+
+                $expDate = $until->format('d.m.Y H:i');
+
+                if ($until > $now) {
+                    $diff = $now->diff($until);
+                    $days = (int)$diff->days;
+
+                    if ($days > 0) {
+                        $daysLeftStr = $days . ' ' . ($days === 1 ? 'deň' : 'dni');
+                    }
+                }
+            }
+
+            $items[] = [
+                'reservation' => $r,
+                'copy' => $copy,
+                'book' => $book,
+                'user' => $u,
+                'expDate' => $expDate,
+                'daysLeft' => $daysLeftStr
+            ];
         }
 
         $pages = ($total > 0) ? (int)ceil($total / $limit) : 1;
@@ -249,6 +269,17 @@ class ReservationController extends BaseController
             'pages' => $pages,
             'total' => $total
         ];
+
+        // if AJAX: return JSON data only (client renders HTML)
+        if ($request->isAjax()) {
+            return $this->json([
+                'items' => $items,
+                'pagination' => $pagination,
+                'q' => $q,
+                'status' => $status,
+                'searchBy' => $searchBy
+            ]);
+        }
 
         return $this->html([
             'items' => $items,
@@ -261,13 +292,10 @@ class ReservationController extends BaseController
 
     public function update(Request $request): Response
     {
-
-        // accept POST only
         if (!$request->isPost()) {
             return $this->redirect($this->url('reservation.manage'));
         }
 
-        // read id/action directly from request (covers POST form-encoded and GET params)
         $id = $request->value('id');
         $action = $request->value('action');
         $id = $id !== null ? (int)$id : null;

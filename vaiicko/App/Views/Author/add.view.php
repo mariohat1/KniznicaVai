@@ -1,10 +1,8 @@
 <?php
 /** @var \Framework\Support\LinkGenerator $link */
 /** @var \App\Models\Author|null $author */
-if (isset($view) && method_exists($view, 'setLayout')) {
-    $view->setLayout('admin');
-}
-if (!isset($author)) $author = null;
+/** @var \Framework\Support\View $view */
+$view->setLayout('admin');
 ?>
 
 <div class="container">
@@ -25,12 +23,19 @@ if (!isset($author)) $author = null;
         <div class="mb-3">
             <label for="description" class="form-label">Biografia</label>
             <textarea id="description" name="description" class="form-control"
-                      rows="5"><?= isset($author) && method_exists($author, 'getDescription') ? htmlspecialchars((string)$author->getDescription()) : '' ?></textarea>
+                      rows="5"><?= isset($author) ? htmlspecialchars((string)$author->getDescription()) : '' ?></textarea>
         </div>
         <div class="mb-3">
-            <label for="birth_date" class="form-label">Birth date</label>
-            <input id="birth_date" name="birth_date" type="date" class="form-control"
-                   value="<?= htmlspecialchars(isset($author) ? ($author->getBirthDate() ?? '') : '') ?>">
+            <label for="birth_year" class="form-label">Birth year</label>
+            <input id="birth_year" name="birth_year" type="number" class="form-control"
+                   min="1000" max="<?= date('Y') ?>"
+                   value="<?= htmlspecialchars(isset($author) ? ($author->getBirthYear() ?? '') : '') ?>">
+        </div>
+        <div class="mb-3">
+            <label for="death_year" class="form-label">Death year</label>
+            <input id="death_year" name="death_year" type="number" class="form-control"
+                   min="1000" max="<?= date('Y') ?>"
+                   value="<?= htmlspecialchars(isset($author) ? ($author->getDeathYear() ?? '') : '') ?>">
         </div>
 
         <div class="mb-3">
@@ -49,6 +54,7 @@ if (!isset($author)) $author = null;
         </div>
         <button class="btn btn-primary"><?= isset($author) ? 'Update' : 'Save' ?></button>
     </form>
+
     <script>
         (function () {
             var drop = document.getElementById('author-photo-drop');
@@ -125,33 +131,37 @@ if (!isset($author)) $author = null;
             }
         })();
     </script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var feedback = document.getElementById('authorFormFeedback');
             var form = document.getElementById('authorForm');
 
-            document.addEventListener( 'submit', async function (e) {
+            form.addEventListener('submit', async function (e) {
                 e.preventDefault();
                 const formData = new FormData(form);
                 const params = new URLSearchParams(formData);
-
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Accept' : 'application/json'
-                    },
-                    body: params
-                });
-                const result = await response.json();
-                if(!result.success) {
-                    feedback.innerHTML = '<div class="alert alert-danger" role="alert">' + (result.errors || 'Error saving author') + '</div>';
-                } else {
-                    window.location.href = result.redirect;
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Accept' : 'application/json'
+                        },
+                        body: params
+                    });
+                    var result = await response.json();
+                    if(!result.success) {
+                        feedback.innerHTML = '<div class="alert alert-danger" role="alert">' + (result.errors || 'Error saving author') + '</div>';
+                    } else {
+                        window.location.href = result.redirect;
+                    }
+                } catch (err) {
+                    feedback.innerHTML = '<div class="alert alert-danger" role="alert">Chyba spojenia</div>';
                 }
-            })
+            });
         });
-    </script>
+     </script>
 </div>
 

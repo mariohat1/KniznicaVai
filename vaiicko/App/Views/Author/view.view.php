@@ -26,20 +26,17 @@
                         <?php endif; ?>
                     </div>
                     <div class="col-md-10">
-                        <!-- name aligned vertically with photo; keep size reasonable -->
                         <h2 class="mb-1 author-name fw-bold" style="line-height:1.1; font-size:1.6rem;">
                             <?= htmlspecialchars(trim($author->getFirstName() . ' ' . $author->getLastName())) ?>
                         </h2>
 
                         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
 
-                            <?php if (method_exists($author, 'getBirthDate') && $author->getBirthDate()): ?>
-                                <?php $bd = $author->getBirthDate(); $bdFormatted = $bd ? @date('j. n. Y', strtotime($bd)) : ''; ?>
-                                <span class="small text-muted ms-2">Narodený</span>
-                                <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info px-2 py-1">
-                                    <?= htmlspecialchars($bdFormatted ?: $bd) ?>
-                                </span>
-                            <?php endif; ?>
+                            <?php $by = $author->getBirthYear(); ?>
+                            <?php $dy = $author->getDeathYear(); ?>
+                            <span class="bg-opacity-10 ">
+                                Narodenie / Úmrtie: <?= htmlspecialchars(($by ?: 'Neznáme') . ' - ' . ($dy ?: 'Neznáme')) ?>
+                            </span>
                         </div>
 
                         <?php if (method_exists($author, 'getDescription') && $author->getDescription()): ?>

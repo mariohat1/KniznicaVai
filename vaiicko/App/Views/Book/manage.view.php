@@ -75,13 +75,6 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                     <tr class="table-action-row">
                         <td colspan="4" class="pt-1 pb-1">
                             <div class="d-flex flex-column flex-sm-row gap-2">
-                                <form method="post" action="<?= $link->url('bookcopy.updateCopies') ?>" class="d-flex align-items-center m-0">
-                                    <input type="hidden" name="id" value="<?= htmlspecialchars((string)$cid) ?>">
-                                    <input type="number" name="copies" min="0" class="form-control form-control-sm me-2"
-                                           style="width:60px" value="<?= htmlspecialchars((string)$meta['total']) ?>"
-                                           aria-label="Počet kópií">
-                                    <button class="btn btn-sm btn-success me-2" type="submit">Pridať kpie</button>
-                                </form>
                                 <a class="btn btn-sm btn-outline-primary" href="<?= $link->url('book.view', ['id' => $cid]) ?>">Zobraziť</a>
                                 <a class="btn btn-sm btn-outline-secondary" href="<?= $link->url('book.add', ['id' => $cid]) ?>">Upraviť</a>
                                 <a class="btn btn-sm btn-outline-info" href="<?= $link->url('bookcopy.index', ['book_id' => $cid]) ?>">Spravovať kópie</a>

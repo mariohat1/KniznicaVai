@@ -91,35 +91,31 @@ class GenreController extends BaseController
      */
     public function store(Request $request): Response
     {
-        if ($request->isJson()) {
-            try {
-                $data = $request->json();
-            } catch (\JsonException $e) {
-                return $this->json(['error' => 'Neplatný JSON']);
-            }
-        }
-        $name = $data->name ?? $request->value('name');
+
+        $name = $request->value('name');
         $description = $request->value('description') ?? null;
         $errors = [];
-        if ($err = Validator::validateShortName($name, 'name')) $errors['name'] = $err;
-        if ($err = Validator::validateDescription($description, 2000, 'description')) $errors['description'] = $err;
+        if ($err = Validator::validateShortName($name, 'name')) $errors[] = $err;
+        if ($err = Validator::validateDescription($description, 2000, 'description')) $errors[] = $err;
 
         if (!empty($errors)) {
             if ($request->isAjax()) {
                 return new JsonResponse(['success' => false, 'errors' => $errors]);
             }
-            $referer = $request->server('HTTP_REFERER') ?: $this->url('genre.manage');
-            return $this->redirect($referer);
         }
 
         $genre = new Genre();
         $id = $request->value('id');
         if (!empty($id)) {
-            $genre = Genre::getOne($id);
+            $loaded = Genre::getOne($id);
+            if ($loaded !== null) $genre = $loaded;
         }
         $genre->setName($name);
         $genre->setDescription($description);
         $genre->save();
+        if ($request->isAjax()) {
+            return $this->json(['success' => true, 'id' => $genre->getId(), 'name' => $genre->getName(), 'redirect' => $this->url('genre.manage')]);
+        }
         return $this->redirect($this->url('genre.manage'));
     }
 

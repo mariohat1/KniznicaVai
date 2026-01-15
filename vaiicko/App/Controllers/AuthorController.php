@@ -114,7 +114,8 @@ class AuthorController extends BaseController
     {
         $first = $request->value('first_name');
         $last = $request->value('last_name');
-        $birth_date = $request->value('birth_date');
+        $birth_year = $request->value('birth_year');
+        $death_year = $request->value('death_year');
         $errors = [];
 
         if ($err = Validator::validatePersonName($first, 'first name')) {
@@ -125,7 +126,7 @@ class AuthorController extends BaseController
             $errors[] = $err;
         }
 
-        if ($err = Validator::validateBirthDate($birth_date, 'birth_date')) {
+        if ($err = Validator::validateYearRange($birth_year, $death_year)) {
             $errors[] = $err;
         }
         if (!empty($errors)) {
@@ -140,7 +141,8 @@ class AuthorController extends BaseController
         $author->setFirstName($first);
         $author->setLastName($last);
         $author->setDescription($request->value('description'));
-        $author->setBirthDate($request->value('birth_date'));
+        $author->setBirthYear((int)$birth_year);
+        $author->setDeathYear((int)$death_year);
         $photoPath = $request->value('photo_path');
         if ($photoPath && method_exists($author, 'setPhoto')) {
             $author->setPhoto($photoPath);

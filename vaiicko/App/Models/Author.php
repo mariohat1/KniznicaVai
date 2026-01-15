@@ -12,7 +12,9 @@ class Author extends Model
     protected ?int $id = null;
     protected ?string $first_name = null;
     protected ?string $last_name = null;
-    protected ?string $birth_date = null;
+    // Store birth year as integer to match DB column `birth_year`
+    protected ?int $birth_year = null;
+    protected ?int $death_year = null;
     protected ?string $description = null;
     protected ?string $photo = null;
 
@@ -66,14 +68,23 @@ class Author extends Model
         $this->last_name = $last_name;
     }
 
-    public function getBirthDate(): ?string
+    public function getBirthYear(): ?int
     {
-        return $this->birth_date;
+        return $this->birth_year;
     }
 
-    public function setBirthDate(?string $birth_date): void
+    public function setBirthYear(?int $birth_year): void
     {
-        $this->birth_date = $birth_date;
+        $this->birth_year = $birth_year;
     }
 
+    public function getDeathYear(): ?int
+    {
+        return $this->death_year;
+    }
+
+    public function setDeathYear(?int $death_year): void
+    {
+        $this->death_year = $death_year;
+    }
 }

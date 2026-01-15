@@ -39,7 +39,8 @@ class BookCopyController extends BaseController
                 // ignore individual failures but continue
             }
         }
-        return $this->redirect($this->url('book.manage'));
+        // After adding copies, stay on the copies management page for the same book
+        return $this->redirect($this->url('bookcopy.index', ['book_id' => $book->getId()]));
     }
 
     /**
@@ -65,7 +66,6 @@ class BookCopyController extends BaseController
             } catch (\Throwable $e) {
                 // ignore
             }
-            // redirect back to copies view if book_id provided, otherwise to manage
             $backBook = $request->value('book_id');
             if ($backBook !== null) return $this->redirect($this->url('bookcopy.index', ['book_id' => $backBook]));
             return $this->redirect($this->url('book.manage'));
@@ -79,7 +79,7 @@ class BookCopyController extends BaseController
         try {
             BookCopy::executeRawSQL('UPDATE `book_copy` SET `available` = ? WHERE `book_id` = ?', [$avail, (int)$bookId]);
         } catch (\Throwable $e) {
-            // ignore
+
         }
         return $this->redirect($this->url('book.manage'));
     }
@@ -127,5 +127,36 @@ class BookCopyController extends BaseController
         }
 
         return $this->html(['copies' => $copies, 'book' => $book, 'reservations' => $reservationsMap, 'users' => $usersMap], 'index');
+    }
+
+    /**
+     * Delete a single copy (admin)
+     * POST params: copy_id, book_id (optional)
+     */
+    public function delete(Request $request): Response
+    {
+        if (!$request->isPost()) {
+            return $this->redirect($this->url('book.manage'));
+        }
+
+        $copyId = $request->post('copy_id') ?? $request->value('copy_id');
+        if ($copyId) {
+            try {
+                $copy = BookCopy::getOne((int)$copyId);
+                if ($copy !== null) {
+                    $bookId = $copy->getBookId();
+                    $copy->delete();
+                    // redirect back to copies list for that book
+                    return $this->redirect($this->url('bookcopy.index', ['book_id' => $bookId]));
+                }
+            } catch (\Throwable $e) {
+                // ignore and continue to fallback
+            }
+        }
+
+        // fallback: if book_id provided redirect there, else to manage
+        $backBook = $request->post('book_id') ?? $request->value('book_id');
+        if ($backBook) return $this->redirect($this->url('bookcopy.index', ['book_id' => $backBook]));
+        return $this->redirect($this->url('book.manage'));
     }
 }

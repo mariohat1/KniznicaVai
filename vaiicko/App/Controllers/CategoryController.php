@@ -92,25 +92,20 @@ class CategoryController extends BaseController
     public function store(Request $request): Response
     {
 
-        if ($request->isJson()) {
-            try {
-                $data = $request->json();
-            } catch (\JsonException $e) {
-                return new JsonResponse(['error' => 'Neplatný JSON'], 400);
-            }
-        }
         $name = $data->name ?? $request->value('name');
         $description = $request->value('description') ?? null;
         $errors = [];
-        if ($err = Validator::validateShortName($name, 'name')) $errors['name'] = $err;
-        if ($err = Validator::validateDescription($description, 2000, 'description')) $errors['description'] = $err;
+        if ($err = Validator::validateShortName($name, 'name')) {
+            $errors[] = $err;
+        };
+        if ($err = Validator::validateDescription($description, 2000, 'description')) {
+            $errors[] = $err;
+        }
 
         if (!empty($errors)) {
             if ($request->isAjax()) {
                 return new JsonResponse(['success' => false, 'errors' => $errors]);
             }
-            $referer = $request->server('HTTP_REFERER') ?: $this->url('category.manage');
-            return $this->redirect($referer);
         }
         $category = new Category();
         $id = $request->value('id');
@@ -122,7 +117,8 @@ class CategoryController extends BaseController
         $category->setDescription($description);
         $category->save();
         if ($request->isAjax()) {
-            return $this->json(['success' => true, 'id' => $category->getId(), 'name' => $category->getName()]);
+            return $this->json(['success' => true, 'id' => $category->getId(), 'name' => $category->getName(),
+                'redirect' => $this->url('category.manage')]);
         };
 
         return $this->redirect($this->url('category.manage'));

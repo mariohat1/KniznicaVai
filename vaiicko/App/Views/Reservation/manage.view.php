@@ -7,20 +7,20 @@ if (isset($view) && method_exists($view, 'setLayout')) {
 /** @var string $q */
 /** @var string|null $status */
 /** @var array|null $users */
-/** @var int $pagination */
+/** @var array|null $pagination */
 ?>
 <script src="<?= $link->asset('js/reservation.js') ?>"></script>
 
 <div class="container">
     <h1 class="mb-4">Správa rezervácií</h1>
     <form id="reservation-search-form" class="row g-2 mb-3" method="get"
-          action="<?= $link->url('reservation.manage') ?>" data-update-url="<?= htmlspecialchars($link->url('reservation.update')) ?>">
-        <!-- ensure controller/action are always present on GET submissions -->
+          action="<?= $link->url('reservation.manage') ?>"
+          data-update-url="<?= htmlspecialchars($link->url('reservation.update')) ?>">
         <input type="hidden" name="c" value="reservation">
         <input type="hidden" name="a" value="manage">
         <input type="hidden" name="status" value="<?= htmlspecialchars($status ?? 'all') ?>">
         <input type="hidden" name="page" id="reservation-page"
-               value="<?= htmlspecialchars(isset($pagination) ? ($pagination['page'] ?? 1) : 1) ?>">
+               value="<?= htmlspecialchars(is_array($pagination) ? ($pagination['page'] ?? 1) : 1) ?>">
         <div class="col-auto">
             <label for="reservation-search-by" class="visually-hidden">Režim hľadania</label>
             <select id="reservation-search-by" name="searchBy" class="form-select" aria-label="Režim hľadania">
@@ -34,7 +34,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         </div>
         <div class="col-auto">
             <input id="reservation-search-input" aria-label="Hľadať" type="search" name="q"
-                   class="form-control" placeholder="Hľadať podľa názvu knihy alebo používateľa"
+                   class="form-control" "
                    value="<?= htmlspecialchars($q ?? '') ?>">
         </div>
         <div class="col-auto">
@@ -42,7 +42,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         </div>
         <div class="col-auto">
             <div class="btn-group" role="group" aria-label="Status filter">
-                <a class="btn btn-outline-secondary <?= ($status === null || $status === 'all') ? 'active' : '' ?>"
+                <a class="btn btn-outline-secondary <?= ($status === 'all') ? 'active' : '' ?>"
                    data-status="all"
                    href="<?= $link->url('reservation.manage', ['status' => 'all', 'q' => $q ?? '', 'user' => $selectedUser ?? '', 'searchBy' => $searchBy ?? '']) ?>">Všetky
                 </a>
@@ -65,20 +65,25 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                 $book = $it['book'];
                 $copy = $it['copy'];
                 $user = $it['user'];
-                $safeTitle = $book ? htmlspecialchars($book->getTitle(), ENT_QUOTES, 'UTF-8') : '';
-                ?>
+                // controller provides preformatted expiration date and days left (no seconds)
+                $expDateLabel = $it['expDate'] ?? '';
+                $daysLabel = $it['daysLeft'] ?? '';
 
+                $safeTitle = $book ? htmlspecialchars($book->getTitle(), ENT_QUOTES, 'UTF-8') : 'Neznáma kniha';
+                ?>
                 <div class="list-group-item d-flex justify-content-between align-items-start reservation-item"
                      data-title="<?= $safeTitle ?>" data-reservation-id="<?= htmlspecialchars((string)$reservation->getId()) ?>">
                     <div>
                         <div class="fw-bold"><?= $book ? htmlspecialchars($book->getTitle()) : 'Neznáma kniha' ?></div>
                         <div class="small text-muted">
                             Používateľ: <?= $user ? htmlspecialchars($user->getUsername() ?? $user->getId()) : '—' ?>
-                            <?php
-                            $diff = (new DateTime($reservation->getCreatedAt()))->diff(new DateTime());
-                            ?>
                             <br>
-                            Čas: <?= $diff->format('%a dní %h hod %i min') ?>
+                            <?php if ($expDateLabel): ?>
+                                Expiruje: <?= htmlspecialchars($expDateLabel) ?>
+                                <?php if ($daysLabel): ?> &middot; Zostáva: <?= htmlspecialchars($daysLabel) ?><?php endif; ?>
+                            <?php else: ?>
+                                <!-- no expiration info -->
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="text-end">
@@ -101,8 +106,8 @@ if (isset($view) && method_exists($view, 'setLayout')) {
 
     <?php if (isset($pagination)): ?>
         <?php
-        $page = $pagination['page'] ?? 1;
-        $pages = $pagination['pages'] ?? 1;
+        $page = is_array($pagination) ? ($pagination['page'] ?? 1) : 1;
+        $pages = is_array($pagination) ? ($pagination['pages'] ?? 1) : 1;
         ?>
         <nav aria-label="pagination" class="mt-3">
             <ul class="pagination">
