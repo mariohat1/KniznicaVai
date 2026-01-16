@@ -39,7 +39,8 @@ class HomeController extends BaseController
      */
     public function index(Request $request): Response
     {
-        return $this->html();
+        $mustLogin = $request->value('must_login') == 1;
+        return $this->html(['mustLogin' => $mustLogin]);
     }
 
     /**

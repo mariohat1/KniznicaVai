@@ -10,10 +10,12 @@ use App\Models\Genre;
 use App\Models\Reservation;
 use App\Support\AuthView;
 use App\Support\Validator;
+use App\Support\PhotoUpload;
 use Framework\Core\BaseController;
 use Framework\Http\Request;
 use Framework\Http\Responses\Response;
 use Framework\Http\Responses\JsonResponse;
+use mysql_xdevapi\Exception;
 
 class BookController extends BaseController
 {
@@ -21,11 +23,6 @@ class BookController extends BaseController
     {
         // Allow public read actions: index and view
         if (in_array($action, ['index', 'view'])) {
-            return true;
-        }
-
-        // Allow the manage listing to be requested via GET by non-admins (read-only)
-        if ($action === 'manage' && !$request->isPost()) {
             return true;
         }
 
@@ -190,26 +187,26 @@ class BookController extends BaseController
         $reservedSuccess = $request->value('reserved') !== null ? (int)$request->value('reserved') : null;
 
         // compute copies availability using centralized helper (same logic as listing)
-         $bookId = $book->getId();
-         $summary = $this->computeCopiesForBook($bookId);
-         $total = $summary['total'];
-         $available = $summary['available'];
-         $reservedCount = $summary['reserved'];
-         $copiesList = $summary['copies'];
+        $bookId = $book->getId();
+        $summary = $this->computeCopiesForBook($bookId);
+        $total = $summary['total'];
+        $available = $summary['available'];
+        $reservedCount = $summary['reserved'];
+        $copiesList = $summary['copies'];
 
         return $this->html([
-             'book' => $book,
-             'author' => $author,
-             'category' => $category,
-             'genre' => $genre,
-             // flag showing a recent successful reservation (used for alert)
-             'reservedSuccess' => $reservedSuccess,
-             // numeric counts the UI needs: available (not reserved) and reserved (count)
-             'available' => $available,
-             'reserved' => $reservedCount,
-             'total' => $summary['total'],
-             'copies' => $copiesList,
-         ], 'bookView');
+            'book' => $book,
+            'author' => $author,
+            'category' => $category,
+            'genre' => $genre,
+            // flag showing a recent successful reservation (used for alert)
+            'reservedSuccess' => $reservedSuccess,
+            // numeric counts the UI needs: available (not reserved) and reserved (count)
+            'available' => $available,
+            'reserved' => $reservedCount,
+            'total' => $summary['total'],
+            'copies' => $copiesList,
+        ], 'bookView');
     }
 
     /**
@@ -242,9 +239,8 @@ class BookController extends BaseController
     {
         if (!$request->isPost()) {
             if ($request->isAjax()) {
-                return (new JsonResponse(['success' => false, 'message' => 'Method not allowed']))->setStatusCode(405);
+                return $this->json(['success' => false, 'message' => 'Method not allowed']);
             }
-            return $this->redirect($this->url('book.add'));
         }
         $errors = [];
         $isbn = $request->value('isbn');
@@ -275,23 +271,38 @@ class BookController extends BaseController
 
         if (!empty($errors)) {
             if ($request->isAjax()) {
-                return (new JsonResponse(['success' => false, 'errors' => $errors]))->setStatusCode(400);
+                return $this->json(['success' => false, 'errors' => $errors]);
             }
+            return $this->redirect($this->url('book.add'));
         }
 
         $book = $this->loadOrCreateBook($request);
         $book->setIsbn(trim((string)$isbn));
         if ($err = $this->checkISBNUniqueness($book)) {
+            $errors[] = $err;
             if ($request->isAjax()) {
-                return (new JsonResponse(['success' => false, 'message' => $err]))->setStatusCode(400);
+                return $this->json(['success' => false, 'message' => $err]);
             }
+            return $this->redirect($this->url('book.add'));
         }
         $book->setFromRequest($request);
-        $this->applyPhotoPath($request, $book);
+
+        // Handle photo upload
+        if ($photoError = $this->handlePhotoUpload($request, $book)) {
+            $errors[] = $photoError;
+        }
+
+        if (!empty($errors)) {
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'errors' => $errors]);
+            }
+            return $this->redirect($this->url('book.add'));
+        }
+
         $book->save();
 
         if ($request->isAjax()) {
-            return new JsonResponse(['success' => true, 'redirect' => $this->url('book.manage')]);
+            return $this->json(['success' => true, 'redirect' => $this->url('book.manage')]);
         }
 
         return $this->redirect($this->url('book.manage'));
@@ -315,20 +326,26 @@ class BookController extends BaseController
         }
         return $book;
     }
+
     /**
-     * Apply photo_path value from request to the Book if available.
+     * Handle photo upload for book
+     * @return string|null Error message or null on success
      */
-    private
-    function applyPhotoPath(Request $request, Book $book): void
+    private function handlePhotoUpload(Request $request, Book $book): ?string
     {
-        $photoPath = $request->value('photo_path');
-        if (method_exists($book, 'setPhoto') && $photoPath !== null) {
-            if (trim((string)$photoPath) !== '') {
-                $book->setPhoto($photoPath);
-            } else {
-                $book->setPhoto(null);
-            }
+        $photoFile = $request->file('photo');
+        if (!$photoFile || !$photoFile->isOk()) {
+            return null; // No file uploaded, that's OK
         }
+
+        $path = PhotoUpload::handle($request, 'book', 'book');
+        if ($path !== null) {
+            $book->setPhoto($path);
+            return null;
+        }
+
+        $err = PhotoUpload::lastError();
+        return 'Photo upload failed: ' . ($err ?? 'Unknown error');
     }
 
     /**
@@ -350,91 +367,43 @@ class BookController extends BaseController
         return null;
     }
 
-    /**
-     * AJAX endpoint: upload a PNG photo for a book.
-     */
-    public
-    function uploadPhoto(Request $request): Response
+
+    public function delete(Request $request): Response
     {
-        if (!$request->isPost()) {
-            return $this->json(['success' => false, 'message' => 'Method not allowed'])->setStatusCode(405);
-        }
-        $file = $request->file('photo');
-        if (!$file || !$file->isOk()) {
-            $msg = $file ? $file->getErrorMessage() : 'No file uploaded';
-            return $this->json(['success' => false, 'message' => 'No file uploaded or upload error', 'detail' => $msg])->setStatusCode(400);
-        }
-        $maxBytes = 5 * 1024 * 1024;
-        if ($file->getSize() > $maxBytes) {
-            return $this->json(['success' => false, 'message' => 'File too large'])->setStatusCode(400);
-        }
-        $tmp = $file->getFileTempPath();
-        $info = @getimagesize($tmp);
-        if (!is_array($info) || empty($info['mime'])) {
-            return $this->json(['success' => false, 'message' => 'Invalid image'])->setStatusCode(400);
-        }
-        $mime = $info['mime'];
-        if ($mime !== 'image/png') {
-            return $this->json(['success' => false, 'message' => 'Only PNG images are allowed', 'detected' => $mime])->setStatusCode(400);
-        }
-
-        $projectRoot = dirname(__DIR__, 2);
-        $uploadDir = $projectRoot . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'book';
-        if (!is_dir($uploadDir)) {
-            if (!mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
-                return $this->json(['success' => false, 'message' => 'Unable to create upload directory: ' . $uploadDir])->setStatusCode(500);
-            }
-        }
-        $filename = uniqid('book_', true) . '.png';
-        $dest = $uploadDir . DIRECTORY_SEPARATOR . $filename;
-        if (!$file->store($dest)) {
-            return $this->json(['success' => false, 'message' => 'Failed to save uploaded file'])->setStatusCode(500);
-        }
-        $relative = '/uploads/book/' . $filename;
-        return $this->json(['success' => true, 'path' => $relative, 'filename' => $filename, 'original' => $file->getName()]);
-    }
-
-    public
-    function delete(Request $request): Response
-    {
-        if (!$request->isPost()) {
-            if ($request->isAjax()) {
-                return (new JsonResponse(['success' => false, 'message' => 'Method not allowed']))->setStatusCode(405);
-            }
-            return $this->redirect($this->url('book.manage'));
-        }
-
         $id = $request->value('id');
         if ($id === null) {
-            if ($request->isAjax()) {
-                return (new JsonResponse(['success' => false, 'message' => 'Missing id']))->setStatusCode(400);
-            }
             return $this->redirect($this->url('book.manage'));
         }
-
-        $book = Book::getOne($id);
+        try {
+            $book = Book::getOne($id);
+        } catch (Exception $e) {
+            $book = null;
+        }
         if ($book === null) {
-            if ($request->isAjax()) {
-                return (new JsonResponse(['success' => false, 'message' => 'Book not found']))->setStatusCode(404);
-            }
             return $this->redirect($this->url('book.manage'));
         }
 
         try {
-            // Delete the book. DB foreign keys (ON DELETE CASCADE) will remove book_copy rows.
-            $book->delete();
+            $photo = $book->getPhoto();
+            if (!empty($photo)) {
+                $projectRoot = dirname(__DIR__, 2);
+                $photoPath = $projectRoot . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . ltrim($photo, '/\\');
+                if (is_file($photoPath)) {
+                    unlink($photoPath);
+                }
+            }
+        } catch (\Throwable $ignored) {
+            return $this->redirect($this->url('book.manage'));
 
-            if ($request->isAjax()) {
-                return new JsonResponse(['success' => true, 'message' => 'Deleted']);
-            }
-            return $this->redirect($this->url('book.manage'));
-        } catch (\Throwable $e) {
-            if ($request->isAjax()) {
-                return (new JsonResponse(['success' => false, 'message' => 'Delete failed: ' . $e->getMessage()]))->setStatusCode(500);
-            }
-            // On failure, go back to manage with a generic message (could be improved to show flash messages)
-            return $this->redirect($this->url('book.manage'));
         }
+
+        try {
+            $book->delete();
+        } catch (\Throwable $e) {
+            return $this->redirect($this->url('book.manage'));
+
+        }
+        return $this->redirect($this->url('book.manage'));
     }
 
 

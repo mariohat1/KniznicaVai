@@ -52,7 +52,9 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                                 <a class="btn btn-sm btn-outline-primary" href="<?= $link->url('author.index') ?>">Zobraziť</a>
                                 <a class="btn btn-sm btn-outline-secondary" href="<?= $link->url('author.add', ['id' => $a->getId()]) ?>">Upraviť</a>
 
-                                <form method="post" action="<?= $link->url('author.delete') ?>" class="d-inline-block author-delete-form">
+                                <form method="post" action="<?= $link->url('author.delete') ?>"
+                                      onsubmit="return confirm('Naozaj chcete zmazať tohto autora?');"
+                                    class="d-inline-block author-delete-form">
                                     <input type="hidden" name="id" value="<?= htmlspecialchars($a->getId()) ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Zmazať</button>
                                 </form>
@@ -66,14 +68,4 @@ if (isset($view) && method_exists($view, 'setLayout')) {
     <?php endif; ?>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('.author-delete-form').forEach(function(f){
-    f.addEventListener('submit', function(e){
-      if (!confirm('Naozaj chcete zmazať tohto autora?')) {
-        e.preventDefault();
-      }
-    });
-  });
-});
-</script>
+

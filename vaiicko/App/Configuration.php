@@ -36,8 +36,10 @@ class Configuration
 
     /**
      * URL for the login page. Users will be redirected here if authentication is required for an action.
+     *
+     * Set to home with must_login=1 so the layout can open the modal (no extra JS required).
      */
-    public const LOGIN_URL = '?c=auth&a=login';
+    public const LOGIN_URL = '?c=home&must_login=1';
 
     /**
      * Prefix for the default view files located in the App/Views directory. The view file format is

@@ -57,7 +57,8 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                                     <input type="hidden" name="available" value="<?= $avail ? '0' : '1' ?>">
                                     <button class="btn btn-sm <?= $avail ? 'btn-outline-warning' : 'btn-outline-success' ?>" type="submit"><?php echo $avail ? 'Označiť nedostupné' : 'Označiť dostupné'; ?></button>
                                 </form>
-                                <form method="post" action="<?= $link->url('bookcopy.delete') ?>" class="d-inline-block">
+                                <form method="post" action="<?= $link->url('bookcopy.delete') ?>" class="d-inline-block"
+                                      onsubmit="return confirm('Naozaj chcete zmazať túto kópiu');">>
                                     <input type="hidden" name="copy_id" value="<?= htmlspecialchars((string)$id) ?>">
                                     <input type="hidden" name="book_id" value="<?= htmlspecialchars((string)$book->getId()) ?>">
                                     <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Zmazať túto kópiu?')">Zmazať kópiu</button>

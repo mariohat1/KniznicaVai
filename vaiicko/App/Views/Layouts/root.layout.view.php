@@ -10,16 +10,14 @@ use App\Support\AuthView;
 $displayNameEsc = AuthView::displayNameEsc($auth);
 $isAdmin = AuthView::canAddAuthor($auth);
 
+
 ?>
 <!DOCTYPE html>
 <html lang="sk">
 <head>
     <title><?= App\Configuration::APP_NAME ?></title>
-    <!-- Responsive viewport -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
-    <!-- Favicons -->
     <link rel="apple-touch-icon" sizes="180x180" href="<?= $link->asset('favicons/apple-touch-icon.png') ?>">
     <link rel="icon" type="image/png" sizes="32x32" href="<?= $link->asset('favicons/favicon-32x32.png') ?>">
     <link rel="icon" type="image/png" sizes="16x16" href="<?= $link->asset('favicons/favicon-16x16.png') ?>">
@@ -62,7 +60,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
                     </ul>
 
                     <!-- Používateľské menu - úplne vpravo -->
-                    <ul class="navbar-nav ms-auto">
+                    <ul class="navbar-nav ms-auto gap-2">
                         <?php if ($auth?->isLogged()): ?>
                             <?php if ($isAdmin): ?>
                                 <li class="nav-item">
@@ -143,7 +141,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
                         </form>
                     </div>
 
-                    <div id="modalRegisterForm" class="hidden-block">
+                    <div id="modalRegisterForm" class="hidden-block" >
                         <form method="post" action="<?= $link->url('user.add') ?>">
                             <input type="hidden" name="auth_form" value="register">
                             <div class="mb-3">
@@ -204,6 +202,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
     </footer>
 
 </div>
+
 
 <script src="<?= $link->asset('js/loginModal.js') ?>"></script>
 <script src="<?= $link->asset('js/login.js') ?>"></script>

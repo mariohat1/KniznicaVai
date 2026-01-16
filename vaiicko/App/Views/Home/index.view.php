@@ -1,8 +1,13 @@
 <?php
 
 /** @var \Framework\Support\LinkGenerator $link */
-?>
+/** @var TYPE_NAME $mustLogin */
+$login = $mustLogin;
 
+?>
+<?php if ($login): ?>
+    <script src="<?= $link->asset('js/loginClick.js') ?>"></script>
+<?php endif; ?>
 <div class="container-fluid">
     <div class="row">
         <div class="col mt-5">

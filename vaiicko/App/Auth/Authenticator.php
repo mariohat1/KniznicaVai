@@ -42,8 +42,7 @@ class Authenticator implements IAuthenticator
         }
         $this->user = $userRow;
         if ($userRow->getId() !== null) {
-            $this->session->set('user_id', $userRow->getId());
-            $this->session->remove('user');
+            $this->session->set('user', $this->user);
         }
         return true;
     }

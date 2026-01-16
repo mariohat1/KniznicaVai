@@ -34,7 +34,6 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th class="d-none d-sm-table-cell">ID</th>
                     <th>Názov</th>
                     <th class="d-none d-md-table-cell">Popis</th>
                     <th>Akcie</th>
@@ -43,13 +42,13 @@ if (isset($view) && method_exists($view, 'setLayout')) {
             <tbody>
                 <?php foreach ($categories as $c): ?>
                     <tr>
-                        <td class="d-none d-sm-table-cell"><?= htmlspecialchars((string)$c->getId()) ?></td>
                         <td><?= htmlspecialchars((string)$c->getName()) ?></td>
                         <td class="d-none d-md-table-cell"><?= htmlspecialchars((string)$c->getDescription()) ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
                                 <a class="btn btn-sm btn-outline-secondary" href="<?= $link->url('category.add', ['id' => $c->getId()]) ?>">Upraviť</a>
-                                <form method="post" action="<?= $link->url('category.delete') ?>" class="d-inline-block category-delete-form">
+                                <form method="post" action="<?= $link->url('category.delete') ?>" class="d-inline-block category-delete-form"
+                                      onsubmit="return confirm('Naozaj chcete zmazať túto kategóriu?');">
                                     <input type="hidden" name="id" value="<?= htmlspecialchars($c->getId()) ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Zmazať</button>
                                 </form>
@@ -88,14 +87,3 @@ if (isset($view) && method_exists($view, 'setLayout')) {
     <?php endif; ?>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('.category-delete-form').forEach(function(f){
-    f.addEventListener('submit', function(e){
-      if (!confirm('Naozaj chcete zmazať túto kategóriu?')) {
-        e.preventDefault();
-      }
-    });
-  });
-});
-</script>

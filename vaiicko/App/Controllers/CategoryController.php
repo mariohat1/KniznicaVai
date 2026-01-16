@@ -28,45 +28,23 @@ class CategoryController extends BaseController
 
     public function index(Request $request): Response
     {
-        $q = $request->value('q');
-        if (!empty($q)) {
-            $q = trim((string)$q);
-            $categories = Category::getAll('name LIKE ?', ["%$q%"]);
-        } else {
-            $categories = Category::getAll();
-        }
-        return $this->html(['categories' => $categories], 'index');
+        $result = $this->paginate($request, 'name ASC', 10);
+
+        return $this->html([
+            'categories' => $result['items'],
+            'filters' => $result['filters'],
+            'pagination' => $result['pagination']
+        ], 'index');
     }
 
     public function manage(Request $request): Response
     {
-        // Read optional search query
-        $q = trim((string)$request->value('q'));
-
-        $whereParts = [];
-        $whereParams = [];
-        if ($q !== '') {
-            $whereParts[] = 'name LIKE ?';
-            $whereParams[] = '%' . $q . '%';
-        }
-        $where = !empty($whereParts) ? implode(' AND ', $whereParts) : null;
-
-        // Pagination
-        $page = max(1, (int)($request->value('page') ?? 1));
-        $perPage = 10;
-
-        $total = Category::getCount($where, $whereParams);
-        $pages = ($perPage > 0) ? (int)ceil($total / $perPage) : 1;
-        if ($pages < 1) $pages = 1;
-        if ($page > $pages) $page = $pages;
-        $offset = ($page - 1) * $perPage;
-
-        $categories = Category::getAll($where, $whereParams, 'name ASC', $perPage, $offset);
+        $result = $this->paginate($request, 'name ASC', 10);
 
         return $this->html([
-            'categories' => $categories,
-            'filters' => ['q' => $q, 'page' => $page],
-            'pagination' => ['page' => $page, 'pages' => $pages, 'perPage' => $perPage, 'total' => $total]
+            'categories' => $result['items'],
+            'filters' => $result['filters'],
+            'pagination' => $result['pagination']
         ], 'manage');
     }
 
@@ -95,6 +73,19 @@ class CategoryController extends BaseController
         if ($err = Validator::validateDescription($description, 2000, 'description')) {
             $errors[] = $err;
         }
+        $id = $request->value('id');
+        if (!empty($id)) {
+            // Pri editácii vylúč aktuálny záznam
+            $count = Category::getCount('name = ? AND id != ?', [$name, $id]);
+        } else {
+            // Pri vytváraní nového
+            $count = Category::getCount('name = ?', [$name]);
+        }
+        if ($count > 0) {
+            $errors[] = 'Kategória s týmto názvom už existuje.';
+        }
+
+
 
         if (!empty($errors)) {
             if ($request->isAjax()) {
@@ -102,7 +93,6 @@ class CategoryController extends BaseController
             }
         }
         $category = new Category();
-        $id = $request->value('id');
         if (!empty($id)) {
             $loaded = Category::getOne($id);
             if ($loaded !== null) $category = $loaded;
@@ -130,5 +120,36 @@ class CategoryController extends BaseController
             $category?->delete();
         }
         return $this->redirect($this->url('category.manage'));
+    }
+
+    /**
+     * Helper: paginate categories (builds where, handles pagination internally)
+     */
+    private function paginate(Request $request, ?string $orderBy = null, int $perPage = 10): array
+    {
+        $q = trim((string)$request->value('q'));
+        $whereParts = [];
+        $whereParams = [];
+        if ($q !== '') {
+            $whereParts[] = 'name LIKE ?';
+            $whereParams[] = '%' . $q . '%';
+        }
+        $where = !empty($whereParts) ? implode(' AND ', $whereParts) : null;
+
+        // Pagination
+        $page = max(1, (int)($request->value('page') ?? 1));
+        $total = Category::getCount($where, $whereParams);
+        $pages = ceil($total / $perPage);
+        if ($pages < 1) $pages = 1;
+        if ($page > $pages) $page = $pages;
+        $offset = ($page - 1) * $perPage;
+
+        $items = Category::getAll($where, $whereParams, $orderBy, $perPage, $offset);
+
+        return [
+            'items' => $items,
+            'filters' => ['q' => $q, 'page' => $page],
+            'pagination' => ['page' => $page, 'pages' => $pages, 'perPage' => $perPage, 'total' => $total]
+        ];
     }
 }

@@ -17,55 +17,27 @@ html, body {
 main.flex-fill {
     flex: 1 1 auto; /* main expands to take available space */
 }
-
+/* footer vec */
 .site-footer {
     flex-shrink: 0; /* prevent shrinking */
     background-color: #2b2b2b;
     color: #d9d9d9;
     padding: 40px 20px;
 }
-
-/* Prevent any layout-transition flicker */
-.web-content, .site-footer {
-    transition: none !important;
-}
-
-/* ===========================
-   HEADER / NAVBAR
-=========================== */
-.site-header {
-    background-color: #6fbf86;
-}
-
-.site-header .navbar {
-    background: transparent;
-    border-bottom: 1px solid grey;
-    padding-top: 10px;
-    padding-bottom: 10px;
-}
-
-.site-header .navbar-brand {
-    padding: 4px 8px;
-    display: flex;
-    align-items: center;
-}
-
 .site-header .navbar-brand img {
     display: inline-block;
     width: 50px;
     height: auto;
 }
-
-.site-header .navbar-nav {
-    gap: 12px;
+.hidden-block {
+    display: none;
 }
-
 .site-header .nav-link {
     color: #ffffff;
     position: relative;
     transition: all 0.3s ease;
 }
-
+/* Underline effect on nav links */
 .site-header .nav-link::after {
     content: '';
     position: absolute;
@@ -76,12 +48,6 @@ main.flex-fill {
     background: #6fbf86;
     transition: width 0.3s ease;
 }
-
-.site-header .nav-link:hover {
-    color: #ffffff;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
 .site-header .nav-link:hover::after {
     width: 100%;
     box-shadow: none;
@@ -117,13 +83,6 @@ main.flex-fill {
 /* ===========================
    BOOK LIST / CARDS
 =========================== */
-
-.meta-label {
-    color: #6b7280;
-    font-size: 0.95em;
-    font-weight: 600;
-}
-
 .section-title {
     font-family: Georgia, serif;
     font-size: 2rem;
@@ -132,17 +91,19 @@ main.flex-fill {
     margin-bottom: 0.5em;
 }
 
-/* author link simplified: no underline pseudo-element and no underline on hover */
 .author-link {
-    color: #234; /* dark slate color */
+    color: #234;
     font-weight: 700;
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: none;
 }
+
 .author-link:hover {
-    color: #1a7f37; /* subtle green on hover, no underline */
-    text-decoration: none;
+    color: #234;
+    text-decoration: underline;
+    text-decoration-color: #000;
 }
+
 
 .book-title {
     font-size: 1.4rem;
@@ -173,10 +134,7 @@ main.flex-fill {
     color: #fff;
 }
 
-.list-item-hover:hover {
-    background: #e6f9ed;
-    transition: background 0.15s;
-}
+
 
 .highlight-reservation {
     background: #fffbe6;
@@ -287,13 +245,6 @@ main.flex-fill {
     font-weight: 600;
 }
 
-/* 2. Tlačidlo v navigácii s efektom */
-.navbar .btn-outline-light:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-color: #ffffff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
 
 /* 3. Dropdown menu štýly */
 .dropdown-menu {
@@ -416,18 +367,6 @@ table thead th {
 .form-control::placeholder {
     color: #adb5bd;
     font-style: italic;
-}
-
-/* 21. Link štýly */
-a {
-    color: #0d3b66;
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
-
-a:hover {
-    color: #6fbf86;
-    text-shadow: 0 2px 4px rgba(111, 191, 134, 0.3);
 }
 
 

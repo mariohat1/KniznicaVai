@@ -1,11 +1,19 @@
 <?php
 /** @var array $items */
-/** @var \Framework\Core\IAuthenticator $auth */
+/** @var string $status */
 /** @var \Framework\Support\LinkGenerator $link */
 
 ?>
 <div class="container">
     <h1 class="mb-4 section-title">Moje rezervácie</h1>
+
+    <div class="mb-3">
+        <div class="btn-group" role="group" aria-label="Status filter">
+            <a href="<?= $link->url('reservation.index', ['status' => 'all']) ?>" class="btn btn-sm <?= ($status ?? 'all') === 'all' ? 'btn-primary' : 'btn-outline-secondary' ?>">Všetky</a>
+            <a href="<?= $link->url('reservation.index', ['status' => 'active']) ?>" class="btn btn-sm <?= ($status ?? '') === 'active' ? 'btn-primary' : 'btn-outline-secondary' ?>">Aktívne</a>
+            <a href="<?= $link->url('reservation.index', ['status' => 'finished']) ?>" class="btn btn-sm <?= ($status ?? '') === 'finished' ? 'btn-primary' : 'btn-outline-secondary' ?>">Skončené</a>
+        </div>
+    </div>
 
     <?php if (empty($items)): ?>
         <div class="alert alert-info">Nemáte žiadne rezervácie.</div>
@@ -30,15 +38,13 @@
                             Kópia: <?= $copy ? htmlspecialchars((string)$copy->getId()) : '—' ?>
                             <br>
                             Rezervované: <?= htmlspecialchars((string)$r->getCreatedAt()) ?>
-                            &middot; Rezervované (flag): <?= $r->getIsReserved() ? 'Áno' : 'Nie' ?>
                         </div>
                     </div>
                     <div class="text-end ms-3">
                         <?php if ($r->getIsReserved()): ?>
-                            <form method="post" action="<?= $link->url('reservation.update') ?>" class="d-inline">
+                            <form method="post" action="<?= $link->url('reservation.cancel') ?>" class="d-inline">
                                 <input type="hidden" name="id" value="<?= htmlspecialchars((string)$r->getId()) ?>">
-                                <input type="hidden" name="action" value="cancel">
-                                <button class="btn btn-sm btn-outline-danger">Zrušiť</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Naozaj zrušiť rezerváciu?');">Zrušiť</button>
                             </form>
                         <?php endif; ?>
                     </div>

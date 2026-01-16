@@ -34,7 +34,6 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th class="d-none d-sm-table-cell">ID</th>
                     <th>Názov</th>
                     <th class="d-none d-md-table-cell">Popis</th>
                     <th>Akcie</th>
@@ -43,13 +42,13 @@ if (isset($view) && method_exists($view, 'setLayout')) {
             <tbody>
                 <?php foreach ($genres as $g): ?>
                     <tr>
-                        <td class="d-none d-sm-table-cell"><?= htmlspecialchars((string)$g->getId()) ?></td>
                         <td><?= htmlspecialchars((string)$g->getName()) ?></td>
                         <td class="d-none d-md-table-cell"><?= htmlspecialchars((string)$g->getDescription()) ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
                                 <a class="btn btn-sm btn-outline-secondary" href="<?= $link->url('genre.add', ['id' => $g->getId()]) ?>">Upraviť</a>
-                                <form method="post" action="<?= $link->url('genre.delete') ?>" class="d-inline-block genre-delete-form">
+                                <form method="post" action="<?= $link->url('genre.delete') ?>" class="d-inline-block genre-delete-form"
+                                      onsubmit="return confirm('Naozaj chcete zmazať tento žáner?');">
                                     <input type="hidden" name="id" value="<?= htmlspecialchars($g->getId()) ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Zmazať</button>
                                 </form>
@@ -88,14 +87,3 @@ if (isset($view) && method_exists($view, 'setLayout')) {
     <?php endif; ?>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('.genre-delete-form').forEach(function(f){
-    f.addEventListener('submit', function(e){
-      if (!confirm('Naozaj chcete zmazať tento žáner?')) {
-        e.preventDefault();
-      }
-    });
-  });
-});
-</script>

@@ -13,11 +13,24 @@ use Framework\Http\Responses\Response;
 
 class ReservationController extends BaseController
 {
+    public function __construct()
+    {
+        // Log instantiation to help debug missing authorize() calls
+        error_log('[DEBUG] ReservationController instantiated');
+    }
+
     public function authorize(Request $request, string $action): bool
     {
         $auth = $this->app->getAuth();
+        if ($action === 'manage' || $action === 'update') {
+            if (!$auth || !$auth->isLogged()) {
+                return false;
+            }
+            $user = $auth->getUser();
+            return $user && strtolower((string)$user->getRole()) === 'admin';
+        }
 
-        if ($action === 'index') {
+        if ($action === 'index' || $action === 'cancel') {
             return $auth && $auth->isLogged();
         }
 
@@ -29,16 +42,11 @@ class ReservationController extends BaseController
             return $user && strtolower((string)$user->getRole()) !== 'admin';
         }
 
-        if ($action === 'manage' || $action === 'update') {
-            if (!$auth || !$auth->isLogged()) {
-                return false;
-            }
-            $user = $auth->getUser();
-            return $user && strtolower((string)$user->getRole()) === 'admin';
-        }
+
 
         return false;
     }
+
 
     /**
      * Create a reservation (POST). Expects param `id` = book id.
@@ -119,7 +127,22 @@ class ReservationController extends BaseController
         if ($userId === null) {
             return $this->redirect($this->url('book.index'));
         }
-        $reservations = Reservation::getAll('user_id = ?', [$userId]);
+
+        // Status filter: 'active' => is_reserved = 1, 'finished' => is_reserved = 0, default all
+        $status = $request->value('status');
+        $whereParts = ['user_id = ?'];
+        $whereParams = [$userId];
+        if ($status === 'active') {
+            $whereParts[] = 'is_reserved = ?';
+            $whereParams[] = 1;
+        } elseif ($status === 'finished') {
+            $whereParts[] = 'is_reserved = ?';
+            $whereParams[] = 0;
+        }
+
+        $where = !empty($whereParts) ? implode(' AND ', $whereParts) : null;
+        $reservations = Reservation::getAll($where, $whereParams);
+
         $items = [];
         foreach ($reservations as $r) {
             $copy = null;
@@ -132,7 +155,7 @@ class ReservationController extends BaseController
             $items[] = ['reservation' => $r, 'copy' => $copy, 'book' => $book];
         }
 
-        return $this->html(['items' => $items], 'index');
+        return $this->html(['items' => $items, 'status' => $status ?? 'all'], 'index');
     }
 
     /**
@@ -160,24 +183,6 @@ class ReservationController extends BaseController
         $items = $data['items'];
         $pagination = $data['pagination'];
 
-        // send response (AJAX JSON or HTML) via helper so manage() calls all helpers
-        return $this->sendResponse($request, $items, $pagination, $q, $status, $searchBy);
-    }
-
-    /**
-     * Centralize response sending: returns JSON for AJAX or HTML view otherwise.
-     * This keeps the decision in one place and ensures `manage()` calls all helpers.
-     *
-     * @param Request $request
-     * @param array $items
-     * @param array $pagination
-     * @param string $q
-     * @param string|null $status
-     * @param string $searchBy
-     * @return Response
-     */
-    private function sendResponse(Request $request, array $items, array $pagination, string $q, ?string $status, string $searchBy): Response
-    {
         if ($request->isAjax() || $request->wantsJson()) {
             return $this->json([
                 'items' => $items,
@@ -195,7 +200,10 @@ class ReservationController extends BaseController
             'searchBy' => $searchBy,
             'pagination' => $pagination
         ], 'manage');
+
     }
+
+
 
     public function update(Request $request): Response
     {
@@ -209,9 +217,8 @@ class ReservationController extends BaseController
         $action = $action ? (string)$action : null;
 
         if ($id === null || $action === null) {
-            // bad request
             if ($request->isAjax()) {
-                return $this->json(['success' => false, 'message' => 'Neplatné údaje.'])->setStatusCode(400);
+                return $this->json(['success' => false, 'message' => 'Neplatné údaje.']);
             }
             return $this->redirect($this->url('reservation.manage'));
         }
@@ -219,49 +226,63 @@ class ReservationController extends BaseController
         $reservation = Reservation::getOne($id);
         if ($reservation === null) {
             if ($request->isAjax()) {
-                return $this->json(['success' => false, 'message' => 'Rezervácia nenájdená.'])->setStatusCode(404);
+                return $this->json(['success' => false, 'message' => 'Rezervácia nenájdená.']);
             }
-            return $this->redirect($this->url('reservation.manage'));
         }
 
         try {
             if ($action === 'cancel') {
-                // cancel reservation: mark as not reserved (is_reserved = 0)
                 $reservation->setIsReserved(0);
                 $reservation->save();
             } elseif ($action === 'restore') {
-                // restore reservation: mark as reserved (is_reserved = 1)
                 $reservation->setIsReserved(1);
                 $reservation->save();
-            } else {
-                // unknown action
-                if ($request->isAjax()) {
-                    return $this->json(['success' => false, 'message' => 'Neznáma akcia.'])->setStatusCode(400);
-                }
-                return $this->redirect($this->url('reservation.manage'));
             }
         } catch (\Throwable $e) {
             if ($request->isAjax()) {
-                return $this->json(['success' => false, 'message' => 'Server error.'])->setStatusCode(500);
+                return $this->json(['success' => false, 'message' => 'Server error.']);
             }
-            return $this->redirect($this->url('reservation.manage'));
         }
         if ($request->isAjax()) {
             if ($action === 'cancel') {
                 return $this->json(['success' => true, 'id' => $id]);
             }
-            try {
-                $copy = BookCopy::getOne($reservation->getBookCopyId());
-                if ($copy) $book = Book::getOne($copy->getBookId());
-                $user = User::getOne($reservation->getUserId());
-            } catch (\Throwable $e) {
-            }
 
             return $this->json(['success' => true, 'id' => $reservation->getId()]);
         }
-
-        // Non-AJAX: redirect back to manage
         return $this->redirect($this->url('reservation.manage'));
+    }
+
+    /**
+     * Umožní užívateľovi zrušiť iba svoju vlastnú rezerváciu (POST, id v parametri)
+     * Minimal: predpokladá, že $this->app->getAuth()->getUser()->getId() existuje.
+     */
+    public function cancel(Request $request): Response
+    {
+        $user = $this->app->getAuth()->getUser();
+        $userId = $user->getId();
+
+        $reservationId = (int)$request->value('id');
+        if ($reservationId <= 0) {
+            return $this->redirect($this->url('reservation.index'));
+        }
+
+        $reservation = Reservation::getOne($reservationId);
+        if (!$reservation) {
+           return $this->redirect($this->url('reservation.index'));
+        }
+
+        if ((int)$reservation->getUserId() !== (int)$userId) {
+           return $this->redirect($this->url('reservation.index'));
+        }
+
+        try {
+            $reservation->setIsReserved(0);
+            $reservation->save();
+            return $this->redirect($this->url('reservation.index'));
+        } catch (\Throwable $e) {
+            return $this->redirect($this->url('reservation.index'));
+        }
     }
 
     /**

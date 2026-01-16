@@ -23,7 +23,6 @@ $displayNameEsc = AuthView::displayNameEsc($auth);
 <body>
 <nav class="navbar navbar-expand-md navbar-dark bg-dark">
     <div class="container-fluid">
-        <!-- Mobile menu button -->
         <button class="btn btn-outline-light me-2 d-md-none" type="button" data-bs-toggle="offcanvas"
                 data-bs-target="#adminOffcanvas" aria-controls="adminOffcanvas" aria-label="Otvoriť menu">
             <i class="bi bi-list" ></i>
@@ -35,7 +34,7 @@ $displayNameEsc = AuthView::displayNameEsc($auth);
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="admNav">
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav ms-auto align-items-center gap-2">
                 <li class="nav-item"><span class="nav-link text-white">Prihlásený: <strong><?= $displayNameEsc ?></strong></span></li>
                 <li class="nav-item"><a class="nav-link" href="<?= $link->url('auth.logout') ?>">Odhlásiť</a></li>
             </ul>
