@@ -1,107 +1,22 @@
 document.addEventListener('DOMContentLoaded', function () {
     var loginForm = document.getElementById('loginForm');
-    if (!loginForm) return;
+    if (loginForm) {
+        var loginFeedback = document.createElement('div');
+        loginFeedback.id = 'loginFormFeedback';
+        loginFeedback.className = 'alert alert-danger';
+        loginFeedback.style.display = 'none';
+        loginForm.insertBefore(loginFeedback, loginForm.firstChild);
 
-    function showError(msg) {
-        var box = loginForm.querySelector('.ajax-error');
-        if (!box) {
-            box = document.createElement('div');
-            box.className = 'ajax-error alert alert-danger mt-2';
-            loginForm.insertBefore(box, loginForm.firstChild);
-        }
-        box.textContent = msg || 'Chyba';
-        box.style.display = 'block';
-    }
-
-    loginForm.addEventListener('submit', async function (event) {
-        event.preventDefault();
-        var url = loginForm.action || window.location.href;
-        var formData = new FormData(loginForm);
-        try {
-            var resp = await fetch(url, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
-                credentials: 'same-origin'
-            });
-
-            if (resp.redirected) {
-                window.location.href = resp.url;
-                return;
-            }
-
-            if (!resp.ok) {
-                var textErr = await resp.text().catch(function () { return ''; });
-                try {
-                    var parsedErr = textErr ? JSON.parse(textErr) : null;
-                    if (parsedErr && parsedErr.message) {
-                        showError(parsedErr.message);
-                        return;
-                    }
-                } catch (e) {
-                }
-                showError('Chyba servera (' + resp.status + ').');
-                return;
-            }
-
-            var text = await resp.text();
-            var json = null;
-            try {
-                json = text ? JSON.parse(text) : null;
-            } catch (e) {
-                showError('Nesprávna odpoveď zo servera.');
-                console.error('Invalid JSON response:', text);
-                return;
-            }
-
-            if (json && json.success) {
-                window.location.href = json.redirect || window.location.href;
-                return;
-            }
-
-            showError((json && json.message) ? json.message : 'Neplatné meno alebo heslo');
-
-        } catch (err) {
-            console.error('Login fetch failed', err);
-            showError('Chyba pri sieti. Skús to neskôr.');
-        }
-    });
-
-    // ----- registration via AJAX -----
-    var registerContainer = document.getElementById('modalRegisterForm');
-    var registerForm = registerContainer ? registerContainer.querySelector('form') : null;
-
-    function ensureRegisterFeedback() {
-        if (!registerForm) return null;
-        var existing = document.getElementById('modalRegisterFeedback');
-        if (existing) return existing;
-        var div = document.createElement('div');
-        div.id = 'modalRegisterFeedback';
-        div.className = 'alert alert-danger mb-2';
-        div.style.display = 'none';
-        registerForm.insertBefore(div, registerForm.firstChild);
-        return div;
-    }
-
-    function showRegisterError(msg) {
-        var box = document.getElementById('modalRegisterFeedback') || ensureRegisterFeedback();
-        if (!box) return;
-        box.textContent = msg || 'Chyba';
-        box.style.display = 'block';
-    }
-
-    if (registerForm) {
-        registerForm.addEventListener('submit', async function (event) {
+        loginForm.addEventListener('submit', async function (event) {
             event.preventDefault();
-            var submitBtn = registerForm.querySelector('button[type="submit"]');
+            loginFeedback.style.display = 'none';
+            loginFeedback.innerHTML = '';
+
+            var submitBtn = loginForm.querySelector('button[type="submit"]');
             if (submitBtn) submitBtn.disabled = true;
 
-            var url = registerForm.action || window.location.href;
-            var formData = new FormData(registerForm);
-
+            var url = loginForm.action || window.location.href;
+            var formData = new FormData(loginForm);
             try {
                 var resp = await fetch(url, {
                     method: 'POST',
@@ -113,34 +28,66 @@ document.addEventListener('DOMContentLoaded', function () {
                     credentials: 'same-origin'
                 });
 
-                if (resp.redirected) {
-                    window.location.href = resp.url;
-                    return;
-                }
-
-                var text = await resp.text();
-                var json = null;
-                try {
-                    json = text ? JSON.parse(text) : null;
-                } catch (e) {
-                    showRegisterError('Nesprávna odpoveď zo servera.');
-                    console.error('Invalid JSON response:', text);
-                    return;
-                }
-
-                if (resp.ok && json && json.success) {
+                var json = await resp.json();
+                if (json && json.success) {
                     window.location.href = json.redirect || window.location.href;
                     return;
                 }
-                showRegisterError((json && json.message) ? json.message : 'Registrácia zlyhala.');
-
+                loginFeedback.innerHTML = json && json.message ? json.message : 'Neplatné meno alebo heslo';
+                loginFeedback.style.display = 'block';
             } catch (err) {
-                console.error('Register fetch failed', err);
-                showRegisterError('Chyba pri sieti. Skús to neskôr.');
+                console.error('Login failed', err);
+                loginFeedback.innerHTML = 'Chyba spojenia';
+                loginFeedback.style.display = 'block';
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
+    }
+    var registerForm = document.querySelector('#modalRegisterForm form');
+    if (registerForm) {
+        var registerFeedback = document.createElement('div');
+        registerFeedback.id = 'registerFormFeedback';
+        registerFeedback.className = 'alert alert-danger';
+        registerFeedback.style.display = 'none';
+        registerForm.insertBefore(registerFeedback, registerForm.firstChild);
+
+        registerForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            registerFeedback.style.display = 'none';
+            registerFeedback.innerHTML = '';
+
+            var submitBtn = registerForm.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+
+            var url = registerForm.action || window.location.href;
+            var formData = new FormData(registerForm);
+            try {
+                var resp = await fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                });
+
+                var json = await resp.json();
+                if (json && json.success) {
+                    window.location.href = json.redirect || window.location.href;
+                    return;
+                }
+
+                registerFeedback.innerHTML = json && json.message ? json.message : 'Registrácia zlyhala';
+                registerFeedback.style.display = 'block';
+            } catch (err) {
+                console.error('Register failed', err);
+                registerFeedback.innerHTML = 'Chyba spojenia';
+                registerFeedback.style.display = 'block';
             } finally {
                 if (submitBtn) submitBtn.disabled = false;
             }
         });
     }
 });
-

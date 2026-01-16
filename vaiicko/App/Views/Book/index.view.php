@@ -14,53 +14,63 @@ use Framework\Support\LinkGenerator;
 
 $view->setLayout('root');
 ?>
-<div class="container" >
+<div class="container">
     <h1 class="mb-4 section-title">Knihy</h1>
-    <form id="bookSearchForm" method="get" action="<?= $link->url('book.index') ?>" class="mb-3">
+
+    <form id="bookSearchForm" method="get" action="<?= $link->url('book.index') ?>" class="mb-4">
         <input type="hidden" name="c" value="book">
-        <div class="d-flex align-items-center gap-3">
-            <div class="d-flex align-items-center gap-2">
-                <label class="me-2 small text-muted">Filtrovať podľa:</label>
-                <div class="btn-group" role="group" aria-label="Filter options">
-                    <input type="radio" class="btn-check" name="filter" id="filterTitle" value="title"
-                           autocomplete="off" <?= (isset($filters['filter']) ? ($filters['filter'] === 'title' ? 'checked' : '') : 'checked') ?>
-                           aria-describedby="bookFilterHelp">
-                    <label class="btn btn-outline-secondary rounded-circle filter-dot" for="filterTitle" title="Názov"></label>
-                    <span class="ms-2 small text-muted">Kniha</span>
-                    <input type="radio" class="btn-check" name="filter" id="filterAuthor" value="author"
-                           autocomplete="off" <?= isset($filters['filter']) && $filters['filter'] === 'author' ? 'checked' : '' ?>
-                           aria-describedby="bookFilterHelp">
-                    <label class="btn btn-outline-secondary rounded-circle filter-dot" for="filterAuthor" title="Autor"></label>
-                    <span class="ms-2 small text-muted">Autor</span>
-                </div>
+
+        <!-- Filter radio dots -->
+        <div class="mb-3 d-flex align-items-center gap-3">
+            <span class="text-muted small">Filtrovať:</span>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="filter" id="filterTitle" value="title"
+                       <?= (isset($filters['filter']) ? ($filters['filter'] === 'title' ? 'checked' : '') : 'checked') ?>>
+                <label class="form-check-label" for="filterTitle">
+                    <i class="bi bi-book me-1"></i>Názov
+                </label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="filter" id="filterAuthor" value="author"
+                       <?= isset($filters['filter']) && $filters['filter'] === 'author' ? 'checked' : '' ?>>
+                <label class="form-check-label" for="filterAuthor">
+                    <i class="bi bi-person me-1"></i>Autor
+                </label>
+            </div>
+        </div>
+
+        <!-- Search and filters -->
+        <div class="row g-2">
+            <div class="col-12 col-md-4">
+                <input id="bookSearchInput" name="q" type="search" class="form-control"
+                       placeholder="Vyhľadať..." value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
             </div>
 
-            <div class="flex-grow-1">
-                <div class="input-group">
-                    <label for="bookSearchInput" class="visually-hidden">Vyhľadať knihy</label>
-                    <input id="bookSearchInput" name="q" type="search" class="form-control"
-                           placeholder="Vyhľadať knihy..." value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
+            <div class="col-6 col-md-3">
+                <select id="bookCategorySelect" name="category" class="form-select">
+                    <option value="">Kategória</option>
+                    <?php if (!empty($categories)): foreach ($categories as $id => $cat): ?>
+                        <option value="<?= htmlspecialchars((string)$id) ?>" <?= isset($filters['category']) && (string)$filters['category'] === (string)$id ? 'selected' : '' ?>><?= htmlspecialchars((string)$cat) ?></option>
+                    <?php endforeach; endif; ?>
+                </select>
+            </div>
 
-                    <label for="bookCategorySelect" class="visually-hidden">Kategória</label>
-                    <select id="bookCategorySelect" name="category" class="form-select">
-                        <option value="">-- všetky kategórie --</option>
-                        <?php if (!empty($categories)): foreach ($categories as $id => $cat): ?>
-                            <option value="<?= htmlspecialchars((string)$id) ?>" <?= isset($filters['category']) && (string)$filters['category'] === (string)$id ? 'selected' : '' ?>><?= htmlspecialchars((string)$cat) ?></option>
-                        <?php endforeach; endif; ?>
-                    </select>
+            <div class="col-6 col-md-3">
+                <select id="bookGenreSelect" name="genre" class="form-select">
+                    <option value="">Žáner</option>
+                    <?php if (!empty($genres)) : foreach ($genres as $id => $gen): ?>
+                        <option value="<?= htmlspecialchars((string)$id) ?>" <?= isset($filters['genre']) && (string)$filters['genre'] === (string)$id ? 'selected' : '' ?>>
+                            <?= htmlspecialchars((string)$gen) ?>
+                        </option>
+                    <?php endforeach;
+                    endif; ?>
+                </select>
+            </div>
 
-                    <label for="bookGenreSelect" class="visually-hidden">Žáner</label>
-                    <select id="bookGenreSelect" name="genre" class="form-select">
-                        <option value="">-- všetky žánre --</option>
-                        <?php if (!empty($genres)) : foreach ($genres as $id => $gen): ?>
-                            <option value="<?= htmlspecialchars((string)$id) ?>" <?= isset($filters['genre']) && (string)$filters['genre'] === (string)$id ? 'selected' : '' ?>>
-                                <?= htmlspecialchars((string)$gen) ?>
-                            </option>
-                        <?php endforeach;
-                        endif; ?>
-                    </select>
-                    <button id="bookSearchBtn" class="btn btn-primary" type="submit">Hľadať</button>
-                </div>
+            <div class="col-12 col-md-2">
+                <button id="bookSearchBtn" class="btn btn-primary w-100" type="submit">
+                    <i class="bi bi-search"></i><span class="d-none d-md-inline ms-1">Hľadať</span>
+                </button>
             </div>
         </div>
     </form>
@@ -86,10 +96,10 @@ $view->setLayout('root');
                     $photo = htmlspecialchars((string)$b->getPhoto());
                     $bookUrl = $link->url('book.view', ['id' => $b->getId()]);
                     ?>
-                    <div class="list-group-item border-bottom py-3 card-book" data-title="<?= $title ?>"
+                    <div class="list-group-item border-bottom py-3 card card-book" data-title="<?= $title ?>"
                          data-author="<?= $authorName ?>" data-isbn="<?= $isbn ?>" data-year="<?= $year ?>"
                          data-category="<?= $categoryName ?>" data-genre="<?= $genreName ?>">
-                        <div class="row g-0 align-items-start">
+                        <div class="row align-items-start g-3 g-md-4">
                             <div class="col-12 col-md-2 text-center">
                                  <?php if (!empty($photo)): ?>
                                      <div class="bg-light d-flex align-items-center justify-content-center border rounded thumb">
@@ -113,7 +123,7 @@ $view->setLayout('root');
 
                                  <p class="mb-1 text-muted">
                                      <small>
-                                         <span class="meta-label"><strong>Autor:</strong> <?= $authorName ?></span>
+                                         <span class="meta-label"><strong>Autor:</strong> <a href="<?= $link->url('author.view', ['id' => $m['author_id'] ?? 0]) ?>" class="author-link"><?= $authorName ?></a></span>
                                          <span class="mx-1">|</span>
                                          <span class="meta-label"><strong>ISBN:</strong> <?= $isbn ?></span>
                                          <span class="mx-1">|</span>
@@ -124,9 +134,9 @@ $view->setLayout('root');
                                  <!-- description removed per request: index should not show full book description -->
 
                                  <div>
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success category-label">
-                                        <i class="bi bi-check-circle me-1"></i> Dostupné
-                                        <span class="ms-2 small text-dark"><?= htmlspecialchars((string)($meta['available'] ?? 0)) ?> / <?= htmlspecialchars((string)($meta['total'] ?? 0)) ?></span>
+                                    <span class="badge bg-success-subtle text-success border border-success">
+                                        <i class="bi bi-check-circle me-1"></i>Dostupné
+                                        <span class="ms-2"><?= htmlspecialchars((string)($meta['available'] ?? 0)) ?> / <?= htmlspecialchars((string)($meta['total'] ?? 0)) ?></span>
                                     </span>
                                  </div>
                             </div>

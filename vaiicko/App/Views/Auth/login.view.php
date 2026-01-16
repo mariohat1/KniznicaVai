@@ -15,7 +15,7 @@ $view->setLayout('auth');
                     <h5 class="card-title text-center">Prihlásenie</h5>
 
                     <?php if (!empty($message)): ?>
-                        <div class="text-center text-danger mb-3"><?= htmlspecialchars($message) ?></div>
+                        <div class="alert alert-danger"><?= htmlspecialchars($message) ?></div>
                     <?php endif; ?>
 
                     <form class="form-signin" method="post" action="<?= $link->url('auth.login') ?>">

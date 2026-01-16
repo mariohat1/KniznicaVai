@@ -39,8 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const expDate = it.expDate ? `Expiruje: ${it.expDate}` : '';
                     const daysLeft = it.daysLeft ? ` · Zostáva: ${it.daysLeft}` : '';
                     const isReserved = parseInt(it.reservation?.is_reserved) === 1;
-                    const btnText = isReserved ? 'Zrušiť rezerváciu' : 'Obnoviť rezerváciu';
-                    const btnClass = isReserved ? 'btn-warning' : 'btn-success';
+                    const btnText = isReserved ? 'Zrušiť' : 'Obnoviť';
+                    const btnClass = isReserved ? 'btn-outline-danger' : 'btn-outline-primary';
                     const btnAction = isReserved ? 'cancel' : 'restore';
                     listHtml += `
                         <div class="list-group-item d-flex justify-content-between align-items-start">
@@ -48,10 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="fw-bold">${title}</div>
                                 <div class="small text-muted">
                                     Používateľ: ${username}<br>
-                                    Čas: ${expDate}${daysLeft}
+                                    ${expDate}${daysLeft ? daysLeft : ''}
                                 </div>
                             </div>
-                            <div>
+                            <div class="text-end ms-2 flex-shrink-0">
                                 <button type="button"
                                     class="btn btn-sm ${btnClass} reservation-action"
                                     data-id="${it.reservation?.id}"

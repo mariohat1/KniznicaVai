@@ -28,7 +28,13 @@ class GenreController extends BaseController
 
     public function index(Request $request): Response
     {
-        $genres = Genre::getAll();
+        $q = $request->value('q');
+        if (!empty($q)) {
+            $q = trim((string)$q);
+            $genres = Genre::getAll('name LIKE ?', ["%$q%"]);
+        } else {
+            $genres = Genre::getAll();
+        }
         return $this->html(['genres' => $genres], 'index');
     }
 

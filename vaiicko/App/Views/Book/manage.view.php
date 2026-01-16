@@ -14,13 +14,13 @@ $view->setLayout('admin');
     <h1>Správa kníh</h1>
 
     <!-- Plain GET form: submit to front controller so router always receives c=book&a=manage -->
-    <form id="bookSearchForm" method="get" action="<?= $link->url('book.manage') ?>" class="row g-2 mb-3 align-items-center">
+    <form id="bookSearchForm" method="get" action="<?= $link->url('book.manage') ?>" class="row g-2 mb-3">
         <input type="hidden" name="c" value="book">
         <input type="hidden" name="a" value="manage">
-        <div class="col-auto">
+        <div class="col-12 col-md-6 col-lg-3">
             <input type="search" name="q" class="form-control" placeholder="Hľadať názov alebo ISBN" value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
         </div>
-        <div class="col-auto">
+        <div class="col-12 col-md-6 col-lg-3">
             <select name="category" class="form-select">
                 <option value="">Všetky kategórie</option>
                 <?php foreach ($categories as $id => $name): ?>
@@ -28,7 +28,7 @@ $view->setLayout('admin');
                 <?php endforeach; ?>
             </select>
         </div>
-        <div class="col-auto">
+        <div class="col-12 col-md-6 col-lg-3">
             <select name="genre" class="form-select">
                 <option value="">Všetky žánre</option>
                 <?php foreach ($genres as $id => $name): ?>
@@ -37,15 +37,15 @@ $view->setLayout('admin');
             </select>
         </div>
         <input type="hidden" id="bookPageInput" name="page" value="<?= htmlspecialchars($filters['page'] ?? 1) ?>">
-        <div class="col-auto">
-            <button type="submit" class="btn btn-primary">Hľadať</button>
+        <div class="col-12 col-lg-3">
+            <button type="submit" class="btn btn-primary w-100">Hľadať</button>
         </div>
     </form>
 
     <div class="mb-3">
         <a class="btn btn-primary" href="<?= $link->url('book.add') ?>">Pridať knihu</a>
     </div>
-    <div id="manageFeedback" class="alert hidden-block"></div>
+    <div id="manageFeedback" class="alert"></div>
 
     <?php if (empty($books)): ?>
         <p>Žiadne knihy.</p>
@@ -68,11 +68,11 @@ $view->setLayout('admin');
                     $meta = $copies[$cid] ?? ['total' => 0, 'available' => 0]; ?>
                     <tr>
                         <td class="visually-hidden"><?= htmlspecialchars((string)$cid) ?></td>
-                        <td class="text-ellipsis-220" title="<?= htmlspecialchars($b->getTitle()) ?>"><?= htmlspecialchars($b->getTitle()) ?></td>
+                        <td title="<?= htmlspecialchars($b->getTitle()) ?>"><?= htmlspecialchars($b->getTitle()) ?></td>
                         <td class="d-none d-md-table-cell"><?= htmlspecialchars($b->getIsbn()) ?></td>
                         <td class="d-none d-md-table-cell"><?= htmlspecialchars((string)$meta['total']) ?> / <?= htmlspecialchars((string)$meta['available']) ?></td>
                     </tr>
-                    <tr class="table-action-row">
+                    <tr>
                         <td colspan="4" class="pt-1 pb-1">
                             <div class="d-flex flex-column flex-sm-row gap-2">
                                 <a class="btn btn-sm btn-outline-primary" href="<?= $link->url('book.view', ['id' => $cid]) ?>">Zobraziť</a>

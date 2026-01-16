@@ -47,7 +47,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
                         aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+                    <i class="bi bi-list text-white"></i>
                 </button>
 
                 <div class="collapse navbar-collapse" id="mainNav">
@@ -205,34 +205,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
 
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var loginForm = document.getElementById('modalLoginForm');
-        var registerForm = document.getElementById('modalRegisterForm');
-
-        var showLoginBtn = document.getElementById('showLogin');
-        var showRegisterBtn = document.getElementById('showRegister');
-
-
-        if (showLoginBtn) {
-            showLoginBtn.addEventListener('click', function () {
-                if (loginForm) loginForm.style.display = 'block';
-                if (registerForm) registerForm.style.display = 'none';
-                var fb = document.getElementById('modalRegisterFeedback');
-                if (fb) fb.style.display = 'none';
-            });
-        }
-
-        if (showRegisterBtn) {
-            showRegisterBtn.addEventListener('click', function () {
-                if (loginForm) loginForm.style.display = 'none';
-                if (registerForm) registerForm.style.display = 'block';
-            });
-        }
-
-    });
-</script>
-
+<script src="<?= $link->asset('js/loginModal.js') ?>"></script>
 <script src="<?= $link->asset('js/login.js') ?>"></script>
 
 </body>

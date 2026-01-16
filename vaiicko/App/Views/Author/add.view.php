@@ -40,17 +40,20 @@ $view->setLayout('admin');
 
         <div class="mb-3">
             <label class="form-label">Fotka autora (PNG) — potiahni sem</label>
-            <div id="author-photo-drop" class="border rounded p-3 text-center"
-                 style="min-height:120px; display:flex;align-items:center;justify-content:center;cursor:pointer;">
-                <div id="author-photo-placeholder">Potiahni sem PNG alebo klikni pre vybratie súboru</div>
+            <div id="author-photo-drop" class="border rounded p-4 text-center bg-light"
+                 style="min-height:140px; display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s ease;">
+                <div id="author-photo-placeholder">
+                    <p class="mb-2"><strong>Potiahni sem PNG alebo klikni pre vybratie</strong></p>
+                    <small class="text-muted d-block">Odporúčané rozmery: <strong>160 × 160 px</strong><br>Pre ostrý výsledok (retina) odporúčame nahrať ~<strong>320 × 320 px</strong>. Max 5 MB, len PNG.</small>
+                </div>
                 <img id="author-photo-preview"
                      src="<?= isset($author) && method_exists($author, 'getPhoto') ? htmlspecialchars((string)$author->getPhoto()) : '' ?>"
-                     alt="" style="max-height:100px; display:none; margin:auto;">
+                     alt="" style="max-width:160px; height:auto; display:none; margin:auto;">
             </div>
             <input id="author-photo-input" type="file" accept="image/png" style="display:none">
             <input type="hidden" name="photo_path" id="photo_path"
                    value="<?= isset($author) && method_exists($author, 'getPhoto') ? htmlspecialchars((string)$author->getPhoto()) : '' ?>">
-            <small class="form-text text-muted">Max 5 MB. Len PNG.</small>
+            <small class="form-text text-muted d-block mt-2">💡 <strong>Tip:</strong> Fotka sa zobrazí ako kruh v zozname autorov a ako štvorcové okno na detaile; kvadratický formát 1:1 (160×160 alebo 320×320) funguje najlepšie.</small>
         </div>
         <button class="btn btn-primary"><?= isset($author) ? 'Update' : 'Save' ?></button>
     </form>

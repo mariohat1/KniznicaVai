@@ -8,6 +8,19 @@ if (isset($view) && method_exists($view, 'setLayout')) {
 
 <div class="container">
     <h1>Správa autorov</h1>
+
+    <!-- Search form -->
+    <form method="get" action="<?= $link->url('author.manage') ?>" class="row g-2 mb-3">
+        <input type="hidden" name="c" value="author">
+        <input type="hidden" name="a" value="manage">
+        <div class="col-12 col-md-6">
+            <input type="search" name="q" class="form-control" placeholder="Hľadať meno alebo priezvisko" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
+        </div>
+        <div class="col-12 col-md-auto">
+            <button type="submit" class="btn btn-primary w-100 w-md-auto">Hľadať</button>
+        </div>
+    </form>
+
     <div class="mb-3">
         <a class="btn btn-primary" href="<?= $link->url('author.add') ?>">Pridať autora</a>
     </div>

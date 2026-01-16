@@ -26,7 +26,7 @@ $displayNameEsc = AuthView::displayNameEsc($auth);
         <!-- Mobile menu button -->
         <button class="btn btn-outline-light me-2 d-md-none" type="button" data-bs-toggle="offcanvas"
                 data-bs-target="#adminOffcanvas" aria-controls="adminOffcanvas" aria-label="Otvoriť menu">
-            <span class="navbar-toggler-icon"></span>
+            <i class="bi bi-list" ></i>
         </button>
 
         <a class="navbar-brand d-flex align-items-center ms-1" href="<?= $link->url('home.index') ?>">Admin</a>

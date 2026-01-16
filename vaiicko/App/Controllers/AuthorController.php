@@ -31,8 +31,15 @@ class AuthorController extends BaseController
 
     public function index(Request $request): Response
     {
-        // Load all authors from DB
-        $authors = Author::getAll();
+        // Load all authors from DB or filter by search
+        $q = $request->value('q');
+        if (!empty($q)) {
+            $q = trim((string)$q);
+            // Search in first_name or last_name
+            $authors = Author::getAll('first_name LIKE ? OR last_name LIKE ?', ["%$q%", "%$q%"]);
+        } else {
+            $authors = Author::getAll();
+        }
 
         // Pass authors to the view (view path will be Author/index)
         return $this->html(['authors' => $authors], 'index');
@@ -85,7 +92,13 @@ class AuthorController extends BaseController
      */
     public function manage(Request $request): Response
     {
-        $authors = Author::getAll();
+        $q = $request->value('q');
+        if (!empty($q)) {
+            $q = trim((string)$q);
+            $authors = Author::getAll('first_name LIKE ? OR last_name LIKE ?', ["%$q%", "%$q%"]);
+        } else {
+            $authors = Author::getAll();
+        }
         return $this->html(['authors' => $authors], 'manage');
     }
 
@@ -204,3 +217,4 @@ class AuthorController extends BaseController
 
     }
 }
+

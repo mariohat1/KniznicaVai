@@ -28,7 +28,13 @@ class CategoryController extends BaseController
 
     public function index(Request $request): Response
     {
-        $categories = Category::getAll();
+        $q = $request->value('q');
+        if (!empty($q)) {
+            $q = trim((string)$q);
+            $categories = Category::getAll('name LIKE ?', ["%$q%"]);
+        } else {
+            $categories = Category::getAll();
+        }
         return $this->html(['categories' => $categories], 'index');
     }
 

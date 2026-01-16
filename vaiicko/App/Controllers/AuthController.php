@@ -56,20 +56,12 @@ class AuthController extends BaseController
             $logged = $this->app->getAuth()->login($loginField, $password);
             $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
 
-            if ($request->isAjax() || $request->wantsJson()) {
-                if ($logged) {
-                    return new JsonResponse(['success' => true, 'redirect' => $referer]);
-                }
-                return new JsonResponse(['success' => false, 'message' => 'Neplatné meno alebo heslo']);
-            }
             if ($logged) {
-                return $this->redirect($referer);
+                return $this->json(['success' => true, 'redirect' => $referer]);
             }
-
-            $message = 'Neplatné meno alebo heslo';
-            return $this->html(['message' => $message]);
+            return $this->json(['success' => false, 'message' => 'Neplatné meno alebo heslo']);
         }
-        return $this->html();
+        return $this->html(['message' => $message]);
     }
 
     /**

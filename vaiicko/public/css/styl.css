@@ -44,18 +44,7 @@ main.flex-fill {
     padding-bottom: 10px;
 }
 
-.site-header .container-fluid {
-    position: relative;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 64px;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-}
-
 .site-header .navbar-brand {
-    position: static;
     padding: 4px 8px;
     display: flex;
     align-items: center;
@@ -73,6 +62,29 @@ main.flex-fill {
 
 .site-header .nav-link {
     color: #ffffff;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.site-header .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #6fbf86;
+    transition: width 0.3s ease;
+}
+
+.site-header .nav-link:hover {
+    color: #ffffff;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.site-header .nav-link:hover::after {
+    width: 100%;
+    box-shadow: none;
 }
 
 @media (hover: hover) {
@@ -120,14 +132,16 @@ main.flex-fill {
     margin-bottom: 0.5em;
 }
 
+/* author link simplified: no underline pseudo-element and no underline on hover */
 .author-link {
-    color: black;
-    font-weight: 600;
+    color: #234; /* dark slate color */
+    font-weight: 700;
     text-decoration: none;
+    transition: color 0.2s ease;
 }
-
 .author-link:hover {
-    text-decoration: underline;
+    color: #1a7f37; /* subtle green on hover, no underline */
+    text-decoration: none;
 }
 
 .book-title {
@@ -181,10 +195,6 @@ main.flex-fill {
 }
 
 /* ===========================
-   IMAGE STABILITY
-=========================== */
-
-/* ===========================
    MEDIA QUERIES / RESPONSIVE
 =========================== */
 @media (max-width: 768px) {
@@ -196,69 +206,324 @@ main.flex-fill {
     }
 }
 
-/* ==========================
-   AUTHOR CARD / AVAILABILITY
-   ========================== */
-
 /* ===========================
-   MODERN UI ENHANCEMENTS - 20 PRAVIDIEL
+   MODERN UI ENHANCEMENTS
 =========================== */
 
-.book-cover-box {
-    width: 100%;
-    height: 190px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-    background: #f8f9fa;
-    padding: 5px;
-}
-.book-cover-box .book-cover-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+/* Thumbnail wrapper and sizing - books */
+.thumb-wrapper {
+    width: 140px;
+    max-width: 100%;
     display: block;
-}
-.book-cover-box .book-placeholder-svg {
-    width: 100%;
-    height: 100%;
-    color: #6c757d;
-    display: block;
+    margin-right: 1.5rem;
 }
 
-/* Replace .thumb and list spacing tweaks with tighter values to bring title closer to thumbnail */
 .thumb {
-    width: 200px;
+    width: 100%;
     height: 160px;
-    box-sizing: border-box;
-    padding: 6px; /* reduced padding so inner image/placeholder is larger */
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     border-radius: 8px;
     border: 1px solid #e9eef3;
-    background: #ffffff;
+    background: #f8f9fa;
+    position: relative;
+    padding: 8px; /* breathing room so 100x150 covers are not flush */
 }
+
 .thumb .thumb-img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    object-position: center;
+    object-fit: contain; /* show full cover without cropping */
     display: block;
     border-radius: 6px;
 }
+
 .thumb svg {
-    width: 48%;
+    width: auto;
     height: auto;
-    max-height: 78%;
+    max-width: 50%;
+    max-height: 50%;
+    display: block;
+    color: #6c757d;
+    opacity: 0.95;
+
+}
+.book-cover-box {
+    width: 200px;
+    max-width: 100%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.book-cover-img {
+    width: 100%;
+    height: 180px;
+    object-fit: contain; /* show full cover without cropping */
+    display: block;
+    border-radius: 6px;
+}
+
+.book-cover-svg {
+    width: auto;
+    height: auto;
+    max-width: 60%;
+    max-height: 60%;
     display: block;
     color: #6c757d;
     opacity: 0.95;
 }
 
 
+/* 1. Navigačný link aktívny */
+.navbar-nav .nav-link.active {
+    border-bottom: 3px solid #ffffff;
+    font-weight: 600;
+}
 
+/* 2. Tlačidlo v navigácii s efektom */
+.navbar .btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 3. Dropdown menu štýly */
+.dropdown-menu {
+    border: 1px solid #dee2e6;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+}
+
+/* 4. Dropdown položky s efektom hoveru */
+.dropdown-item {
+    padding: 10px 16px;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #e8f5e9;
+    color: #1a7f37;
+}
+
+/* 5. Modálne okno štýly */
+.modal-content {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* 6. Hlavička modálneho okna */
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    border-radius: 8px 8px 0 0;
+}
+
+/* 7. Tlačidlá v modáli */
+.modal-footer .btn {
+    padding: 8px 20px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* 8. Formulárove pole focus stav */
+.form-control:focus {
+    border-color: #6fbf86;
+    box-shadow: 0 0 0 0.2rem rgba(111, 191, 134, 0.25);
+}
+
+/* 9. Štítky v formulároch */
+.form-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+/* 10. Varovný box */
+.alert-warning {
+    background-color: #fffbe6;
+    border-left: 4px solid #ffd166;
+    border-radius: 4px;
+}
+
+/* 11. Úspešný box */
+.alert-success {
+    background-color: #e6f9ed;
+    border-left: 4px solid #6fbf86;
+    border-radius: 4px;
+}
+
+/* 12. Chybový box */
+.alert-danger {
+    background-color: #ffe6e6;
+    border-left: 4px solid #dc3545;
+    border-radius: 4px;
+}
+
+/* 13. Karta (Card) štýly */
+.card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+/* 14. Karta hoveru efekt */
+.card:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+/* 15. Tabuľka riadky */
+table tbody tr {
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.15s ease;
+}
+
+/* 16. Tabuľka riadky hoveru */
+table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* 17. Tabuľka záhlavia */
+table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    color: #495057;
+}
+
+/* 18. Rozdelenie obsahu */
+.divider {
+    border-top: 2px solid #dee2e6;
+    margin: 20px 0;
+}
+
+/* 19. Badge štýly removed - using Bootstrap defaults */
+
+/* 20. Text input placeholders */
+.form-control::placeholder {
+    color: #adb5bd;
+    font-style: italic;
+}
+
+/* 21. Link štýly */
+a {
+    color: #0d3b66;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: #6fbf86;
+    text-shadow: 0 2px 4px rgba(111, 191, 134, 0.3);
+}
+
+
+/* 22. Nadpis štýly */
+h1, h2, h3, h4, h5, h6 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+/* 23. Odstavec štýly */
+p {
+    line-height: 1.6;
+    color: #495057;
+    margin-bottom: 12px;
+}
+
+.author-avatar-wrapper {
+    width: 120px; /* fixed visual size */
+    height: 120px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    overflow: hidden; /* ensure child image is clipped to circle */
+    border-radius: 50%;
+    border: 2px solid rgba(111, 191, 134, 0.15);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    background: #fff;
+    flex-shrink: 0;
+}
+.avatar-author {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: contain; /* show full author photo without cropping */
+    object-position: center center;
+    display: block;
+}
+.author-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f5faf6 0%, #eef7ee 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2f4858;
+    font-weight: 700;
+    font-size: 28px;
+}
+
+.author-initials {
+    line-height: 1;
+    letter-spacing: 0.02em;
+}
+
+/* Author page avatar - square, matching list size */
+.author-page-avatar {
+    width: 100%;
+    max-width: 96px;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    border-radius: 6px;
+    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+}
+
+.author-page-avatar-placeholder {
+    width: 100%;
+    max-width: 96px;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8faf8 0%, #eef7ee 100%);
+    border-radius: 6px;
+    border: 1px solid rgba(0,0,0,0.03);
+}
+
+.author-page-avatar-placeholder svg {
+    width: 60%;
+    height: 60%;
+    color: #6c757d;
+    opacity: 0.85;
+}
+
+@media (max-width: 480px) {
+    .author-avatar-wrapper {
+        width: 64px;
+        height: 64px;
+    }
+    .author-page-avatar, .author-page-avatar-placeholder {
+        max-width: 64px;
+    }
+    .author-avatar-placeholder { font-size: 12px; }
 }
