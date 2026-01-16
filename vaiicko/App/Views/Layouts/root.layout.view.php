@@ -37,19 +37,22 @@ $isAdmin = AuthView::canAddAuthor($auth);
 
     <header class="site-header">
         <nav class="navbar navbar-expand-md navbar-dark bg-success">
-            <div class="container">
+            <div class="container-fluid">
+                <!-- Logo a názov - vľavo -->
                 <a class="navbar-brand d-flex align-items-center" href="<?= $link->url('home.index') ?>">
                     <img src="<?= $link->asset('images/vaiicko_logo.png') ?>" alt="<?= App\Configuration::APP_NAME ?>"
-                         class="me-2" style="height:36px;">
+                         class="me-2 navbar-logo-sm">
                     <span class="text-white fs-5 d-none d-md-inline">DNN Knižnica</span>
                 </a>
+
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
                         aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse" id="mainNav">
-                    <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                    <!-- Hlavné menu linky - vľavo vedľa loga -->
+                    <ul class="navbar-nav mb-2 mb-md-0">
                         <li class="nav-item"><a class="nav-link"
                                                 href="<?= $link->url('category.index') ?>">Kategórie</a></li>
                         <li class="nav-item"><a class="nav-link" href="<?= $link->url('genre.index') ?>">Žánre</a></li>
@@ -58,24 +61,27 @@ $isAdmin = AuthView::canAddAuthor($auth);
                         <li class="nav-item"><a class="nav-link" href="<?= $link->url('book.index') ?>">Knihy</a></li>
                     </ul>
 
-                    <div class="d-flex align-items-center">
+                    <!-- Používateľské menu - úplne vpravo -->
+                    <ul class="navbar-nav ms-auto">
                         <?php if ($auth?->isLogged()): ?>
                             <?php if ($isAdmin): ?>
-                                <a class="btn btn-outline-light me-2 d-inline-flex align-items-center"
-                                   href="<?= $link->url('reservation.manage') ?>" role="button" aria-label="Správa">
-                                    <i class="bi bi-gear-fill" aria-hidden="true"></i>
-                                    <span class="d-none d-sm-inline ms-1">Správa</span>
-                                </a>
+                                <li class="nav-item">
+                                    <a class="btn btn-outline-light d-inline-flex align-items-center"
+                                       href="<?= $link->url('reservation.manage') ?>" role="button" aria-label="Správa">
+                                        <i class="bi bi-gear-fill" aria-hidden="true"></i>
+                                        <span class="d-none d-sm-inline ms-1">Správa</span>
+                                    </a>
+                                </li>
                             <?php endif; ?>
-                            <div class="dropdown">
+                            <li class="nav-item dropdown">
                                 <a class="btn btn-light dropdown-toggle" href="#" id="userMenu"
                                    data-bs-toggle="dropdown" aria-expanded="false"><b><?= $displayNameEsc ?></b></a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
                                     <?php if (!$isAdmin): ?>
                                         <li>
-                                        <a class="dropdown-item" href="<?= $link->url('reservation.index') ?>">Moje
-                                            rezervácie</a>
-                                        </li><?php endif; ?>
+                                            <a class="dropdown-item" href="<?= $link->url('reservation.index') ?>">Moje rezervácie</a>
+                                        </li>
+                                    <?php endif; ?>
                                     <li>
                                         <hr class="dropdown-divider">
                                     </li>
@@ -83,13 +89,15 @@ $isAdmin = AuthView::canAddAuthor($auth);
                                         <a class="dropdown-item" href="<?= $link->url('auth.logout') ?>">Odhlásiť sa</a>
                                     </li>
                                 </ul>
-                            </div>
+                            </li>
                         <?php else: ?>
-                            <button id="loginToggle" class="btn btn-light" type="button" data-bs-toggle="modal"
-                                    data-bs-target="#loginModal">Prihlásiť sa
-                            </button>
+                            <li class="nav-item">
+                                <button id="loginToggle" class="btn btn-light" type="button" data-bs-toggle="modal"
+                                        data-bs-target="#loginModal">Prihlásiť sa
+                                </button>
+                            </li>
                         <?php endif; ?>
-                    </div>
+                    </ul>
                 </div>
             </div>
         </nav>
@@ -135,7 +143,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
                         </form>
                     </div>
 
-                    <div id="modalRegisterForm" style="display:none;">
+                    <div id="modalRegisterForm" class="hidden-block">
                         <form method="post" action="<?= $link->url('user.add') ?>">
                             <input type="hidden" name="auth_form" value="register">
                             <div class="mb-3">
@@ -168,9 +176,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
     </div>
 
     <main id="main" class="container mt-4 mb-5 flex-fill">
-        <div class="web-content">
-            <?= $contentHTML ?>
-        </div>
+        <?= $contentHTML ?>
     </main>
 
     <footer class="site-footer">

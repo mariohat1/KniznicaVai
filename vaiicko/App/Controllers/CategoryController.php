@@ -16,26 +16,14 @@ class CategoryController extends BaseController
         if ($action === 'index') {
             return true;
         }
-        if ($action === 'manage') {
-            $auth = $this->app->getAuth();
-            if (!$auth || !$auth->isLogged()) return false;
-            $user = $auth->getUser();
-            if (is_object($user) && ($user instanceof \App\Models\User) && method_exists($user, 'getRole')) {
-                return (strtolower((string)$user->getRole()) === 'admin');
-            }
-            return false;
-        }
+
         $auth = $this->app->getAuth();
-        if (!$auth->isLogged()) {
+        if (!$auth || !$auth->isLogged()) {
             return false;
         }
 
         $user = $auth->getUser();
-        if (is_object($user) && ($user instanceof \App\Models\User) && method_exists($user, 'getRole')) {
-            return (strtolower((string)$user->getRole()) === 'admin');
-        }
-
-        return false;
+        return $user && strtolower((string)$user->getRole()) === 'admin';
     }
 
     public function index(Request $request): Response

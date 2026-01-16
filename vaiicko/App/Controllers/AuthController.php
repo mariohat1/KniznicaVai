@@ -83,7 +83,7 @@ class AuthController extends BaseController
     public function logout(Request $request): Response
     {
         $this->app->getAuth()->logout();
-        $redirect = $request->server('HTTP_REFERER') ?: $this->url('home.index');
+        $redirect =  $this->url('home.index');
         return $this->redirect($redirect);
     }
 }

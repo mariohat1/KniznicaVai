@@ -91,7 +91,7 @@ CREATE TABLE `reservation`
     `user_id`      int(11) DEFAULT NULL,
     `book_copy_id` int(11) DEFAULT NULL,
     `created_at`   timestamp NULL DEFAULT current_timestamp(),
-    `reserved_until` timestamp NULL DEFAULT NULL,
+    reserved_until timestamp NULL DEFAULT NULL,
     PRIMARY KEY (`id`),
     KEY            `book_copy_id` (`book_copy_id`),
     KEY            `user_id` (`user_id`),
@@ -99,7 +99,6 @@ CREATE TABLE `reservation`
     CONSTRAINT `reservation_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
--- Create event to expire reservations (created after reservation table exists)
 DROP EVENT IF EXISTS `expire_reservations`;
 CREATE EVENT `expire_reservations`
     ON SCHEDULE EVERY 1 HOUR

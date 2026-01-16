@@ -18,7 +18,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
     <div class="mb-3">
         <form method="post" action="<?= $link->url('bookcopy.updateCopies') ?>" class="d-inline-block">
             <input type="hidden" name="id" value="<?= htmlspecialchars((string)$book->getId()) ?>">
-            <div class="input-group" style="max-width:220px;">
+            <div class="input-group input-narrow">
                 <input type="number" name="copies" min="1" class="form-control form-control-sm" value="1" aria-label="Pridať kópie">
                 <button class="btn btn-sm btn-success" type="submit">Pridať kópie</button>
             </div>

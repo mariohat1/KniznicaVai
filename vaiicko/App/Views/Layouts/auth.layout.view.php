@@ -23,9 +23,7 @@
 </head>
 <body>
 <div class="container-fluid mt-3">
-    <div class="web-content">
-        <?= $contentHTML ?>
-    </div>
+    <?= $contentHTML ?>
 </div>
 </body>
 </html>

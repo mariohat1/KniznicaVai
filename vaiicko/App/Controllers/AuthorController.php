@@ -19,26 +19,14 @@ class AuthorController extends BaseController
         if ($action === 'index' || $action === 'view') {
             return true;
         }
-        if ($action === 'manage') {
-            $auth = $this->app->getAuth();
-            if (!$auth || !$auth->isLogged()) return false;
-            $user = $auth->getUser();
-            if (is_object($user) && ($user instanceof \App\Models\User) && method_exists($user, 'getRole')) {
-                return (strtolower((string)$user->getRole()) === 'admin');
-            }
-            return false;
-        }
+
         $auth = $this->app->getAuth();
-        if (!$auth->isLogged()) {
+        if (!$auth || !$auth->isLogged()) {
             return false;
         }
 
         $user = $auth->getUser();
-        if (is_object($user) && ($user instanceof \App\Models\User) && method_exists($user, 'getRole')) {
-            return (strtolower((string)$user->getRole()) === 'admin');
-        }
-
-        return false;
+        return $user && strtolower((string)$user->getRole()) === 'admin';
     }
 
     public function index(Request $request): Response
@@ -77,8 +65,10 @@ class AuthorController extends BaseController
         foreach ($books as $b) {
             try {
                 $bookId = $b->getId();
-                $total = BookCopy::getCount('book_id = ?', [$bookId]);
-                $reserved = Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ?) AND is_reserved = 1', [$bookId]);
+                // Count only physical copies that are marked as available
+                $total = BookCopy::getCount('book_id = ? AND available = 1', [$bookId]);
+                // Count active reservations referencing those available copies
+                $reserved = Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ? AND available = 1) AND is_reserved = 1', [$bookId]);
                 $available = max(0, $total - $reserved);
                 $copies[$bookId] = ['total' => $total, 'available' => $available];
             } catch (\Throwable $ex) {

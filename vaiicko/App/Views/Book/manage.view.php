@@ -1,7 +1,4 @@
 <?php
-if (isset($view) && method_exists($view, 'setLayout')) {
-    $view->setLayout('admin');
-}
 /** @var array $books */
 /** @var array $copies */
 /** @var array $categories */
@@ -9,6 +6,9 @@ if (isset($view) && method_exists($view, 'setLayout')) {
 /** @var array $filters */
 /** @var array $pagination */
 /** @var \Framework\Support\LinkGenerator $link */
+/** @var TYPE_NAME $view */
+$view->setLayout('admin');
+
 ?>
 <div class="container">
     <h1>Správa kníh</h1>
@@ -45,7 +45,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
     <div class="mb-3">
         <a class="btn btn-primary" href="<?= $link->url('book.add') ?>">Pridať knihu</a>
     </div>
-    <div id="manageFeedback" style="display:none;" class="alert"></div>
+    <div id="manageFeedback" class="alert hidden-block"></div>
 
     <?php if (empty($books)): ?>
         <p>Žiadne knihy.</p>
@@ -68,7 +68,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                     $meta = $copies[$cid] ?? ['total' => 0, 'available' => 0]; ?>
                     <tr>
                         <td class="visually-hidden"><?= htmlspecialchars((string)$cid) ?></td>
-                        <td style="max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="<?= htmlspecialchars($b->getTitle()) ?>"><?= htmlspecialchars($b->getTitle()) ?></td>
+                        <td class="text-ellipsis-220" title="<?= htmlspecialchars($b->getTitle()) ?>"><?= htmlspecialchars($b->getTitle()) ?></td>
                         <td class="d-none d-md-table-cell"><?= htmlspecialchars($b->getIsbn()) ?></td>
                         <td class="d-none d-md-table-cell"><?= htmlspecialchars((string)$meta['total']) ?> / <?= htmlspecialchars((string)$meta['available']) ?></td>
                     </tr>

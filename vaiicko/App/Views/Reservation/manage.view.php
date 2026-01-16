@@ -34,7 +34,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         </div>
         <div class="col-auto">
             <input id="reservation-search-input" aria-label="Hľadať" type="search" name="q"
-                   class="form-control" "
+                   class="form-control"
                    value="<?= htmlspecialchars($q ?? '') ?>">
         </div>
         <div class="col-auto">
@@ -42,7 +42,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         </div>
         <div class="col-auto">
             <div class="btn-group" role="group" aria-label="Status filter">
-                <a class="btn btn-outline-secondary <?= ($status === 'all') ? 'active' : '' ?>"
+                <a class="btn btn-outline-secondary <?= ($status ?? 'all') === 'all' ? 'active' : '' ?>"
                    data-status="all"
                    href="<?= $link->url('reservation.manage', ['status' => 'all', 'q' => $q ?? '', 'user' => $selectedUser ?? '', 'searchBy' => $searchBy ?? '']) ?>">Všetky
                 </a>
@@ -71,7 +71,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
 
                 $safeTitle = $book ? htmlspecialchars($book->getTitle(), ENT_QUOTES, 'UTF-8') : 'Neznáma kniha';
                 ?>
-                <div class="list-group-item d-flex justify-content-between align-items-start reservation-item"
+                <div class="list-group-item d-flex justify-content-between align-items-start"
                      data-title="<?= $safeTitle ?>" data-reservation-id="<?= htmlspecialchars((string)$reservation->getId()) ?>">
                     <div>
                         <div class="fw-bold"><?= $book ? htmlspecialchars($book->getTitle()) : 'Neznáma kniha' ?></div>
@@ -88,12 +88,12 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                     </div>
                     <div class="text-end">
                         <?php if ($reservation->getIsReserved()): ?>
-                            <button type="button" class="btn btn-sm btn-warning  reservation-action"
+                            <button type="button" class="btn btn-sm btn-warning reservation-action"
                                     data-action="cancel" data-id="<?= htmlspecialchars((string)$reservation->getId()) ?>">Zrušiť
                                 rezerváciu
                             </button>
                         <?php else: ?>
-                            <button type="button" class="btn  btn-sm btn-success reservation-action"
+                            <button type="button" class="btn btn-sm btn-success reservation-action"
                                     data-action="restore" data-id="<?= htmlspecialchars((string)$reservation->getId()) ?>">Obnoviť
                                 rezerváciu
                             </button>
@@ -108,6 +108,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         <?php
         $page = is_array($pagination) ? ($pagination['page'] ?? 1) : 1;
         $pages = is_array($pagination) ? ($pagination['pages'] ?? 1) : 1;
+        if ($pages > 1):
         ?>
         <nav aria-label="pagination" class="mt-3">
             <ul class="pagination">
@@ -134,5 +135,6 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                 </li>
             </ul>
         </nav>
+        <?php endif; ?>
     <?php endif; ?>
 </div>

@@ -19,36 +19,23 @@ class BookController extends BaseController
 {
     public function authorize(Request $request, string $action): bool
     {
-        // Only admin users can perform non-read actions (add/store). Allow index for everyone.
         // Allow public read actions: index and view
         if (in_array($action, ['index', 'view'])) {
             return true;
         }
 
-        // Allow the manage listing to be requested via GET by non-admins (read-only). POST/modify actions remain protected.
+        // Allow the manage listing to be requested via GET by non-admins (read-only)
         if ($action === 'manage' && !$request->isPost()) {
             return true;
         }
 
         $auth = $this->app->getAuth();
-        if (!$auth->isLogged()) {
+        if (!$auth || !$auth->isLogged()) {
             return false;
         }
 
         $user = $auth->getUser();
-        // Require explicit role === 'admin' (case-insensitive). No username fallback.
-        if (is_object($user)) {
-            if (method_exists($user, 'getRole')) {
-                return (strtolower((string)$user->getRole()) === 'admin');
-            }
-            // If role is a public/protected property (no getter), inspect it defensively
-            $vars = $user;
-            if (isset($vars['role'])) {
-                return (strtolower((string)$vars['role']) === 'admin');
-            }
-        }
-
-        return false;
+        return $user && strtolower((string)$user->getRole()) === 'admin';
     }
 
     /**
@@ -106,7 +93,7 @@ class BookController extends BaseController
             $authorName = '';
             $categoryName = $categoriesMap[$book->getCategoryId()] ?? '';
             $genreName = $genresMap[$book->getGenreId()] ?? '';
-            $author = $book->getOneRelated(Author::class);
+            $author = $book->getOneRelated(Author::class, 'author_id');
             if ($author !== null) {
                 $authorName = trim(($author->getFirstName() ?? '') . ' ' . ($author->getLastName() ?? ''));
             }
@@ -199,14 +186,30 @@ class BookController extends BaseController
             if ($book->getGenreId()) $genre = Genre::getOne($book->getGenreId());
         } catch (\Throwable $e) {
         }
-        $reserved = $request->value('reserved') !== null ? (int)$request->value('reserved') : null;
+        // reservedSuccess: indicates a recent successful reservation (request param).
+        $reservedSuccess = $request->value('reserved') !== null ? (int)$request->value('reserved') : null;
+
+        // compute copies availability using centralized helper (same logic as listing)
+         $bookId = $book->getId();
+         $summary = $this->computeCopiesForBook($bookId);
+         $total = $summary['total'];
+         $available = $summary['available'];
+         $reservedCount = $summary['reserved'];
+         $copiesList = $summary['copies'];
+
         return $this->html([
-            'book' => $book,
-            'author' => $author,
-            'category' => $category,
-            'genre' => $genre,
-            'reserved' => $reserved,
-        ], 'bookView');
+             'book' => $book,
+             'author' => $author,
+             'category' => $category,
+             'genre' => $genre,
+             // flag showing a recent successful reservation (used for alert)
+             'reservedSuccess' => $reservedSuccess,
+             // numeric counts the UI needs: available (not reserved) and reserved (count)
+             'available' => $available,
+             'reserved' => $reservedCount,
+             'total' => $summary['total'],
+             'copies' => $copiesList,
+         ], 'bookView');
     }
 
     /**
@@ -224,7 +227,6 @@ class BookController extends BaseController
                 return $this->redirect($this->url('book.manage'));
             }
         }
-
         $authors = Author::getAll();
         $categories = Category::getAll();
         $genres = Genre::getAll();
@@ -462,10 +464,10 @@ class BookController extends BaseController
         $copies = [];
         foreach ($books as $b) {
             $bookId = $b->getId();
-            $total = BookCopy::getCount('book_id = ?', [$bookId]);
-            $reserved = Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ?) AND is_reserved = 1', [$bookId]);
-            $available = max(0, $total - $reserved);
-            $copies[$bookId] = ['total' => $total, 'available' => $available];
+            // Use centralized helper to compute totals so listing and detail match
+            $summary = $this->computeCopiesForBook($bookId);
+            // provide counts: available (not reserved), total (copies flagged available) and reserved (count)
+            $copies[$bookId] = ['available' => $summary['available'], 'total' => $summary['total'], 'reserved' => $summary['reserved']];
         }
 
         $categoriesMap = [];
@@ -495,5 +497,32 @@ class BookController extends BaseController
         ];
     }
 
+    /**
+     * Compute copies summary for a single book.
+     * Returns ['physicalTotal' => int, 'total' => int, 'available' => int, 'copies' => array]
+     *
+     * Logic: keep the same calculation used in listing: 'total' counts copies marked available (available = 1),
+     * then available = total - reservedCount (reserved referencing those available copies). Also return
+     * physicalTotal (all copies regardless of available flag) and the full copies list for detail views.
+     */
+    private function computeCopiesForBook($bookId): array
+    {
+        $physicalTotal = 0;
+        $total = 0;
+        $available = 0;
+        $reservedCount = 0;
+        $copiesList = [];
+        try {
+            $physicalTotal = BookCopy::getCount('book_id = ?', [$bookId]);
+            // total = copies currently marked as available
+            $total = BookCopy::getCount('book_id = ? AND available = 1', [$bookId]);
+            $reservedCount = Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ? AND available = 1) AND is_reserved = 1', [$bookId]);
+            $available = max(0, $total - $reservedCount);
+            $copiesList = BookCopy::getAll('book_id = ?', [$bookId]);
+        } catch (\Throwable $e) {
+            // ignore and return defaults
+        }
 
+        return ['physicalTotal' => (int)$physicalTotal, 'total' => (int)$total, 'available' => (int)$available, 'reserved' => (int)$reservedCount, 'copies' => $copiesList];
+    }
 }

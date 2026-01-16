@@ -31,16 +31,15 @@
                         </h2>
 
                         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-
                             <?php $by = $author->getBirthYear(); ?>
                             <?php $dy = $author->getDeathYear(); ?>
-                            <span class="bg-opacity-10 ">
+                            <span>
                                 Narodenie / Úmrtie: <?= htmlspecialchars(($by ?: 'Neznáme') . ' - ' . ($dy ?: 'Neznáme')) ?>
                             </span>
                         </div>
 
                         <?php if (method_exists($author, 'getDescription') && $author->getDescription()): ?>
-                            <div class="mt-2 author-bio p-3 bg-light border rounded text-muted" style="text-align:justify; line-height:1.5;">
+                            <div class="mt-2 p-3 bg-light border rounded text-muted" style="text-align:justify; line-height:1.5;">
                                 <?= nl2br(htmlspecialchars($author->getDescription())) ?>
                             </div>
                         <?php else: ?>
@@ -75,7 +74,7 @@
                 <?php $bid = (int)$b->getId();
                 $meta = $copies[$bid] ?? ['total' => 0, 'available' => 0]; ?>
                 <div class="col-12">
-                    <div class="card h-100 position-relative card-compact">
+                    <div class="card h-100 position-relative">
                         <?php if (method_exists($b, 'getPhoto') && $b->getPhoto()): ?>
                             <img src="<?= htmlspecialchars($b->getPhoto()) ?>" class="card-img-top"
                                  alt="<?= htmlspecialchars($b->getTitle()) ?>">
@@ -87,10 +86,10 @@
 
                             <!-- Responsive container: column on small, row (title left / badge right) on md+ -->
                             <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-2">
-                                <h5 class="book-card-title mb-2 mb-md-0 fw-bold" style="font-size:1.125rem;">
+                                <h5 class="mb-2 mb-md-0 fw-bold" style="font-size:1.125rem;">
                                     <?= htmlspecialchars($b->getTitle()) ?>
                                 </h5>
-                                <div class="availability mt-2 mt-md-0 ms-md-3">
+                                <div class="mt-2 mt-md-0 ms-md-3">
                                     <?php if ($isAvail): ?>
                                         <span class="badge border border-success text-success bg-white" style="padding:.35rem .6rem;">
                                             <i class="bi bi-check-circle me-1"></i>

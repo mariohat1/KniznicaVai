@@ -20,9 +20,10 @@ $displayNameEsc = AuthView::displayNameEsc($auth);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </head>
-<body class="admin-layout">
+<body>
 <nav class="navbar navbar-expand-md navbar-dark bg-dark">
     <div class="container-fluid">
+        <!-- Mobile menu button -->
         <button class="btn btn-outline-light me-2 d-md-none" type="button" data-bs-toggle="offcanvas"
                 data-bs-target="#adminOffcanvas" aria-controls="adminOffcanvas" aria-label="Otvoriť menu">
             <span class="navbar-toggler-icon"></span>
@@ -62,30 +63,30 @@ $displayNameEsc = AuthView::displayNameEsc($auth);
 
 <div class="container-fluid">
     <div class="row">
-        <!-- Left white sidebar (hidden on small screens) -->
-        <aside class="d-none d-md-block col-md-2 p-0 admin-sidebar">
-            <div class="position-sticky top-0 vh-100 p-3 d-flex flex-column">
-                <h6 class="mb-3">Správa</h6>
-                <div class="d-grid mb-3">
-                    <a class="btn btn-sm btn-secondary" href="<?= $link->url('home.index') ?>">Domov</a>
+        <div class="d-none d-md-block col-md-2 p-0 position-relative">
+            <aside class="h-100">
+                <div class="position-sticky top-0 vh-100 p-3 d-flex flex-column">
+                  <div class="d-grid mb-3">
+                        <a class="btn btn-sm btn-secondary" href="<?= $link->url('home.index') ?>">Domov</a>
+                    </div>
+                    <nav class="nav flex-column small">
+                        <a href="<?= $link->url('category.manage') ?>" class="nav-link text-black">Kategórie</a>
+                        <a href="<?= $link->url('genre.manage') ?>" class="nav-link text-black">Žánre</a>
+                        <a href="<?= $link->url('author.manage') ?>" class="nav-link text-black">Autori</a>
+                        <a href="<?= $link->url('book.manage') ?>" class="nav-link text-black">Knihy</a>
+                        <a href="<?= $link->url('reservation.manage') ?>" class="nav-link text-black">Rezervácie</a>
+                    </nav>
+                    <div class="mt-auto pt-3 small text-muted">&copy; <?= date('Y') ?></div>
                 </div>
-                <nav class="nav flex-column small">
-                    <a href="<?= $link->url('category.manage') ?>" class="nav-link text-black ">Kategórie</a>
-                    <a href="<?= $link->url('genre.manage') ?>" class="nav-link text-black">Žánre</a>
-                    <a href="<?= $link->url('author.manage') ?>" class="nav-link text-black">Autori</a>
-                    <a href="<?= $link->url('book.manage') ?>" class="nav-link text-black">Knihy</a>
-                    <a href="<?= $link->url('reservation.manage') ?>" class="nav-link text-black">Rezervácie</a>
-                </nav>
-                <div class="mt-auto pt-3 small text-muted">&copy; <?= date('Y') ?></div>
-            </div>
-        </aside>
 
-        <!-- Main content area -->
-        <main class="col-12 col-md-10 p-3 admin-content" role="main">
-            <?= $contentHTML ?>
-        </main>
+            </aside>
+        </div>
+        <main class="col-12 col-md-10 p-3" role="main">
+             <?= $contentHTML ?>
+         </main>
     </div>
 </div>
+
 
 </body>
 </html>

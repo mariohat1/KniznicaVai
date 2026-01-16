@@ -28,7 +28,13 @@ class AdminController extends BaseController
      */
     public function authorize(Request $request, string $action): bool
     {
-        return $this->app->getAuth()->isLogged();
+        $auth = $this->app->getAuth();
+        if (!$auth || !$auth->isLogged()) {
+            return false;
+        }
+
+        $user = $auth->getUser();
+        return $user && strtolower((string)$user->getRole()) === 'admin';
     }
 
     /**

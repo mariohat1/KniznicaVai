@@ -16,7 +16,7 @@
                 $book = $it['book'];
                 $copy = $it['copy'];
                 ?>
-                <div class="list-group-item d-flex justify-content-between align-items-start<?php if ($r->getIsReserved()): ?> highlight-reservation<?php endif; ?>">
+                <div class="list-group-item d-flex justify-content-between align-items-start">
                     <div>
                         <div class="fw-bold book-title">
                             <?php if ($book): ?>
@@ -26,7 +26,7 @@
                                 Neznáma kniha
                             <?php endif; ?>
                         </div>
-                        <div class="small text-muted muted-small">
+                        <div class="small text-muted">
                             Kópia: <?= $copy ? htmlspecialchars((string)$copy->getId()) : '—' ?>
                             Rezervované: <?= htmlspecialchars((string)$r->getCreatedAt()) ?>
                             Rezervované (flag): <?= $r->getIsReserved() ? 'Áno' : 'Nie' ?>
@@ -34,7 +34,7 @@
                     </div>
                     <div class="text-end">
                         <?php if ($r->getIsReserved()): ?>
-                            <form method="post" action="<?= $link->url('reservation.update') ?>" style="display:inline">
+                            <form method="post" action="<?= $link->url('reservation.update') ?>" class="inline-form">
                                 <input type="hidden" name="id" value="<?= htmlspecialchars((string)$r->getId()) ?>">
                                 <input type="hidden" name="action" value="cancel">
                                 <button class="btn btn-sm btn-outline-danger">Zrušiť</button>

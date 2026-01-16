@@ -13,7 +13,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
     <h1 class="mb-4"><?= isset($book) ? 'Editovať knihu' : 'Pridať knihu' ?></h1>
 
     <div id="bookAddRoot" data-category-url="<?= $link->url('category.store') ?>" data-genre-url="<?= $link->url('genre.store') ?>" data-redirect-url="<?= $link->url('book.manage') ?>">
-    <div id="bookFormFeedback" class="ajax-error custom-error-box" style="display:none;"></div>
+    <div id="bookFormFeedback" class="ajax-error custom-error-box hidden-block"></div>
     <form method="post" action="<?= $link->url('book.store') ?>">
         <?php if (isset($book)): ?>
             <input type="hidden" name="id" value="<?= htmlspecialchars(isset($book) ? ($book->getId() ?? '') : '') ?>">
@@ -83,11 +83,11 @@ if (isset($view) && method_exists($view, 'setLayout')) {
 
         <div class="mb-3">
             <label class="form-label">Obal knihy (PNG) — potiahni sem alebo klikni</label>
-            <div id="book-photo-drop" class="border rounded p-3 text-center" style="min-height:120px; display:flex;align-items:center;justify-content:center;cursor:pointer;">
+            <div id="book-photo-drop" class="border rounded p-3 text-center drop-zone">
                 <div id="book-photo-placeholder">Potiahni sem PNG alebo klikni pre výber súboru</div>
-                <img id="book-photo-preview" src="<?= htmlspecialchars(isset($book) ? ($book->getPhoto() ?? '') : '') ?>" alt="" style="max-height:120px; display:none; margin:auto;">
+                <img id="book-photo-preview" src="<?= htmlspecialchars(isset($book) ? ($book->getPhoto() ?? '') : '') ?>" alt="" class="preview-img">
             </div>
-            <input id="book-photo-input" type="file" accept="image/png" style="display:none">
+            <input id="book-photo-input" type="file" accept="image/png" class="input-hidden">
             <input type="hidden" name="photo_path" id="photo_path" value="<?= htmlspecialchars(isset($book) ? ($book->getPhoto() ?? '') : '') ?>">
             <div class="form-text">Max 5 MB. Použiť PNG pre najlepšiu kvalitu.</div>
         </div>

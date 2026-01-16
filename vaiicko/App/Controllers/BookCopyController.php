@@ -13,9 +13,12 @@ class BookCopyController extends BaseController
     public function authorize(Request $request, string $action): bool
     {
         $auth = $this->app->getAuth();
-        if (!$auth?->isLogged()) return false;
+        if (!$auth || !$auth->isLogged()) {
+            return false;
+        }
+
         $user = $auth->getUser();
-        return strtolower((string)$user->getRole()) === 'admin';
+        return $user && strtolower((string)$user->getRole()) === 'admin';
     }
 
     /**
@@ -34,6 +37,7 @@ class BookCopyController extends BaseController
             try {
                 $c = new BookCopy();
                 $c->setBookId($book->getId());
+                $c->setAvailable(1);
                 $c->save();
             } catch (\Throwable $e) {
                 // ignore individual failures but continue

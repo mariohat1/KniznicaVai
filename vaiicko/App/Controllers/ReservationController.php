@@ -16,40 +16,25 @@ class ReservationController extends BaseController
     public function authorize(Request $request, string $action): bool
     {
         $auth = $this->app->getAuth();
+
         if ($action === 'index') {
-            return $auth?->isLogged() ? true : false;
-        }
-        if ($action === 'create') {
-            if (!$auth?->isLogged()) return false;
-            $user = $auth->getUser();
-            if (is_object($user)) {
-                if (method_exists($user, 'getRole')) return strtolower((string)$user->getRole()) !== 'admin';
-                $vars = get_object_vars($user);
-                return !isset($vars['role']) || strtolower((string)$vars['role']) !== 'admin';
-            }
-            return true;
-        }
-        if ($action === 'manage') {
-            if (!$auth?->isLogged()) return false;
-            $user = $auth->getUser();
-            if (is_object($user)) {
-                if (method_exists($user, 'getRole')) return strtolower((string)$user->getRole()) === 'admin';
-                $vars = get_object_vars($user);
-                return isset($vars['role']) && strtolower((string)$vars['role']) === 'admin';
-            }
-            return false;
+            return $auth && $auth->isLogged();
         }
 
-        // allow admin to call update (AJAX actions)
-        if ($action === 'update') {
-            if (!$auth?->isLogged()) return false;
-            $user = $auth->getUser();
-            if (is_object($user)) {
-                if (method_exists($user, 'getRole')) return strtolower((string)$user->getRole()) === 'admin';
-                $vars = get_object_vars($user);
-                return isset($vars['role']) && strtolower((string)$vars['role']) === 'admin';
+        if ($action === 'create') {
+            if (!$auth || !$auth->isLogged()) {
+                return false;
             }
-            return false;
+            $user = $auth->getUser();
+            return $user && strtolower((string)$user->getRole()) !== 'admin';
+        }
+
+        if ($action === 'manage' || $action === 'update') {
+            if (!$auth || !$auth->isLogged()) {
+                return false;
+            }
+            $user = $auth->getUser();
+            return $user && strtolower((string)$user->getRole()) === 'admin';
         }
 
         return false;
@@ -82,7 +67,8 @@ class ReservationController extends BaseController
         }
 
         // find an available copy by checking reservations (controller handles logic)
-        $allCopies = BookCopy::getAll('book_id = ?', [$book->getId()]);
+        // consider only copies that are marked available in DB
+        $allCopies = BookCopy::getAll('book_id = ? AND available = 1', [$book->getId()]);
         $copy = null;
         foreach ($allCopies as $c) {
             // treat is_reserved as indicator of an active reservation that blocks a copy
@@ -164,114 +150,35 @@ class ReservationController extends BaseController
         if ($page < 1) $page = 1;
         $limit = 10;
         $offset = ($page - 1) * $limit;
+
         $whereParts = [];
         $whereParams = [];
+        $this->applySearchFilters($q, $searchBy, $whereParts, $whereParams);
 
-        if ($searchBy !== 'user' && $searchBy !== 'book') {
-            $searchBy = ($q !== '') ? 'book' : 'book';
-        }
+        // fetch reservations data
+        $data = $this->getReservationsData($whereParts, $whereParams, $status, $page, $limit, $offset);
+        $items = $data['items'];
+        $pagination = $data['pagination'];
 
-        if ($searchBy === 'user') {
-            if ($q !== '') {
-                $like = $q . '%';
-                $usersFound = User::getAll('username LIKE ?', [$like]);
-                $userIds = array_values(array_unique(array_filter(array_map(fn($u) => $u->getId(), $usersFound))));
-                if (empty($userIds)) {
-                    $items = [];
-                    return $this->html(['items' => $items, 'q' => $q, 'status' => $status, 'searchBy' => $searchBy], 'manage');
-                }
-                $place = implode(',', array_fill(0, count($userIds), '?'));
-                $whereParts[] = "user_id IN ($place)";
-                $whereParams = array_merge($whereParams, $userIds);
-            }
-        } else {
-            if ($q !== '') {
-                $like = $q . '%';
-                $books = Book::getAll('title LIKE ?', [$like]);
-                $bookIds = array_filter(array_map(fn($b) => $b->getId(), $books));
-                if (empty($bookIds)) {
-                    $items = [];
-                    return $this->html(['items' => $items, 'q' => $q, 'status' => $status, 'searchBy' => $searchBy], 'manage');
-                }
-                $placeholders = implode(',', array_fill(0, count($bookIds), '?'));
-                $copies = BookCopy::getAll("book_id IN ($placeholders)", $bookIds);
-                $copyIds = array_filter(array_map(fn($c) => $c->getId(), $copies));
-                if (empty($copyIds)) {
-                    $items = [];
-                    return $this->html(['items' => $items, 'q' => $q, 'status' => $status, 'searchBy' => $searchBy], 'manage');
-                }
-                $cpPlace = implode(',', array_fill(0, count($copyIds), '?'));
-                $whereParts[] = "book_copy_id IN ($cpPlace)";
-                $whereParams = array_merge($whereParams, $copyIds);
-            }
-        }
-        if ($status === 'active') {
-            $whereParts[] = 'is_reserved = ?';
-            $whereParams[] = 1;
-        } elseif ($status === 'finished') {
-            $whereParts[] = 'is_reserved = ?';
-            $whereParams[] = 0;
-        }
+        // send response (AJAX JSON or HTML) via helper so manage() calls all helpers
+        return $this->sendResponse($request, $items, $pagination, $q, $status, $searchBy);
+    }
 
-        $where = null;
-        if (!empty($whereParts)) {
-            $where = implode(' AND ', $whereParts);
-        }
-
-        $total = Reservation::getCount($where, $whereParams);
-        $reservations = Reservation::getAll($where, $whereParams, 'created_at DESC', $limit, $offset);
-        $items = [];
-        foreach ($reservations as $r) {
-            $copy = null;
-            $book = null;
-            $u = null;
-            try {
-                $copy = BookCopy::getOne($r->getBookCopyId());
-                if ($copy) $book = Book::getOne($copy->getBookId());
-                $u = User::getOne($r->getUserId());
-            } catch (\Throwable $e) {
-            }
-
-            // minimal guard: only create DateTimeImmutable when reserved_until exists
-            $rawUntil = $r->getReservedUntil();
-            $expDate = '';
-            $daysLeftStr = '';
-            if ($rawUntil) {
-                $until = new \DateTimeImmutable($rawUntil);
-                $now   = new \DateTimeImmutable();
-
-                $expDate = $until->format('d.m.Y H:i');
-
-                if ($until > $now) {
-                    $diff = $now->diff($until);
-                    $days = (int)$diff->days;
-
-                    if ($days > 0) {
-                        $daysLeftStr = $days . ' ' . ($days === 1 ? 'deň' : 'dni');
-                    }
-                }
-            }
-
-            $items[] = [
-                'reservation' => $r,
-                'copy' => $copy,
-                'book' => $book,
-                'user' => $u,
-                'expDate' => $expDate,
-                'daysLeft' => $daysLeftStr
-            ];
-        }
-
-        $pages = ($total > 0) ? (int)ceil($total / $limit) : 1;
-
-        $pagination = [
-            'page' => $page,
-            'pages' => $pages,
-            'total' => $total
-        ];
-
-        // if AJAX: return JSON data only (client renders HTML)
-        if ($request->isAjax()) {
+    /**
+     * Centralize response sending: returns JSON for AJAX or HTML view otherwise.
+     * This keeps the decision in one place and ensures `manage()` calls all helpers.
+     *
+     * @param Request $request
+     * @param array $items
+     * @param array $pagination
+     * @param string $q
+     * @param string|null $status
+     * @param string $searchBy
+     * @return Response
+     */
+    private function sendResponse(Request $request, array $items, array $pagination, string $q, ?string $status, string $searchBy): Response
+    {
+        if ($request->isAjax() || $request->wantsJson()) {
             return $this->json([
                 'items' => $items,
                 'pagination' => $pagination,
@@ -355,6 +262,133 @@ class ReservationController extends BaseController
 
         // Non-AJAX: redirect back to manage
         return $this->redirect($this->url('reservation.manage'));
+    }
+
+    /**
+     * Build and append WHERE parts and parameters for search filters.
+     * Keeps code centralized and avoids inline SQL construction.
+     *
+     * @param string $q
+     * @param string $searchBy
+     * @param array  $whereParts (by ref)
+     * @param array  $whereParams (by ref)
+     */
+    private function applySearchFilters(string $q, string $searchBy, array & $whereParts, array & $whereParams): void
+    {
+        if ($q === '') return;
+
+        if ($searchBy === 'user') {
+            $like = $q . '%';
+            $usersFound = User::getAll('username LIKE ?', [$like]);
+            $userIds = array_values(array_unique(array_filter(array_map(fn($u) => $u->getId(), $usersFound))));
+            if (empty($userIds)) {
+                $whereParts[] = '1 = 0';
+            } else {
+                $place = implode(',', array_fill(0, count($userIds), '?'));
+                $whereParts[] = "user_id IN ($place)";
+                $whereParams = array_merge($whereParams, $userIds);
+            }
+            return;
+        }
+
+        $like = $q . '%';
+        $books = Book::getAll('title LIKE ?', [$like]);
+        $bookIds = array_values(array_filter(array_map(fn($b) => $b->getId(), $books)));
+        if (empty($bookIds)) {
+            $whereParts[] = '1 = 0';
+            return;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($bookIds), '?'));
+        $copies = BookCopy::getAll("book_id IN ($placeholders)", $bookIds);
+        $copyIds = array_values(array_filter(array_map(fn($c) => $c->getId(), $copies)));
+        if (empty($copyIds)) {
+            $whereParts[] = '1 = 0';
+            return;
+        }
+
+        $cpPlace = implode(',', array_fill(0, count($copyIds), '?'));
+        $whereParts[] = "book_copy_id IN ($cpPlace)";
+        $whereParams = array_merge($whereParams, $copyIds);
+    }
+
+    /**
+     * Query reservations and build items + pagination using precomputed where parts and params.
+     * @param array $whereParts
+     * @param array $whereParams
+     * @param string|null $status
+     * @param int $page
+     * @param int $limit
+     * @param int $offset
+     * @return array{items: array, pagination: array}
+     */
+    private function getReservationsData(array $whereParts, array $whereParams, ?string $status, int $page, int $limit, int $offset): array
+    {
+
+        if ($status === 'active') {
+            $whereParts[] = 'is_reserved = ?';
+            $whereParams[] = 1;
+        } elseif ($status === 'finished') {
+            $whereParts[] = 'is_reserved = ?';
+            $whereParams[] = 0;
+        }
+
+        $where = null;
+        if (!empty($whereParts)) {
+            $where = implode(' AND ', $whereParts);
+        }
+
+        $total = Reservation::getCount($where, $whereParams);
+        $reservations = Reservation::getAll($where, $whereParams, 'created_at DESC', $limit, $offset);
+        $items = [];
+        foreach ($reservations as $r) {
+            $copy = null;
+            $book = null;
+            $u = null;
+            try {
+                $copy = BookCopy::getOne($r->getBookCopyId());
+                if ($copy) $book = Book::getOne($copy->getBookId());
+                $u = User::getOne($r->getUserId());
+            } catch (\Throwable $e) {
+            }
+
+            $rawUntil = $r->getReservedUntil();
+            $expDate = '';
+            $daysLeftStr = '';
+            if ($rawUntil) {
+                $until = new \DateTimeImmutable($rawUntil);
+                $now   = new \DateTimeImmutable();
+
+                $expDate = $until->format('d.m.Y H:i');
+
+                if ($until > $now) {
+                    $diff = $now->diff($until);
+                    $days = (int)$diff->days;
+                    if ($days > 0) {
+                        $daysLeftStr = $days . ' ' . ($days === 1 ? 'deň' : 'dni');
+                    }
+                }
+            }
+
+            $items[] = [
+                'reservation' => $r,
+                'copy' => $copy,
+                'book' => $book,
+                'user' => $u,
+                'expDate' => $expDate,
+                'daysLeft' => $daysLeftStr
+            ];
+        }
+
+        $pages = ($total > 0) ? (int)ceil($total / $limit) : 1;
+
+        $pagination = [
+            'page' => $page,
+            'pages' => $pages,
+            'total' => $total
+        ];
+
+        return ['items' => $items, 'pagination' => $pagination];
     }
 
 }
