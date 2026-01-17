@@ -17,14 +17,14 @@ class Validator
     {
         $v = trim((string)($value ?? ''));
         if ($v === '') {
-            return ucfirst($field) . ' is required.';
+            return ucfirst($field) . ' je povinné pole.';
         }
         if (mb_strlen($v) > 50) {
-            return ucfirst($field) . ' must be at most 50 characters.';
+            return ucfirst($field) . ' môže mať najviac 50 znakov.';
         }
         // allow letters (all languages), spaces, hyphen and apostrophe
         if (!preg_match("/^[\\p{L} '\\-]+$/u", $v)) {
-            return ucfirst($field) . ' contains invalid characters.';
+            return ucfirst($field) . ' obsahuje neplatné znaky.';
         }
         return null;
     }
@@ -36,10 +36,10 @@ class Validator
     {
         $v = trim(($value ?? ''));
         if ($v === '') {
-            return $field . ' is required.';
+            return $field . ' je povinné.';
         }
         if (mb_strlen($v) > 100) {
-            return $field . ' must be at most 100 characters.';
+            return $field . ' môže mať maximálne 100 znakov.';
         }
         return null;
     }
@@ -53,29 +53,29 @@ class Validator
         if ($v === '') {
             return null;
         }
-        if (mb_strlen($v) > $max) return ucfirst($field) . " must be at most $max characters.";
+        if (mb_strlen($v) > $max) return ucfirst($field) . " môže mať maximálne $max znakov.";
         return null;
     }
 
     /**
-     * Validate birth date (optional). Accepts only a 4-digit year (YYYY) and must not be in the future.
+     * Validate birth date (required). Accepts only a 1-4 digit year and must not be in the future.
      */
     public static function validateYear(?string $value, string $field): ?string
     {
         $v = trim(($value ?? ''));
         if ($v === '') {
-            return null;
+            return ucfirst($field) . ' je povinné pole.';
         }
 
         if (!preg_match('/^\d{1,4}$/', $v)) {
-            return ucfirst($field) . ' has invalid format (expected year).';
+            return ucfirst($field) . ' má neplatný formát (očakáva sa rok).';
         }
 
         $year = (int)$v;
         $current = (int)date('Y');
 
         if ($year < 0 || $year > $current) {
-            return ucfirst($field) . " must be between 0 and $current.";
+            return ucfirst($field) . " musí byť medzi 0 a $current.";
         }
 
         return null;
@@ -97,10 +97,10 @@ class Validator
         if ($to === '' || $to === null) return null;
 
         if ((int)$from > (int)$to) {
-            return 'Birth year "from" must be less than or equal to "to".';
+            return 'Rok narodenia musí byť menší alebo rovný roku úmrtia.';
         }
         if (((int)$to - (int)$from) > $maxSpan) {
-            return "Year range must not exceed $maxSpan years.";
+            return "Rozpätie rokov nesmie presiahnuť $maxSpan rokov.";
         }
         return null;
     }
@@ -154,7 +154,7 @@ class Validator
 
         // remove non-digit and non-X characters
         $normalized = preg_replace('/[^0-9Xx]/', '', $v);
-        if ($normalized === null) return ucfirst($field) . ' has invalid format.';
+        if ($normalized === null) return ucfirst($field) . ' má neplatný formát.';
 
         // ISBN-13 check
         if (strlen($normalized) === 13 && ctype_digit($normalized)) {
@@ -164,7 +164,7 @@ class Validator
                 $sum += ($i % 2 === 0) ? $digit : $digit * 3;
             }
             if (($sum % 10) === 0) return null;
-            return ucfirst($field) . ' is not a valid ISBN-13.';
+            return ucfirst($field) . ' nie je platné ISBN-13.';
         }
 
         // ISBN-10 check
@@ -172,19 +172,32 @@ class Validator
             $sum = 0;
             for ($i = 0; $i < 9; $i++) {
                 if (!isset($normalized[$i]) || !ctype_digit($normalized[$i])) {
-                    return ucfirst($field) . ' is not a valid ISBN-10.';
+                    return ucfirst($field) . ' nie je platné ISBN-10.';
                 }
                 $sum += (10 - $i) * (int)$normalized[$i];
             }
             $check = $normalized[9];
             $checkVal = ($check === 'X' || $check === 'x') ? 10 : (ctype_digit($check) ? (int)$check : -1);
-            if ($checkVal < 0) return ucfirst($field) . ' is not a valid ISBN-10.';
+            if ($checkVal < 0) return ucfirst($field) . ' nie je platné ISBN-10.';
             $sum += 1 * $checkVal;
             if (($sum % 11) === 0) return null;
-            return ucfirst($field) . ' is not a valid ISBN-10.';
+            return ucfirst($field) . ' nie je platné ISBN-10.';
         }
 
-        return ucfirst($field) . ' has invalid format (expected ISBN-10 or ISBN-13).';
+        return ucfirst($field) . ' má neplatný formát (očakáva sa ISBN-10 alebo ISBN-13).';
+    }
+
+    /**
+     * Validate publisher name (required, max 255 chars)
+     */
+    public static function validatePublisher(?string $value, string $field = 'vydavateľ'): ?string
+    {
+        $v = trim((string)($value ?? ''));
+        if ($v === '') {
+            return ucfirst($field) . ' je povinné pole.';
+        }
+        if (mb_strlen($v) > 255) return ucfirst($field) . ' môže mať maximálne 255 znakov.';
+        if (!preg_match('~^[\p{L}0-9\s.,\'()/&-]+$~u', $v)) return ucfirst($field) . ' obsahuje neplatné znaky.';
+        return null;
     }
 }
-

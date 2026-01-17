@@ -43,7 +43,8 @@ CREATE TABLE `books`
 (
     `id`             int(11) NOT NULL AUTO_INCREMENT,
     `isbn`           varchar(50)  NOT NULL,
-    `year_published` SMALLINT(4)  DEFAULT NULL,
+    `year_published` SMALLINT(4)  NOT NULL,
+    `publisher`      varchar(255)  NOT NULL,
     `description`    varchar(100) DEFAULT NULL,
     `title`          varchar(100) NOT NULL,
     `author_id`      int(11) DEFAULT NULL,

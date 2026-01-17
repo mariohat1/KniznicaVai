@@ -19,7 +19,8 @@ $view->setLayout('admin');
         <input type="hidden" name="a" value="manage">
         <div class="row g-2">
             <div class="col-auto">
-                <input type="search" name="q" class="form-control" placeholder="Hľadať podľa názvu knihy" value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
+                <label for="bookManageSearch" class="visually-hidden">Hľadať podľa názvu knihy</label>
+                <input id="bookManageSearch" type="search" name="q" class="form-control" placeholder="Hľadať podľa názvu knihy" value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
             </div>
             <div class="col-auto">
                 <select name="category" class="form-select">

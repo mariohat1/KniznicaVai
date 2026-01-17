@@ -16,87 +16,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function load() {
         const params = new URLSearchParams(new FormData(form));
-        const urlObj = new URL(form.action, window.location.href);
+        const urlObj = new URL(form.action);
         urlObj.search = params.toString();
         const url = urlObj.toString();
 
         try {
+            // Fetch server-rendered HTML (no JSON)
             const res = await fetch(url, {
                 method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
                 credentials: 'same-origin'
             });
 
-            const json = await res.json();
-            let listHtml = '<div class="list-group" id="reservation-list">';
-            if (json.items && json.items.length) {
-                json.items.forEach(it => {
-                    const title = it.book?.title || 'Neznáma kniha';
-                    const username = it.user?.username || it.user?.id || '—';
-                    const expDate = it.expDate ? `Expiruje: ${it.expDate}` : '';
-                    const daysLeft = it.daysLeft ? ` · Zostáva: ${it.daysLeft}` : '';
-                    const isReserved = parseInt(it.reservation?.is_reserved) === 1;
-                    const btnText = isReserved ? 'Zrušiť' : 'Obnoviť';
-                    const btnClass = isReserved ? 'btn-outline-danger' : 'btn-outline-primary';
-                    const btnAction = isReserved ? 'cancel' : 'restore';
-                    listHtml += `
-                        <div class="list-group-item d-flex justify-content-between align-items-start">
-                            <div>
-                                <div class="fw-bold">${title}</div>
-                                <div class="small text-muted">
-                                    Používateľ: ${username}<br>
-                                    ${expDate}${daysLeft ? daysLeft : ''}
-                                </div>
-                            </div>
-                            <div class="text-end ms-2 flex-shrink-0">
-                                <button type="button"
-                                    class="btn btn-sm ${btnClass} reservation-action"
-                                    data-id="${it.reservation?.id}"
-                                    data-action="${btnAction}">
-                                    ${btnText}
-                                </button>
-                            </div>
-                        </div>`;
-                });
-            } else {
-                listHtml += '<div class="alert alert-info">Žiadne rezervácie.</div>';
+            const html = await res.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // Replace reservations list (server-rendered)
+            const newList = doc.querySelector(listSelector);
+            const oldList = document.querySelector(listSelector);
+            if (newList && oldList) {
+                oldList.replaceWith(newList);
             }
-            listHtml += '</div>';
-            const temp = document.createElement('div');
-            temp.innerHTML = listHtml;
-            document.querySelector(listSelector)?.replaceWith(temp.firstElementChild);
-            // ================= PAGINATION =================
-            document.querySelector('.pagination')?.remove();
-            if (json.pagination?.pages > 1) {
-                let pag = '<ul class="pagination">';
-                for (let i = 1; i <= json.pagination.pages; i++) {
-                    pag += `
-                        <li class="page-item ${i === json.pagination.page ? 'active' : ''}">
-                            <a class="page-link" href="#" data-page="${i}">${i}</a>
-                        </li>`;
-                }
-                pag += '</ul>';
-                const p = document.createElement('div');
-                p.innerHTML = pag;
-                document.querySelector(listSelector).after(p.firstElementChild);
+            document.querySelector('nav[aria-label="pagination"]')?.remove();
+            const newNav = doc.querySelector('nav[aria-label="pagination"]');
+            if (newNav && document.querySelector(listSelector)) {
+                document.querySelector(listSelector).after(newNav);
             }
-            // ================= ACTIVE STATUS =================
             const status = params.get('status') || 'all';
             document.querySelectorAll('[data-status]').forEach(btn =>
                 btn.classList.toggle('active', btn.dataset.status === status)
             );
             history.replaceState(null, '', url);
+            const resultingList = document.querySelector(listSelector);
+            if (resultingList) {
+                const items = resultingList.querySelectorAll('.list-group-item');
+                return { hasItems: items.length > 0 };
+            }
+
+            return { hasItems: false };
         } catch (err) {
-            console.error('AJAX error:', err);
+            console.error('AJAX error (HTML):', err);
+            return { hasItems: false };
         }
     }
 
 
 
-    // ================= CLICK HANDLER =================
     document.addEventListener('click', async e => {
         const statusBtn = e.target.closest('[data-status]');
         if (statusBtn) {
@@ -105,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusInput = form.querySelector('[name="status"]');
             if (statusInput) statusInput.value = statusVal;
             if (pageInput) pageInput.value = 1;
-            load();
+             load();
             return;
         }
 
@@ -116,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const pageVal = pageBtn.dataset.page;
             if (pageVal && pageVal.trim()) {
                 if (pageInput) pageInput.value = pageVal;
-                load();
+                 load();
             }
             return;
         }
@@ -140,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             await res.json().catch(() => null);
-            load();
+            await load();
         }
     });
 

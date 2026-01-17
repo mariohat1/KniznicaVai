@@ -13,11 +13,13 @@
                     <!-- Avatar Column -->
                     <div class="col-12 col-md-4 col-lg-3 text-center">
                         <?php if (method_exists($author, 'getPhoto') && $author->getPhoto()): ?>
-                            <img src="<?= htmlspecialchars($author->getPhoto()) ?>"
-                                 alt="<?= htmlspecialchars(trim($author->getFirstName() . ' ' . $author->getLastName())) ?>"
-                                 class="author-page-avatar img-fluid rounded">
+                            <div class="author-avatar-wrapper">
+                                <img src="<?= htmlspecialchars($author->getPhoto()) ?>"
+                                     alt="<?= htmlspecialchars(trim($author->getFirstName() . ' ' . $author->getLastName())) ?>"
+                                     class="avatar-author">
+                            </div>
                         <?php else: ?>
-                            <div class="author-page-avatar-placeholder mx-auto rounded">
+                            <div class="author-avatar-wrapper author-avatar-placeholder mx-auto">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor"
                                      class="text-secondary bi bi-person" viewBox="0 0 16 16">
                                     <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
@@ -72,7 +74,7 @@
     </div>
 
     <?php if (empty($books)): ?>
-        <div class="alert alert-info" role="alert">Tento autor nemá žiadne knihy.</div>
+        <div class="alert alert-info" role="alert">Tento autor nemá žiadne knihy v tejto knižnici.</div>
     <?php else: ?>
         <div class="row g-3">
             <?php foreach ($books as $b): ?>

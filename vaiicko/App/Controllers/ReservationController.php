@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Support\AuthHelper;
 use App\Models\Book;
 use App\Models\BookCopy;
 use App\Models\Reservation;
@@ -13,37 +14,20 @@ use Framework\Http\Responses\Response;
 
 class ReservationController extends BaseController
 {
-    public function __construct()
-    {
-        // Log instantiation to help debug missing authorize() calls
-        error_log('[DEBUG] ReservationController instantiated');
-    }
+    use AuthHelper;
+
 
     public function authorize(Request $request, string $action): bool
     {
-        $auth = $this->app->getAuth();
-        if ($action === 'manage' || $action === 'update') {
-            if (!$auth || !$auth->isLogged()) {
-                return false;
-            }
-            $user = $auth->getUser();
-            return $user && strtolower((string)$user->getRole()) === 'admin';
+        if (in_array($action, ['manage', 'update'])) {
+            return $this->isAdmin();
         }
-
-        if ($action === 'index' || $action === 'cancel') {
-            return $auth && $auth->isLogged();
+        if (in_array($action, ['index', 'cancel'])) {
+            return $this->app->getAuth()->isLogged();
         }
-
         if ($action === 'create') {
-            if (!$auth || !$auth->isLogged()) {
-                return false;
-            }
-            $user = $auth->getUser();
-            return $user && strtolower((string)$user->getRole()) !== 'admin';
+            return $this->isUser();
         }
-
-
-
         return false;
     }
 
@@ -53,19 +37,7 @@ class ReservationController extends BaseController
      */
     public function create(Request $request): Response
     {
-        $auth = $this->app->getAuth();
-
-        if (!$auth->isLogged()) {
-            $bid = $request->value('id');
-            if ($bid) {
-                return $this->redirect($this->url('book.view', ['id' => $bid, 'must_login' => 1]));
-            }
-            return $this->redirect($this->url('book.index'));
-        }
-        $user = $auth->getUser();
-        $role = $user->getRole();
-        $userId = $user->getId();
-        if (strtolower((string)$role) === 'admin') {
+        if (!$request->isPost()) {
             return $this->redirect($this->url('book.index'));
         }
         $id = $request->value('id');
@@ -73,33 +45,20 @@ class ReservationController extends BaseController
         if ($book === null) {
             return $this->redirect($this->url('book.index'));
         }
-
-        // find an available copy by checking reservations (controller handles logic)
-        // consider only copies that are marked available in DB
-        $allCopies = BookCopy::getAll('book_id = ? AND available = 1', [$book->getId()]);
-        $copy = null;
-        foreach ($allCopies as $c) {
-            // treat is_reserved as indicator of an active reservation that blocks a copy
-            $reservedCount = Reservation::getCount('book_copy_id = ? AND is_reserved = 1', [$c->getId()]);
-            if ($reservedCount === 0) {
-                $copy = $c;
-                break;
-            }
-        }
+        $userId = $this->app->getAuth()->getUser()->getId();
+        $copy = $this->findAvailableCopy($book);
         if ($copy === null) {
-            // no available copies -> redirect to book view
             return $this->redirect($this->url('book.view', ['id' => $book->getId()]));
         }
 
         try {
             $reservation = new Reservation();
-            // mark reservation as reserved
             $reservation->setIsReserved(1);
             $reservation->setUserId($userId);
             $reservation->setBookCopyId($copy->getId());
-            $reservation->setCreatedAt(date('Y-m-d H:i'));
-            $created = new \DateTime();
-            $reservedUntil = (clone $created)->modify('+6 days')->setTime(23, 59);
+            $now = new \DateTimeImmutable();
+            $reservation->setCreatedAt($now->format('Y-m-d H:i'));
+            $reservedUntil = $now->modify('+6 days')->setTime(23, 59);
             $reservation->setReservedUntil($reservedUntil->format('Y-m-d H:i'));
             $reservation->save();
             return $this->redirect($this->url('book.view', ['id' => $book->getId(), 'reserved' => 1]));
@@ -110,25 +69,7 @@ class ReservationController extends BaseController
 
     public function index(Request $request): Response
     {
-        $auth = $this->app->getAuth();
-        if (!$auth->isLogged()) {
-            return $this->redirect($this->url('book.index'));
-        }
-
-        $user = $auth->getUser();
-        $userId = null;
-        if (is_object($user) && method_exists($user, 'getId')) {
-            $userId = $user->getId();
-        } elseif (is_object($user)) {
-            $vars = get_object_vars($user);
-            $userId = $vars['id'] ?? null;
-        }
-
-        if ($userId === null) {
-            return $this->redirect($this->url('book.index'));
-        }
-
-        // Status filter: 'active' => is_reserved = 1, 'finished' => is_reserved = 0, default all
+        $userId = $this->app->getAuth()->getUser()->getId();
         $status = $request->value('status');
         $whereParts = ['user_id = ?'];
         $whereParams = [$userId];
@@ -139,10 +80,13 @@ class ReservationController extends BaseController
             $whereParts[] = 'is_reserved = ?';
             $whereParams[] = 0;
         }
-
         $where = !empty($whereParts) ? implode(' AND ', $whereParts) : null;
-        $reservations = Reservation::getAll($where, $whereParams);
-
+        $page = (int)$request->value('page');
+        if ($page < 1) $page = 1;
+        $perPage = 10;
+        $offset = ($page - 1) * $perPage;
+        $total = Reservation::getCount($where, $whereParams);
+        $reservations = Reservation::getAll($where, $whereParams, 'created_at DESC', $perPage, $offset);
         $items = [];
         foreach ($reservations as $r) {
             $copy = null;
@@ -155,7 +99,14 @@ class ReservationController extends BaseController
             $items[] = ['reservation' => $r, 'copy' => $copy, 'book' => $book];
         }
 
-        return $this->html(['items' => $items, 'status' => $status ?? 'all'], 'index');
+        $pages = ($total > 0) ? (int)ceil($total / $perPage) : 1;
+        $pagination = ['page' => $page, 'pages' => $pages, 'total' => $total, 'limit' => $perPage];
+
+        if ($request->isAjax() || $request->wantsJson()) {
+            return $this->json(['items' => $items, 'status' => $status ?? 'all', 'pagination' => $pagination]);
+        }
+
+        return $this->html(['items' => $items, 'status' => $status ?? 'all', 'pagination' => $pagination], 'index');
     }
 
     /**
@@ -173,25 +124,13 @@ class ReservationController extends BaseController
         if ($page < 1) $page = 1;
         $limit = 10;
         $offset = ($page - 1) * $limit;
-
         $whereParts = [];
         $whereParams = [];
         $this->applySearchFilters($q, $searchBy, $whereParts, $whereParams);
-
-        // fetch reservations data
         $data = $this->getReservationsData($whereParts, $whereParams, $status, $page, $limit, $offset);
         $items = $data['items'];
         $pagination = $data['pagination'];
 
-        if ($request->isAjax() || $request->wantsJson()) {
-            return $this->json([
-                'items' => $items,
-                'pagination' => $pagination,
-                'q' => $q,
-                'status' => $status,
-                'searchBy' => $searchBy
-            ]);
-        }
 
         return $this->html([
             'items' => $items,
@@ -410,6 +349,19 @@ class ReservationController extends BaseController
         ];
 
         return ['items' => $items, 'pagination' => $pagination];
+    }
+
+    // helper to find a copy that's available and not already reserved
+    private function findAvailableCopy(Book $book): ?BookCopy
+    {
+        $allCopies = BookCopy::getAll('book_id = ? AND available = 1', [$book->getId()]);
+        foreach ($allCopies as $c) {
+            $reservedCount = Reservation::getCount('book_copy_id = ? AND is_reserved = 1', [$c->getId()]);
+            if ($reservedCount === 0) {
+                return $c;
+            }
+        }
+        return null;
     }
 
 }

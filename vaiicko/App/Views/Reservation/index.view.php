@@ -1,6 +1,7 @@
 <?php
 /** @var array $items */
 /** @var string $status */
+/** @var array $pagination */
 /** @var \Framework\Support\LinkGenerator $link */
 
 ?>
@@ -51,5 +52,42 @@
                 </div>
             <?php endforeach; ?>
         </div>
+
+        <!-- Pagination: simple full pages loop using provided $pagination -->
+        <?php if (!empty($pagination) && isset($pagination['pages']) && $pagination['pages'] > 1):
+            $page = (int)$pagination['page'];
+            $pages = (int)$pagination['pages'];
+            $limit = (int)($pagination['limit'] ?? 10);
+            $total = (int)($pagination['total'] ?? 0);
+            ?>
+            <div class="d-flex flex-column align-items-center mt-3">
+                <nav aria-label="Stránkovanie">
+                    <ul class="pagination">
+                        <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+                            <a class="page-link" href="<?= $link->url('reservation.index', ['page' => max(1, $page - 1), 'status' => $status ?? 'all']) ?>" aria-label="Predchádzajúca">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+
+                        <?php for ($p = 1; $p <= $pages; $p++): ?>
+                            <li class="page-item <?= $p === $page ? 'active' : '' ?>">
+                                <a class="page-link" href="<?= $link->url('reservation.index', ['page' => $p, 'status' => $status ?? 'all']) ?>"><?= $p ?></a>
+                            </li>
+                        <?php endfor; ?>
+
+                        <li class="page-item <?= $page >= $pages ? 'disabled' : '' ?>">
+                            <a class="page-link" href="<?= $link->url('reservation.index', ['page' => min($pages, $page + 1), 'status' => $status ?? 'all']) ?>" aria-label="Ďalšia">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="small text-muted">
+                    Zobrazené: <?= $total > 0 ? (($page - 1) * $limit + 1) : 0 ?> - <?= $total > 0 ? min($total, $page * $limit) : 0 ?> z <?= $total ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
     <?php endif; ?>
 </div>

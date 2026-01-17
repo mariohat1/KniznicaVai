@@ -2,6 +2,8 @@
 /** @var array $authors */
 /** @var \Framework\Core\IAuthenticator $auth */
 /** @var \Framework\Support\LinkGenerator $link */
+/** @var array $filters */
+/** @var array $pagination */
 ?>
 
 <div class="container">
@@ -10,8 +12,8 @@
     <!-- Search form -->
     <form method="get" action="<?= $link->url('author.index') ?>" class="row g-2 mb-4">
         <div class="col-12 col-md-6">
-            <label for="authorSearchInput" class="sr-only">Hľadať autora</label>
-            <input id="authorSearchInput" type="search" name="q" class="form-control" placeholder="Hľadať autora..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
+            <label for="authorSearchInput" class="visually-hidden">Hľadať autora</label>
+            <input id="authorSearchInput" type="search" name="q" class="form-control" placeholder="Hľadať autora..." value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
         </div>
         <div class="col-12 col-md-auto">
             <button type="submit" class="btn btn-primary w-100 w-md-auto">Hľadať</button>
@@ -42,8 +44,6 @@
                                 <?php endif; ?>
                             </div>
                         </div>
-
-                        <!-- Author info column -->
                         <div class="col">
                             <h5 class="mb-1">
                                 <a href="<?= $link->url('author.view', ['id' => $a->getId()]) ?>" class="author-link">
@@ -58,5 +58,42 @@
                 </div>
             <?php endforeach; ?>
         </div>
+
+        <?php if (!empty($pagination) && isset($pagination['pages']) && $pagination['pages'] > 1):
+            $page = (int)$pagination['page'];
+            $pages = (int)$pagination['pages'];
+            $perPage = (int)($pagination['perPage'] ?? 10);
+            $total = (int)($pagination['total'] ?? 0);
+            $qParam = $filters['q'] ?? '';
+            ?>
+            <div class="d-flex flex-column align-items-center mt-3">
+                <nav aria-label="Stránkovanie autorov">
+                    <ul class="pagination">
+                        <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+                            <a class="page-link" href="<?= $link->url('author.index', ['page' => max(1, $page - 1), 'q' => $qParam]) ?>" aria-label="Predchádzajúca">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+
+                        <?php for ($p = 1; $p <= $pages; $p++): ?>
+                            <li class="page-item <?= $p === $page ? 'active' : '' ?>">
+                                <a class="page-link" href="<?= $link->url('author.index', ['page' => $p, 'q' => $qParam]) ?>"><?= $p ?></a>
+                            </li>
+                        <?php endfor; ?>
+
+                        <li class="page-item <?= $page >= $pages ? 'disabled' : '' ?>">
+                            <a class="page-link" href="<?= $link->url('author.index', ['page' => min($pages, $page + 1), 'q' => $qParam]) ?>" aria-label="Ďalšia">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="small text-muted">
+                    Zobrazené: <?= $total > 0 ? (($page - 1) * $perPage + 1) : 0 ?> - <?= $total > 0 ? min($total, $page * $perPage) : 0 ?> z <?= $total ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
     <?php endif; ?>
 </div>

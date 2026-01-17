@@ -15,7 +15,8 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         <input type="hidden" name="c" value="category">
         <input type="hidden" name="a" value="manage">
         <div class="col-auto">
-            <input type="search" name="q" class="form-control" placeholder="Hľadať názov..." value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
+            <label for="categoryManageSearch" class="visually-hidden">Hľadať názov</label>
+            <input id="categoryManageSearch" type="search" name="q" class="form-control" placeholder="Hľadať názov..." value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
         </div>
         <div class="col-auto">
             <input type="hidden" name="page" value="<?= htmlspecialchars($filters['page'] ?? 1) ?>">

@@ -37,6 +37,11 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         </div>
 
         <div class="mb-3">
+            <label for="publisher" class="form-label">Vydavateľ</label>
+            <input id="publisher" name="publisher" type="text" class="form-control" required maxlength="255" value="<?= htmlspecialchars(isset($book) ? ($book->getPublisher() ?? '') : '') ?>">
+        </div>
+
+        <div class="mb-3">
             <label for="author_id" class="form-label">Autor</label>
             <select id="author_id" name="author_id" class="form-select" required>
                 <option value="">-- vybrať --</option>

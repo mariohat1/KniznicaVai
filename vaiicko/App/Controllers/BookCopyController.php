@@ -4,21 +4,18 @@ namespace App\Controllers;
 
 use App\Models\Book;
 use App\Models\BookCopy;
+use App\Support\AuthHelper;
 use Framework\Core\BaseController;
 use Framework\Http\Request;
 use Framework\Http\Responses\Response;
 
 class BookCopyController extends BaseController
 {
+    use AuthHelper;
+
     public function authorize(Request $request, string $action): bool
     {
-        $auth = $this->app->getAuth();
-        if (!$auth || !$auth->isLogged()) {
-            return false;
-        }
-
-        $user = $auth->getUser();
-        return $user && strtolower((string)$user->getRole()) === 'admin';
+        return $this->isAdmin();
     }
 
     /**

@@ -4,6 +4,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
 }
 /** @var array $authors */
 /** @var \Framework\Support\LinkGenerator $link */
+/** @var array $filters */
 ?>
 
 <div class="container">
@@ -14,7 +15,9 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         <input type="hidden" name="c" value="author">
         <input type="hidden" name="a" value="manage">
         <div class="col-12 col-md-6">
-            <input type="search" name="q" class="form-control" placeholder="Hľadať meno alebo priezvisko" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
+            <label for="authorManageSearch" class="visually-hidden">Hľadať meno alebo priezvisko</label>
+            <input id="authorManageSearch" type="search" name="q" class="form-control"
+                   placeholder="Hľadať meno alebo priezvisko" value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
         </div>
         <div class="col-12 col-md-auto">
             <button type="submit" class="btn btn-primary w-100 w-md-auto">Hľadať</button>
@@ -67,5 +70,4 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         </div>
     <?php endif; ?>
 </div>
-
 

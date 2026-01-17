@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\Genre;
+use App\Support\AuthHelper;
 use Framework\Core\BaseController;
 use Framework\Http\Request;
 use Framework\Http\Responses\Response;
@@ -11,24 +12,18 @@ use App\Support\Validator;
 
 class GenreController extends BaseController
 {
+    use AuthHelper;
+
     public function authorize(Request $request, string $action): bool
     {
-        if ($action === 'index') {
-            return true;
-        }
+        if ($action === 'index') return true;
 
-        $auth = $this->app->getAuth();
-        if (!$auth || !$auth->isLogged()) {
-            return false;
-        }
-
-        $user = $auth->getUser();
-        return $user && strtolower((string)$user->getRole()) === 'admin';
+        return $this->isAdmin();
     }
 
     public function index(Request $request): Response
     {
-        $result = $this->paginate($request, 'name ASC', 10);
+        $result = $this->paginate($request, 'name ASC');
 
         return $this->html([
             'genres' => $result['items'],
@@ -39,7 +34,7 @@ class GenreController extends BaseController
 
     public function manage(Request $request): Response
     {
-        $result = $this->paginate($request, 'name ASC', 10);
+        $result = $this->paginate($request, 'name ASC');
 
         return $this->html([
             'genres' => $result['items'],

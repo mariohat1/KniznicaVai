@@ -7,6 +7,7 @@ use App\Models\Book;
 use App\Models\BookCopy;
 use App\Models\Reservation;
 use Exception;
+use App\Support\AuthHelper;
 use Framework\Core\BaseController;
 use Framework\Http\Request;
 use Framework\Http\Responses\Response;
@@ -16,25 +17,18 @@ use App\Support\PhotoUpload;
 
 class AuthorController extends BaseController
 {
+    use AuthHelper;
+
     public function authorize(Request $request, string $action): bool
     {
-        if ($action === 'index' || $action === 'view') {
-            return true;
-        }
+        if ($action === 'index' || $action === 'view') return true;
 
-        $auth = $this->app->getAuth();
-        if (!$auth || !$auth->isLogged()) {
-            return false;
-        }
-
-        $user = $auth->getUser();
-        return $user && strtolower((string)$user->getRole()) === 'admin';
+        return $this->isAdmin();
     }
 
     public function index(Request $request): Response
     {
         $result = $this->paginate($request);
-
         return $this->html([
             'authors' => $result['items'],
             'filters' => $result['filters'],
@@ -52,22 +46,20 @@ class AuthorController extends BaseController
         if (empty($id)) {
             return $this->redirect($this->url('author.index'));
         }
-
         $author = null;
         try {
             $author = Author::getOne((int)$id);
         } catch (\Throwable $e) {
-            // ignore and redirect
         }
-
         if (!$author) {
             return $this->redirect($this->url('author.index'));
         }
         $books = [];
         try {
-            $books = Book::getAll('author_id = ?', [$id]);
+            $totalBooks = Book::getCount('author_id = ?', [$id]);
+            $books = Book::getAll('author_id = ?', [$id], 'title ASC', 3, 0);
         } catch (Exception $e) {
-
+            $totalBooks = 0;
         }
         $copies = [];
         foreach ($books as $b) {
@@ -82,9 +74,12 @@ class AuthorController extends BaseController
             }
         }
 
-        return $this->html(['author' => $author,
+        return $this->html([
+            'author' => $author,
             'books' => $books,
-            'copies' => $copies], 'view');
+            'copies' => $copies,
+            'totalBooks' => $totalBooks
+        ], 'view');
     }
 
     /**
@@ -191,13 +186,11 @@ class AuthorController extends BaseController
         if ($id === null) {
             return $this->redirect($this->url('author.manage'));
         }
-
+        $author =null;
         try {
             $author = Author::getOne($id);
         } catch (\Throwable $ex) {
-            return $this->redirect($this->url('author.manage'));
         }
-
         if ($author === null) {
             return $this->redirect($this->url('author.manage'));
         }
@@ -237,11 +230,10 @@ class AuthorController extends BaseController
         }
         $where = !empty($whereParts) ? implode(' AND ', $whereParts) : null;
 
-        // Pagination
         $perPage = 10;
         $page = max(1, (int)($request->value('page') ?? 1));
         $total = Author::getCount($where, $whereParams);
-        $pages = ($perPage > 0) ? (int)ceil($total / $perPage) : 1;
+        $pages = (int)ceil($total / $perPage);
         if ($pages < 1) $pages = 1;
         if ($page > $pages) $page = $pages;
         $offset = ($page - 1) * $perPage;

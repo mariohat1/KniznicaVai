@@ -22,28 +22,35 @@ class PhotoUpload
         $file = $request->file('photo');
 
         if (!$file || !$file->isOk()) {
-            self::$lastError = 'No file';
+            self::$lastError = 'Žiadny súbor.';
             return null;
         }
 
         if ($file->getSize() > 5 * 1024 * 1024) {
-            self::$lastError = 'File too large';
+            self::$lastError = 'Súbor je príliš veľký.';
             return null;
         }
         $info = $file->getType();
         if ($info !== 'image/png') {
-            self::$lastError = 'Invalid file type';
+            self::$lastError = 'Neplatný typ súboru; očakáva sa PNG.';
             return null;
         }
 
         $projectRoot = dirname(__DIR__, 2);
         $dir = $projectRoot . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . $uploadDir;
 
+        if (!is_dir($dir)) {
+            if (!@mkdir($dir, 0755, true)) {
+                self::$lastError = 'Nepodarilo sa vytvoriť priečinok pre nahrávanie.';
+                return null;
+            }
+        }
+
         $filename = uniqid($filePrefix . '_', true) . '.png';
         $dest = $dir . DIRECTORY_SEPARATOR . $filename;
 
         if (!$file->store($dest)) {
-            self::$lastError = 'Upload failed';
+            self::$lastError = 'Nahratie zlyhalo.';
             return null;
         }
 

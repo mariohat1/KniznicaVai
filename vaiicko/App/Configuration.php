@@ -19,7 +19,7 @@ class Configuration
     /**
      * Application name.
      */
-    public const APP_NAME = 'Vaííčko MVC FW';
+    public const APP_NAME = 'DNN Knižnica';
 
     /**
      * Version of the framework.
@@ -75,16 +75,5 @@ class Configuration
      */
     public const ERROR_HANDLER_CLASS = ErrorHandler::class;
 
-    /**
-     * Directory for file uploads on the filesystem (uses OS-specific directory separators).
-     * Example on Linux:  public/uploads/
-     * Example on Windows: public\uploads\
-     */
-    public const UPLOAD_DIR = 'uploads' . DIRECTORY_SEPARATOR;
 
-    /**
-     * Public URL path prefix for uploaded files (always uses forward slashes for web URLs).
-     * Example: /uploads/
-     */
-    public const UPLOAD_URL = '/uploads/';
 }

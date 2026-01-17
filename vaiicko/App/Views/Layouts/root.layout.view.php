@@ -19,10 +19,10 @@ $isAdmin = AuthView::canAddAuthor($auth);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="apple-touch-icon" sizes="180x180" href="<?= $link->asset('favicons/apple-touch-icon.png') ?>">
-    <link rel="icon" type="image/png" sizes="32x32" href="<?= $link->asset('favicons/favicon-32x32.png') ?>">
-    <link rel="icon" type="image/png" sizes="16x16" href="<?= $link->asset('favicons/favicon-16x16.png') ?>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= $link->asset('favicons/dnn_image_favicon-32x32.png') ?>">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?= $link->asset('favicons/dnn_image_favicon-16x16.png') ?>">
     <link rel="manifest" href="<?= $link->asset('favicons/site.webmanifest') ?>">
-    <link rel="shortcut icon" href="<?= $link->asset('favicons/favicon.ico') ?>">
+    <link rel="shortcut icon" href="<?= $link->asset('favicons/favicon_dnn.ico') ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
@@ -38,9 +38,9 @@ $isAdmin = AuthView::canAddAuthor($auth);
             <div class="container-fluid">
                 <!-- Logo a názov - vľavo -->
                 <a class="navbar-brand d-flex align-items-center" href="<?= $link->url('home.index') ?>">
-                    <img src="<?= $link->asset('images/vaiicko_logo.png') ?>" alt="<?= App\Configuration::APP_NAME ?>"
+                    <img src="<?= $link->asset('images/dnn_image.png') ?>" alt="<?= App\Configuration::APP_NAME ?>"
                          class="me-2 navbar-logo-sm">
-                    <span class="text-white fs-5 d-none d-md-inline">DNN Knižnica</span>
+                    <span class="text-white fs-5 d-none d-md-inline">Knižnica</span>
                 </a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
@@ -49,7 +49,6 @@ $isAdmin = AuthView::canAddAuthor($auth);
                 </button>
 
                 <div class="collapse navbar-collapse" id="mainNav">
-                    <!-- Hlavné menu linky - vľavo vedľa loga -->
                     <ul class="navbar-nav mb-2 mb-md-0">
                         <li class="nav-item"><a class="nav-link"
                                                 href="<?= $link->url('category.index') ?>">Kategórie</a></li>

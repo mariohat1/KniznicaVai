@@ -59,6 +59,17 @@ class ErrorHandler implements IHandleError
             return (new JsonResponse($data))
                 ->setStatusCode($exception->getCode());
         } else {
+            // For regular HTML requests, render a friendly 403 page when appropriate
+            if ($exception->getCode() === 403) {
+                $data = [
+                    "exception" => $exception,
+                    "showDetail" => false
+                ];
+
+                return (new ViewResponse($app, "_Error/forbidden", $data))
+                    ->setStatusCode(403);
+            }
+
             $data = [
                 "exception" => $exception,
                 "showDetail" => Configuration::SHOW_EXCEPTION_DETAILS

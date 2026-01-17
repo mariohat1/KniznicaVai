@@ -8,31 +8,22 @@ use App\Models\BookCopy;
 use App\Models\Category;
 use App\Models\Genre;
 use App\Models\Reservation;
-use App\Support\AuthView;
+use App\Support\AuthHelper;
 use App\Support\Validator;
 use App\Support\PhotoUpload;
 use Framework\Core\BaseController;
 use Framework\Http\Request;
 use Framework\Http\Responses\Response;
-use Framework\Http\Responses\JsonResponse;
 use mysql_xdevapi\Exception;
 
 class BookController extends BaseController
 {
+    use AuthHelper;
+
     public function authorize(Request $request, string $action): bool
     {
-        // Allow public read actions: index and view
-        if (in_array($action, ['index', 'view'])) {
-            return true;
-        }
-
-        $auth = $this->app->getAuth();
-        if (!$auth || !$auth->isLogged()) {
-            return false;
-        }
-
-        $user = $auth->getUser();
-        return $user && strtolower((string)$user->getRole()) === 'admin';
+        if (in_array($action, ['index', 'view'])) return true;
+        return $this->isAdmin();
     }
 
     /**
@@ -40,124 +31,37 @@ class BookController extends BaseController
      */
     public function index(Request $request): Response
     {
-        $q = trim((string)$request->value('q'));
-        $filterBy = $request->value('filter') ?? 'title';
-        $categoryFilter = $request->value('category') ?? '';
-        $genreFilter = $request->value('genre') ?? '';
-        $whereParts = [];
-        $whereParams = [];
-        if ($q !== '') {
-            if ($filterBy === 'author') {
-                $like = '%' . $q . '%';
-                $matchingAuthors = Author::getAll("CONCAT(first_name, ' ', last_name) LIKE ?", [$like]);
-                $ids = array_map(fn($author) => $author->getId(), $matchingAuthors);
-                if (!empty($ids)) {
-                    $placeholders = implode(',', array_fill(0, count($ids), '?'));
-                    $whereParts[] = "author_id IN ($placeholders)";
-                    $whereParams = array_merge($whereParams, $ids);
-                } else {
-                    $whereParts[] = '1 = 0';
-                }
-            } else {
-                $whereParts[] = 'title LIKE ?';
-                $whereParams[] = '%' . $q . '%';
-            }
-        }
+        $filters = $this->parseFilters($request, allowAuthorFilter: true);
+        $pageData = $this->paginateBooks($filters, $request);
+        $aux = $this->loadListing($pageData['books']);
 
-        if ($categoryFilter !== null && trim((string)$categoryFilter) !== '') {
-            $whereParts[] = 'category_id = ?';
-            $whereParams[] = (int)$categoryFilter;
-        }
-
-        // Filter by genre
-        if ($genreFilter !== null && trim((string)$genreFilter) !== '') {
-            $whereParts[] = 'genre_id = ?';
-            $whereParams[] = (int)$genreFilter;
-        }
-        $results = $this->fetchBooksForListing($request, $whereParts, $whereParams);
-        $books = $results['books'];
-        $copies = $results['copies'];
-        $categoriesMap = $results['categories'];
-        $genresMap = $results['genres'];
-        $page = $results['pagination']['page'];
-        $pages = $results['pagination']['pages'];
-        $perPage = $results['pagination']['perPage'];
-        $totalCount = $results['pagination']['total'];
-
-        $bookMeta = [];
-        foreach ($books as $book) {
-            $id = $book->getId();
-            $authorName = '';
-            $categoryName = $categoriesMap[$book->getCategoryId()] ?? '';
-            $genreName = $genresMap[$book->getGenreId()] ?? '';
-            $author = $book->getOneRelated(Author::class, 'author_id');
-            if ($author !== null) {
-                $authorName = trim(($author->getFirstName() ?? '') . ' ' . ($author->getLastName() ?? ''));
-            }
-
-            $bookMeta[$id] = [
-                'author' => $authorName,
-                'category' => $categoryName,
-                'genre' => $genreName,
-            ];
-        }
-
-
-        return $this->html(['books' => $books,
-            'copies' => $copies,
-            'categories' => $categoriesMap,
-            'genres' => $genresMap,
-            'bookMeta' => $bookMeta,
-            'filters' => ['q' => $q, 'filter' => $filterBy, 'category' => $categoryFilter, 'genre' => $genreFilter, 'page' => $page],
-            'pagination' => ['page' => $page, 'pages' => $pages, 'perPage' => $perPage, 'total' => $totalCount],], 'index');
+        return $this->html([
+            'books' => $pageData['books'],
+            'copies' => $aux['copies'],
+            'categories' => $aux['categories'],
+            'genres' => $aux['genres'],
+            'bookMeta' => $aux['bookMeta'],
+            'filters' => $filters['viewFilters'] + ['page' => $pageData['page']],
+            'pagination' => $pageData['pagination']
+        ], 'index');
     }
-
 
     /**
      * @throws \Exception
      */
-    public
-    function manage(Request $request): Response
+    public function manage(Request $request): Response
     {
-        $q = trim((string)$request->value('q'));
-        $categoryFilter = $request->value('category') ?? '';
-        $genreFilter = $request->value('genre') ?? '';
-
-        $whereParts = [];
-        $whereParams = [];
-
-        if ($q !== '') {
-            $whereParts[] = 'title LIKE ?';
-            $whereParams[] = '%' . $q . '%';
-        }
-
-        if ($categoryFilter !== null && trim((string)$categoryFilter) !== '') {
-            $whereParts[] = 'category_id = ?';
-            $whereParams[] = (int)$categoryFilter;
-        }
-
-        if ($genreFilter !== null && trim((string)$genreFilter) !== '') {
-            $whereParts[] = 'genre_id = ?';
-            $whereParams[] = (int)$genreFilter;
-        }
-
-        $results = $this->fetchBooksForListing($request, $whereParts, $whereParams);
-        $books = $results['books'];
-        $copies = $results['copies'];
-        $categoriesMap = $results['categories'];
-        $genresMap = $results['genres'];
-        $page = $results['pagination']['page'];
-        $pages = $results['pagination']['pages'];
-        $perPage = $results['pagination']['perPage'];
-        $total = $results['pagination']['total'];
+        $filters = $this->parseFilters($request, allowAuthorFilter: false);
+        $pageData = $this->paginateBooks($filters, $request);
+        $aux = $this->loadListing($pageData['books']);
 
         return $this->html([
-            'books' => $books,
-            'copies' => $copies,
-            'categories' => $categoriesMap,
-            'genres' => $genresMap,
-            'filters' => ['q' => $q, 'category' => $categoryFilter, 'genre' => $genreFilter, 'page' => $page],
-            'pagination' => ['page' => $page, 'pages' => $pages, 'perPage' => $perPage, 'total' => $total],
+            'books' => $pageData['books'],
+            'copies' => $aux['copies'],
+            'categories' => $aux['categories'],
+            'genres' => $aux['genres'],
+            'filters' => $filters['viewFilters'] + ['page' => $pageData['page']],
+            'pagination' => $pageData['pagination']
         ], 'manage');
     }
 
@@ -244,12 +148,20 @@ class BookController extends BaseController
         }
         $errors = [];
         $isbn = $request->value('isbn');
-        $year = $request->value('year');
+        $year = $request->value('year_published');
         $description = $request->value('description');
         $authorId = (int)trim(($request->value('author_id') ?? ''));
         $categoryId = (int)trim(($request->value('category_id') ?? ''));
         $genreId = (int)trim(($request->value('genre_id') ?? ''));
+        $publisher = trim((string)($request->value('publisher') ?? ''));
 
+
+        if ($err = Validator::validatePublisher($publisher, 'vydavateľ')) {
+            $errors[] = $err;
+        }
+        if ($err = Validator::validateYear($year, 'rok vydania')) {
+            $errors[] = $err;
+        }
         if ($err = Validator::validateAuthorId($authorId)) {
             $errors[] = $err;
         }
@@ -277,7 +189,7 @@ class BookController extends BaseController
         }
 
         $book = $this->loadOrCreateBook($request);
-        $book->setIsbn(trim((string)$isbn));
+        $book->setIsbn(trim($isbn));
         if ($err = $this->checkISBNUniqueness($book)) {
             $errors[] = $err;
             if ($request->isAjax()) {
@@ -287,24 +199,19 @@ class BookController extends BaseController
         }
         $book->setFromRequest($request);
 
-        // Handle photo upload
         if ($photoError = $this->handlePhotoUpload($request, $book)) {
             $errors[] = $photoError;
         }
-
         if (!empty($errors)) {
             if ($request->isAjax()) {
                 return $this->json(['success' => false, 'errors' => $errors]);
             }
             return $this->redirect($this->url('book.add'));
         }
-
         $book->save();
-
         if ($request->isAjax()) {
             return $this->json(['success' => true, 'redirect' => $this->url('book.manage')]);
         }
-
         return $this->redirect($this->url('book.manage'));
     }
 
@@ -394,9 +301,7 @@ class BookController extends BaseController
             }
         } catch (\Throwable $ignored) {
             return $this->redirect($this->url('book.manage'));
-
         }
-
         try {
             $book->delete();
         } catch (\Throwable $e) {
@@ -408,63 +313,145 @@ class BookController extends BaseController
 
 
     /**
-     * Helper that runs the where clause, pagination, loads books, copies and maps for categories/genres.
-     * Returns an array with keys: books, copies, categories, genres, pagination, whereClause, whereParams
+     * Parse request filters into structured whereParts/params and view-friendly filters.
+     * @param Request $request
+     * @param bool $allowAuthorFilter
+     * @return array contains: whereParts, whereParams, viewFilters (q, filter, category, genre)
      */
-    private
-    function fetchBooksForListing(Request $request, array $whereParts = [], array $whereParams = [], int $perPage = 5): array
+    private function parseFilters(Request $request, bool $allowAuthorFilter = true): array
     {
-        $whereClause = null;
-        if (!empty($whereParts)) {
-            $whereClause = implode(' AND ', $whereParts);
+        $q = trim((string)$request->value('q'));
+        $filterBy = $allowAuthorFilter ? ($request->value('filter') ?? 'title') : 'title';
+        $categoryFilter = $request->value('category') ?? '';
+        $genreFilter = $request->value('genre') ?? '';
+        $whereParts = [];
+        $whereParams = [];
+        if ($q !== '') {
+            if ($allowAuthorFilter && $filterBy === 'author') {
+                $whereParts[] = "author_id IN 
+                             (SELECT id FROM `authors` 
+                            WHERE CONCAT(first_name, ' ', last_name) LIKE ?)";
+                $whereParams[] = '%' . $q . '%';
+            } else {
+                $whereParts[] = 'title LIKE ?';
+                $whereParams[] = '%' . $q . '%';
+            }
         }
+        if ($categoryFilter !== null && trim((string)$categoryFilter) !== '') {
+            $whereParts[] = 'category_id = ?';
+            $whereParams[] = (int)$categoryFilter;
+        }
+        if ($genreFilter !== null && trim((string)$genreFilter) !== '') {
+            $whereParts[] = 'genre_id = ?';
+            $whereParams[] = (int)$genreFilter;
+        }
+        return [
+            'whereParts' => $whereParts,
+            'whereParams' => $whereParams,
+            'viewFilters' => ['q' => $q, 'filter' => $filterBy, 'category' => $categoryFilter, 'genre' => $genreFilter]
+        ];
+    }
 
+    /**
+     * Paginate books for given filters. Returns books array, pagination data and current page.
+     * @param array $filters (output of parseFilters)
+     * @param Request $request
+     * @param int $defaultPerPage
+     * @return array ['books'=>..., 'pagination'=>..., 'page'=>int]
+     */
+    private function paginateBooks(array $filters, Request $request, int $perPage = 2): array
+    {
+        $whereClause = !empty($filters['whereParts']) ? implode(' AND ', $filters['whereParts']) : null;
+        $whereParams = $filters['whereParams'] ?? [];
         $page = max(1, (int)($request->value('page') ?? 1));
-
         $totalCount = Book::getCount($whereClause, $whereParams);
         $pages = (int)ceil($totalCount / $perPage);
         if ($pages < 1) $pages = 1;
         if ($page > $pages) $page = $pages;
-
         $offset = ($page - 1) * $perPage;
-
         $books = Book::getAll($whereClause, $whereParams, 'title ASC', $perPage, $offset);
-
-        $copies = [];
-        foreach ($books as $b) {
-            $bookId = $b->getId();
-            // Use centralized helper to compute totals so listing and detail match
-            $summary = $this->computeCopiesForBook($bookId);
-            // provide counts: available (not reserved), total (copies flagged available) and reserved (count)
-            $copies[$bookId] = ['available' => $summary['available'], 'total' => $summary['total'], 'reserved' => $summary['reserved']];
-        }
-
-        $categoriesMap = [];
-        $cats = Category::getAll();
-        foreach ($cats as $c) {
-            $id = $c->getId();
-            $name = $c->getName();
-            $categoriesMap[$id] = $name;
-        }
-
-        $genresMap = [];
-        $gens = Genre::getAll();
-        foreach ($gens as $g) {
-            $id = $g->getId();
-            $name = $g->getName();
-            $genresMap[$id] = $name;
-        }
-
         return [
             'books' => $books,
-            'copies' => $copies,
-            'categories' => $categoriesMap,
-            'genres' => $genresMap,
             'pagination' => ['page' => $page, 'pages' => $pages, 'perPage' => $perPage, 'total' => $totalCount],
-            'whereClause' => $whereClause,
-            'whereParams' => $whereParams,
+            'page' => $page
         ];
     }
+
+    /**
+     * Load copies, categories, genres and computed bookMeta for a list of books.
+     * @param array $books
+     * @return array ['copies'=>..., 'categories'=>..., 'genres'=>..., 'bookMeta'=>...]
+     */
+    private function loadListing(array $books): array
+    {
+        $copies = [];
+        $bookIds = [];
+        foreach ($books as $b) {
+            $bookIds[] = $b->getId();
+        }
+        foreach ($books as $b) {
+            $summary = $this->computeCopiesForBook($b->getId());
+            $copies[$b->getId()] = ['available' => $summary['available'], 'total' => $summary['total'], 'reserved' => $summary['reserved']];
+        }
+        $categoriesMap = [];
+        try {
+            $cats = Category::getAll();
+            foreach ($cats as $c) {
+                $categoriesMap[$c->getId()] = $c->getName();
+            }
+        } catch (\Throwable $e) {
+            $categoriesMap = [];
+        }
+        $genresMap = [];
+        try {
+            $gens = Genre::getAll();
+            foreach ($gens as $g) {
+                $genresMap[$g->getId()] = $g->getName();
+            }
+        } catch (\Throwable $e) {
+            $genresMap = [];
+        }
+        $bookMeta = $this->buildBookMeta($books, $categoriesMap, $genresMap);
+        return ['copies' => $copies, 'categories' => $categoriesMap, 'genres' => $genresMap, 'bookMeta' => $bookMeta];
+    }
+
+    /**
+     * Build metadata (author/category/genre text) for a list of books to simplify views.
+     * This version avoids N+1 queries by batch-loading authors for all books at once.
+     * @param array $books
+     * @param array $categoriesMap
+     * @param array $genresMap
+     * @return array keyed by book id
+     */
+    private function buildBookMeta(array $books, array $categoriesMap, array $genresMap): array
+    {
+        $bookMeta = [];
+        if (empty($books)) return $bookMeta;
+        $authorIds = [];
+        foreach ($books as $b) {
+            $aid = $b->getAuthorId();
+            if ($aid) $authorIds[] = $aid;
+        }
+        $authorIds = array_values(array_unique($authorIds));
+        $authorsMap = [];
+        if (!empty($authorIds)) {
+            $placeholders = implode(',', array_fill(0, count($authorIds), '?'));
+            $loaded = Author::getAll("id IN ($placeholders)", $authorIds);
+            foreach ($loaded as $a) {
+                $authorsMap[$a->getId()] = trim(($a->getFirstName() ?? '') . ' ' . ($a->getLastName() ?? ''));
+            }
+        }
+        foreach ($books as $book) {
+            $id = $book->getId();
+            $bookMeta[$id] = [
+                'author' => $authorsMap[$book->getAuthorId()] ?? '',
+                'category' => $categoriesMap[$book->getCategoryId()] ?? '',
+                'genre' => $genresMap[$book->getGenreId()] ?? '',
+            ];
+        }
+        return $bookMeta;
+    }
+
 
     /**
      * Compute copies summary for a single book.
@@ -483,7 +470,6 @@ class BookController extends BaseController
         $copiesList = [];
         try {
             $physicalTotal = BookCopy::getCount('book_id = ?', [$bookId]);
-            // total = copies currently marked as available
             $total = BookCopy::getCount('book_id = ? AND available = 1', [$bookId]);
             $reservedCount = Reservation::getCount('book_copy_id IN (SELECT id FROM book_copy WHERE book_id = ? AND available = 1) AND is_reserved = 1', [$bookId]);
             $available = max(0, $total - $reservedCount);
@@ -491,7 +477,10 @@ class BookController extends BaseController
         } catch (\Throwable $e) {
             // ignore and return defaults
         }
-
-        return ['physicalTotal' => (int)$physicalTotal, 'total' => (int)$total, 'available' => (int)$available, 'reserved' => (int)$reservedCount, 'copies' => $copiesList];
+        return ['physicalTotal' => $physicalTotal,
+            'total' => (int)$total,
+            'available' => (int)$available,
+            'reserved' => (int)$reservedCount,
+            'copies' => $copiesList];
     }
 }

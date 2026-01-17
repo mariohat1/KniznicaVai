@@ -83,7 +83,6 @@ $view->setLayout('root');
             <div class="list-group list-group-flush">
                 <?php foreach ($books as $b):
                      $bid = (int)$b->getId();
-                    // copies mapping provides ['available' => int, 'reserved' => int]
                     $meta = $copies[$bid] ?? ['available' => 0, 'reserved' => 0];
                     $m = $bookMeta[$bid] ?? ['author' => '', 'category' => '', 'genre' => ''];
                     $authorName = htmlspecialchars((string)($m['author'] ?? ''));
@@ -91,11 +90,13 @@ $view->setLayout('root');
                     $genreName = htmlspecialchars((string)($m['genre'] ?? ''));
                     $title = htmlspecialchars((string)$b->getTitle());
                     $isbn = htmlspecialchars((string)$b->getIsbn());
-                    $year = htmlspecialchars((string)$b->getYearPublished());
+                    $year = $b->getYearPublished();
                     $desc = htmlspecialchars((string)$b->getDescription());
                     $photo = htmlspecialchars((string)$b->getPhoto());
-                    $bookUrl = $link->url('book.view', ['id' => $b->getId()]);
-                    ?>
+                    $publisher = trim((string)$b->getPublisher());
+                    $publisherSafe = $publisher !== '' ? htmlspecialchars($publisher) : null;
+                     $bookUrl = $link->url('book.view', ['id' => $b->getId()]);
+                     ?>
                     <div class="list-group-item border-bottom py-3 card card-book" data-title="<?= $title ?>"
                          data-author="<?= $authorName ?>" data-isbn="<?= $isbn ?>" data-year="<?= $year ?>"
                          data-category="<?= $categoryName ?>" data-genre="<?= $genreName ?>">
@@ -126,8 +127,14 @@ $view->setLayout('root');
                                          <span class="meta-label"><strong>Autor:</strong> <a href="<?= $link->url('author.view', ['id' => $m['author_id'] ?? 0]) ?>" class="author-link"><?= $authorName ?></a></span>
                                          <span class="mx-1">|</span>
                                          <span class="meta-label"><strong>ISBN:</strong> <?= $isbn ?></span>
-                                         <span class="mx-1">|</span>
-                                         <span class="meta-label"><strong>Rok:</strong> <?= $year ?></span>
+                                         <?php if ($year !== null): ?>
+                                            <span class="mx-1">|</span>
+                                            <span class="meta-label"><strong>Rok:</strong> <?= htmlspecialchars((string)$year) ?></span>
+                                         <?php endif; ?>
+                                         <?php if ($publisherSafe !== null): ?>
+                                            <span class="mx-1">|</span>
+                                            <span class="meta-label"><strong>Vydavateľ:</strong> <?= $publisherSafe ?></span>
+                                         <?php endif; ?>
                                      </small>
                                  </p>
 

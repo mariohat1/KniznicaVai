@@ -48,20 +48,19 @@ class AuthController extends BaseController
     public function login(Request $request): Response
     {
         $message = null;
-
         if ($request->isPost()) {
-            $loginField = $request->value('login') ?? $request->value('username');
+            $loginField =  $request->value('username');
             $password = $request->value('password');
 
             $logged = $this->app->getAuth()->login($loginField, $password);
-            $referer = $request->server('HTTP_REFERER') ?: $this->url('home.index');
+            $referer = $request->server('HTTP_REFERER');
 
             if ($logged) {
                 return $this->json(['success' => true, 'redirect' => $referer]);
             }
             return $this->json(['success' => false, 'message' => 'Neplatné meno alebo heslo']);
         }
-        return $this->html(['message' => $message]);
+        return $this->redirect(Configuration::LOGIN_URL);
     }
 
     /**

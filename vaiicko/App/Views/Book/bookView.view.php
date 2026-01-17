@@ -91,6 +91,10 @@
                 </span>
                 <span class="mx-1">|</span>
                 <span class="meta-label"><strong>Rok:</strong> <?= htmlspecialchars((string)$book->getYearPublished()) ?></span>
+                <?php $publisher = trim((string)$book->getPublisher()); if (!empty($publisher)): ?>
+                    <span class="mx-1">|</span>
+                    <span class="meta-label"><strong>Vydavateľ:</strong> <?= htmlspecialchars($publisher) ?></span>
+                <?php endif; ?>
             </p>
 
             <hr>
