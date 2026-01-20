@@ -9,7 +9,7 @@
     <h1 class="mb-4 section-title">Kategórie</h1>
     <form method="get" action="<?= $link->url('category.index') ?>" class="row g-2 mb-4">
         <input type="hidden" name="c" value="category">
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-3">
             <label for="categorySearchInput" class="visually-hidden">Hľadať kategóriu</label>
             <input id="categorySearchInput" type="search" name="q" class="form-control" placeholder="Hľadať kategóriu..." value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
         </div>
@@ -22,7 +22,7 @@
     <?php else: ?>
         <div class="row row-cols-1 row-cols-md-2 g-3">
             <?php foreach ($categories as $c): ?>
-                <?php $url = $link->url('book.index') . (strpos($link->url('book.index'), '?') === false ? '?' : '&') . 'category=' . (int)$c->getId(); ?>
+                <?php $url = $link->url('book.index', ['category' => (int)$c->getId()]); ?>
                 <div class="col">
                     <div class="card h-100 list-item-hover">
                         <div class="card-body">

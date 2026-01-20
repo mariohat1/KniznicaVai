@@ -14,7 +14,8 @@ if (isset($view) && method_exists($view, 'setLayout')) {
 <div class="container">
     <h1 class="mb-4">Správa rezervácií</h1>
 
-    <form id="reservation-search-form" class="row g-2 mb-3" method="get"
+    <!-- Responsive search: inline on md+, stacked on xs -->
+    <form id="reservation-search-form" class="mb-3" method="get"
           action="<?= $link->url('reservation.manage') ?>"
           data-update-url="<?= htmlspecialchars($link->url('reservation.update')) ?>">
         <input type="hidden" name="c" value="reservation">
@@ -23,41 +24,44 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         <input type="hidden" name="page" id="reservation-page"
                value="<?= htmlspecialchars(is_array($pagination) ? ($pagination['page'] ?? 1) : 1) ?>">
 
-        <div class="col-auto">
-            <label for="reservation-search-by" class="visually-hidden">Režim hľadania</label>
-            <select id="reservation-search-by" name="searchBy" class="form-select" aria-label="Režim hľadania">
-                <option value="book" <?= (isset($searchBy) && $searchBy === 'book') || !isset($searchBy) ? 'selected' : '' ?>>
-                    Podľa knihy
-                </option>
-                <option value="user" <?= isset($searchBy) && $searchBy === 'user' ? 'selected' : '' ?>>Podľa používateľa</option>
-            </select>
-        </div>
+        <div class="row g-2 align-items-start">
+            <div class="col-12 col-md-auto mb-2 mb-md-0">
+                <label for="reservation-search-by" class="visually-hidden">Režim hľadania</label>
+                <select id="reservation-search-by" name="searchBy" class="form-select" aria-label="Režim hľadania">
+                    <option value="book" <?= (isset($searchBy) && $searchBy === 'book') || !isset($searchBy) ? 'selected' : '' ?>>
+                        Podľa knihy
+                    </option>
+                    <option value="user" <?= isset($searchBy) && $searchBy === 'user' ? 'selected' : '' ?>>Podľa používateľa</option>
+                </select>
+            </div>
 
-        <div class="col-auto">
-            <input id="reservation-search-input" aria-label="Hľadať" type="search" name="q"
-                   class="form-control"
-                   placeholder="Hľadať..."
-                   value="<?= htmlspecialchars($q ?? '') ?>">
-        </div>
+            <div class="col-12 col-md-auto mb-2 mb-md-0">
+                <label for="reservation-search-input" class="visually-hidden">Hľadať</label>
+                <input id="reservation-search-input" aria-label="Hľadať" type="search" name="q"
+                       class="form-control"
+                       placeholder="Hľadať..."
+                       value="<?= htmlspecialchars($q ?? '') ?>">
+            </div>
 
-        <div class="col-auto">
-            <button id="reservation-search-button" type="button" class="btn btn-primary">
-                <i class="bi bi-search me-2"></i>Hľadať
-            </button>
-        </div>
+            <div class="col-12 col-md-auto mb-2 mb-md-0">
+                <button id="reservation-search-button" type="button" class="btn btn-primary w-100 w-md-auto">
+                    Hľadať
+                </button>
+            </div>
 
-        <div class="col-12">
-            <div class="btn-group" role="group" aria-label="Status filter">
-                <a class="btn btn-outline-secondary <?= ($status ?? 'all') === 'all' ? 'active' : '' ?>"
-                   data-status="all"
-                   href="<?= $link->url('reservation.manage', ['status' => 'all', 'q' => $q ?? '', 'user' => $selectedUser ?? '', 'searchBy' => $searchBy ?? '']) ?>">Všetky
-                </a>
-                <a class="btn btn-outline-success <?= ($status === 'active') ? 'active' : '' ?>"
-                   data-status="active"
-                   href="<?= $link->url('reservation.manage', ['status' => 'active', 'q' => $q ?? '', 'user' => $selectedUser ?? '', 'searchBy' => $searchBy ?? '']) ?>">Aktívne</a>
-                <a class="btn btn-outline-dark <?= ($status === 'finished') ? 'active' : '' ?>"
-                   data-status="finished"
-                   href="<?= $link->url('reservation.manage', ['status' => 'finished', 'q' => $q ?? '', 'user' => $selectedUser ?? '', 'searchBy' => $searchBy ?? '']) ?>">Skončené</a>
+            <div class="col-12">
+                <div class="btn-group" role="group" aria-label="Status filter">
+                    <a class="btn btn-outline-secondary <?= ($status ?? 'all') === 'all' ? 'active' : '' ?>"
+                       data-status="all"
+                       href="<?= $link->url('reservation.manage', ['status' => 'all', 'q' => $q ?? '', 'user' => $selectedUser ?? '', 'searchBy' => $searchBy ?? '']) ?>">Všetky
+                    </a>
+                    <a class="btn btn-outline-success <?= ($status === 'active') ? 'active' : '' ?>"
+                       data-status="active"
+                       href="<?= $link->url('reservation.manage', ['status' => 'active', 'q' => $q ?? '', 'user' => $selectedUser ?? '', 'searchBy' => $searchBy ?? '']) ?>">Aktívne</a>
+                    <a class="btn btn-outline-dark <?= ($status === 'finished') ? 'active' : '' ?>"
+                       data-status="finished"
+                       href="<?= $link->url('reservation.manage', ['status' => 'finished', 'q' => $q ?? '', 'user' => $selectedUser ?? '', 'searchBy' => $searchBy ?? '']) ?>">Skončené</a>
+                </div>
             </div>
         </div>
     </form>

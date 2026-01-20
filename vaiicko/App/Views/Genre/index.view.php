@@ -8,10 +8,9 @@
 <div class="container">
     <h1 class="mb-4 section-title">Žánre</h1>
 
-    <!-- Search form -->
     <form method="get" action="<?= $link->url('genre.index') ?>" class="row g-2 mb-4">
         <input type="hidden" name="c" value="genre">
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-3">
             <label for="genreSearchInput" class="visually-hidden">Hľadať žáner</label>
             <input id="genreSearchInput" type="search" name="q" class="form-control" placeholder="Hľadať žáner..." value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
         </div>
@@ -25,7 +24,7 @@
     <?php else: ?>
         <div class="row row-cols-1 row-cols-md-2 g-3">
             <?php foreach ($genres as $g): ?>
-                <?php $url = $link->url('book.index') . (strpos($link->url('book.index'), '?') === false ? '?' : '&') . 'genre=' . (int)$g->getId(); ?>
+                <?php $url = $link->url('book.index', ['genre' => (int)$g->getId()]); ?>
                 <div class="col">
                     <div class="card h-100 list-item-hover">
                         <div class="card-body">

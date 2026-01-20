@@ -11,21 +11,26 @@ if (isset($view) && method_exists($view, 'setLayout')) {
 <div class="container">
     <h1>Správa kategórií</h1>
 
-    <form method="get" action="<?= $link->url('category.manage') ?>" class="row g-2 mb-3 align-items-center">
+    <form method="get" action="<?= $link->url('category.manage') ?>" class="mb-3">
         <input type="hidden" name="c" value="category">
         <input type="hidden" name="a" value="manage">
-        <div class="col-auto">
-            <label for="categoryManageSearch" class="visually-hidden">Hľadať názov</label>
-            <input id="categoryManageSearch" type="search" name="q" class="form-control" placeholder="Hľadať názov..." value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
-        </div>
-        <div class="col-auto">
-            <input type="hidden" name="page" value="<?= htmlspecialchars($filters['page'] ?? 1) ?>">
-            <button class="btn btn-primary" type="submit">Hľadať</button>
+        <input type="hidden" name="page" value="<?= htmlspecialchars($filters['page'] ?? 1) ?>">
+
+        <div class="row g-2 align-items-start">
+            <div class="col-12 col-md-auto mb-2 mb-md-0">
+                <label for="categoryManageSearch" class="visually-hidden">Hľadať názov</label>
+                <input id="categoryManageSearch" type="search" name="q" class="form-control" placeholder="Hľadať názov..." value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
+            </div>
+            <div class="col-12 col-md-auto mb-2 mb-md-0">
+                <button class="btn btn-primary w-100 w-md-auto" type="submit">Hľadať</button>
+            </div>
         </div>
     </form>
 
-    <div class="mb-3">
-        <a class="btn btn-primary" href="<?= $link->url('category.add') ?>">Pridať kategóriu</a>
+    <div class="mb-3 row">
+        <div class="col-12 col-md-auto">
+            <a class="btn btn-primary btn-sm w-100" href="<?= $link->url('category.add') ?>">Pridať kategóriu</a>
+        </div>
     </div>
 
     <?php if (empty($categories)): ?>

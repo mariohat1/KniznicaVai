@@ -175,7 +175,10 @@ class ReservationController extends BaseController
                 $reservation->save();
             } elseif ($action === 'restore') {
                 $reservation->setIsReserved(1);
-                $reservation->save();
+                $now = new \DateTimeImmutable();
+                $reservation->setCreatedAt($now->format('Y-m-d H:i'));
+                $reservedUntil = $now->modify('+6 days')->setTime(23, 59);
+                $reservation->setReservedUntil($reservedUntil->format('Y-m-d H:i'));                $reservation->save();
             }
         } catch (\Throwable $e) {
             if ($request->isAjax()) {

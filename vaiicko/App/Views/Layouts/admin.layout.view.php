@@ -15,6 +15,7 @@ $displayNameEsc = AuthView::displayNameEsc($auth);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= App\Configuration::APP_NAME ?> — Správa</title>
+    <link rel="shortcut icon" href="<?= $link->asset('favicons/favicon_dnn.ico') ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="<?= $link->asset('css/styl.css') ?>">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -23,14 +24,12 @@ $displayNameEsc = AuthView::displayNameEsc($auth);
 <body>
 <nav class="navbar navbar-expand-md navbar-dark bg-dark">
     <div class="container-fluid">
-        <button class="btn btn-outline-light me-2 d-md-none" type="button" data-bs-toggle="offcanvas"
-                data-bs-target="#adminOffcanvas" aria-controls="adminOffcanvas" aria-label="Otvoriť menu">
-            <i class="bi bi-list" ></i>
+        <button class="btn border border-secondary d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminOffcanvas" aria-label="Otvoriť menu">
+            <span class="navbar-toggler-icon"></span>
         </button>
 
         <a class="navbar-brand d-flex align-items-center ms-1" href="<?= $link->url('home.index') ?>">Admin</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#admNav"
-                aria-controls="admNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#admNav" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="admNav">
@@ -42,8 +41,7 @@ $displayNameEsc = AuthView::displayNameEsc($auth);
     </div>
 </nav>
 
-<!-- Offcanvas menu for small screens -->
-<div class="offcanvas offcanvas-start" tabindex="-1" id="adminOffcanvas" aria-labelledby="adminOffcanvasLabel">
+<div class="offcanvas offcanvas-start" id="adminOffcanvas" aria-labelledby="adminOffcanvasLabel">
   <div class="offcanvas-header">
     <h5 class="offcanvas-title" id="adminOffcanvasLabel">Správa</h5>
     <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Zavrieť"></button>
@@ -64,7 +62,7 @@ $displayNameEsc = AuthView::displayNameEsc($auth);
     <div class="row">
         <div class="d-none d-md-block col-md-2 p-0 position-relative">
             <aside class="h-100">
-                <div class="position-sticky top-0 vh-100 p-3 d-flex flex-column">
+                <div class="position-sticky p-3 d-flex flex-column">
                   <div class="d-grid mb-3">
                         <a class="btn btn-sm btn-secondary" href="<?= $link->url('home.index') ?>">Domov</a>
                     </div>
@@ -75,7 +73,6 @@ $displayNameEsc = AuthView::displayNameEsc($auth);
                         <a href="<?= $link->url('book.manage') ?>" class="nav-link text-black">Knihy</a>
                         <a href="<?= $link->url('reservation.manage') ?>" class="nav-link text-black">Rezervácie</a>
                     </nav>
-                    <div class="mt-auto pt-3 small text-muted">&copy; <?= date('Y') ?></div>
                 </div>
 
             </aside>

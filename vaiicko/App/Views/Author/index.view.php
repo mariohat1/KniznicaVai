@@ -10,8 +10,8 @@
     <h1 class="mb-4 section-title">Autori</h1>
 
     <!-- Search form -->
-    <form method="get" action="<?= $link->url('author.index') ?>" class="row g-2 mb-4">
-        <div class="col-12 col-md-6">
+    <form method="get" action="<?= $link->url('author.index') ?>" class="row g-2 mb-4 form-row-search">
+        <div class="col-12 col-md-3">
             <label for="authorSearchInput" class="visually-hidden">Hľadať autora</label>
             <input id="authorSearchInput" type="search" name="q" class="form-control" placeholder="Hľadať autora..." value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
         </div>

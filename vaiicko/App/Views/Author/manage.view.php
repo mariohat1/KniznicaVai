@@ -14,7 +14,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
     <form method="get" action="<?= $link->url('author.manage') ?>" class="row g-2 mb-3">
         <input type="hidden" name="c" value="author">
         <input type="hidden" name="a" value="manage">
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-3">
             <label for="authorManageSearch" class="visually-hidden">Hľadať meno alebo priezvisko</label>
             <input id="authorManageSearch" type="search" name="q" class="form-control"
                    placeholder="Hľadať meno alebo priezvisko" value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
@@ -24,8 +24,10 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         </div>
     </form>
 
-    <div class="mb-3">
-        <a class="btn btn-primary" href="<?= $link->url('author.add') ?>">Pridať autora</a>
+    <div class="mb-3 row">
+        <div class="col-12 col-md-auto">
+            <a class="btn btn-primary btn-sm w-100" href="<?= $link->url('author.add') ?>">Pridať autora</a>
+        </div>
     </div>
 
     <?php if (empty($authors)): ?>
@@ -35,7 +37,6 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th class="d-none d-sm-table-cell">ID</th>
                     <th>Meno</th>
                     <th>Priezvisko</th>
                     <th class="d-none d-md-table-cell">Rok narodenia</th>
@@ -45,7 +46,6 @@ if (isset($view) && method_exists($view, 'setLayout')) {
             <tbody>
                 <?php foreach ($authors as $a): ?>
                     <tr>
-                        <td class="d-none d-sm-table-cell"><?= htmlspecialchars((string)$a->getId()) ?></td>
                         <td><?= htmlspecialchars($a->getFirstName()) ?></td>
                         <td><?= htmlspecialchars($a->getLastName()) ?></td>
                         <?php $by = $a->getBirthYear(); ?>
@@ -68,6 +68,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
             </tbody>
         </table>
         </div>
+
     <?php endif; ?>
 </div>
 

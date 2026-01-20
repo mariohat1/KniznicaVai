@@ -6,50 +6,56 @@
 /** @var array $filters */
 /** @var array $pagination */
 /** @var \Framework\Support\LinkGenerator $link */
-/** @var TYPE_NAME $view */
+/** @var object $view */
 $view->setLayout('admin');
 
 ?>
-<div class="container py-3">
-    <h1 class="mb-3">Správa kníh</h1>
-
-    <!-- Plain GET form: submit to front controller so router always receives c=book&a=manage -->
+<div class="container">
+    <h1>Správa kníh</h1>
     <form id="bookSearchForm" method="get" action="<?= $link->url('book.manage') ?>" class="mb-3">
         <input type="hidden" name="c" value="book">
         <input type="hidden" name="a" value="manage">
-        <div class="row g-2">
-            <div class="col-auto">
+
+        <div class="row g-2 align-items-start">
+            <div class="col-12 col-sm-6 col-md-2">
                 <label for="bookManageSearch" class="visually-hidden">Hľadať podľa názvu knihy</label>
                 <input id="bookManageSearch" type="search" name="q" class="form-control" placeholder="Hľadať podľa názvu knihy" value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
             </div>
-            <div class="col-auto">
-                <select name="category" class="form-select">
+
+            <div class="col-12 col-sm-6 col-md-2">
+                <label for="bookCategorySelect" class="visually-hidden">Kategória</label>
+                <select id="bookCategorySelect" name="category" class="form-select">
                     <option value="">Všetky kategórie</option>
                     <?php foreach ($categories as $id => $name): ?>
                         <option value="<?= htmlspecialchars($id) ?>" <?= isset($filters['category']) && $filters['category'] == $id ? 'selected' : '' ?>><?= htmlspecialchars($name) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-auto">
-                <select name="genre" class="form-select">
+
+            <div class="col-12 col-sm-6 col-md-2">
+                <label for="bookGenreSelect" class="visually-hidden">Žáner</label>
+                <select id="bookGenreSelect" name="genre" class="form-select">
                     <option value="">Všetky žánre</option>
                     <?php foreach ($genres as $id => $name): ?>
                         <option value="<?= htmlspecialchars($id) ?>" <?= isset($filters['genre']) && $filters['genre'] == $id ? 'selected' : '' ?>><?= htmlspecialchars($name) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
+
             <input type="hidden" id="bookPageInput" name="page" value="<?= htmlspecialchars($filters['page'] ?? 1) ?>">
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Hľadať</button>
+
+            <div class="col-12 col-sm-6 col-md-auto">
+                <button type="submit" class="btn btn-primary w-100 w-md-auto"><i class="bi bi-search"></i> Hľadať</button>
             </div>
         </div>
     </form>
 
-    <div class="mb-2">
-        <a class="btn btn-primary" href="<?= $link->url('book.add') ?>">
-            <i class="bi bi-plus-circle"></i> Pridať knihu
-        </a>
+    <div class="mb-3 row">
+        <div class="col-12 col-md-auto">
+            <a class="btn btn-primary btn-sm w-100" href="<?= $link->url('book.add') ?>">Pridať knihu</a>
+        </div>
     </div>
+
     <div id="manageFeedback" class="alert d-none"></div>
 
     <?php if (empty($books)): ?>
