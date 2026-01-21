@@ -82,8 +82,6 @@ $displayNameEsc = AuthView::displayNameEsc($auth);
          </main>
     </div>
 </div>
-
-
 </body>
 </html>
 

@@ -5,12 +5,10 @@
 /** @var \Framework\Support\LinkGenerator $link */
 ?>
 <div class="container py-4">
-    <!-- Author Header Card -->
     <div class="row mb-5">
         <div class="col-12">
             <div class="bg-white shadow-sm rounded p-4 p-md-5">
                 <div class="row align-items-center g-4">
-                    <!-- Avatar Column -->
                     <div class="col-12 col-md-4 col-lg-3 text-center">
                         <?php if (method_exists($author, 'getPhoto') && $author->getPhoto()): ?>
                             <div class="author-avatar-wrapper">
@@ -19,8 +17,8 @@
                                      class="avatar-author">
                             </div>
                         <?php else: ?>
-                            <div class="author-avatar-wrapper author-avatar-placeholder mx-auto">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor"
+                            <div class="author-avatar-wrapper author-avatar-placeholder">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="90" height="90" fill="currentColor"
                                      class="text-secondary bi bi-person" viewBox="0 0 16 16">
                                     <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
                                     <path fill-rule="evenodd" d="M14 14s-1-4-6-4-6 4-6 4 1 0 6 0 6 0 6 0z"/>
@@ -38,7 +36,7 @@
                         <div class="mb-3">
                             <?php $by = $author->getBirthYear(); $dy = $author->getDeathYear(); ?>
                             <p class="mb-1 text-muted">
-                                <strong>Narodenie / Úmrtí:</strong>
+                                <strong>Narodenie / Úmrtie:</strong>
                                 <span><?= htmlspecialchars(($by ?: 'Neznáme') . ' — ' . ($dy ?: 'Neznáme')) ?></span>
                             </p>
                         </div>
@@ -95,12 +93,12 @@
                                 <div class="flex-shrink-0">
                                     <?php if ($isAvail): ?>
                                         <span class="badge border border-success text-success bg-white" style="padding:.35rem .6rem; white-space:nowrap;">
-                                            <i class="bi bi-check-circle me-1"></i>
+                                            <i class="bi bi-check-circle me-1" aria-hidden="true"></i>
                                             <strong>Dostupné</strong>
                                         </span>
                                     <?php else: ?>
                                         <span class="badge border border-secondary text-secondary bg-white" style="padding:.35rem .6rem; white-space:nowrap;">
-                                            <i class="bi bi-x-circle me-1"></i>
+                                            <i class="bi bi-x-circle me-1" aria-hidden="true"></i>
                                             <strong>Nedostupné</strong>
                                         </span>
                                     <?php endif; ?>

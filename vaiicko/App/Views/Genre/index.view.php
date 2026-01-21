@@ -24,12 +24,11 @@
     <?php else: ?>
         <div class="row row-cols-1 row-cols-md-2 g-3">
             <?php foreach ($genres as $g): ?>
-                <?php $url = $link->url('book.index', ['genre' => (int)$g->getId()]); ?>
                 <div class="col">
-                    <div class="card h-100 list-item-hover">
+                    <div class="card h-100">
                         <div class="card-body">
                             <h5 class="card-title mb-2">
-                                <a href="<?= htmlspecialchars($url) ?>" class="author-link"><?= htmlspecialchars($g->getName()) ?></a>
+                                <a href="<?= $link->url('book.index', ['genre' => (int)$g->getId()]) ?>" class="author-link"><?= htmlspecialchars($g->getName()) ?></a>
                             </h5>
                         </div>
                     </div>

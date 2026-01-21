@@ -1,6 +1,6 @@
 DROP EVENT IF EXISTS `expire_reservations`;
 
-DROP TABLE IF EXISTS `reservation`;
+DROP TABLE IF EXISTS `reservations`;
 DROP TABLE IF EXISTS `book_copy`;
 DROP TABLE IF EXISTS `books`;
 DROP TABLE IF EXISTS `authors`;
@@ -20,7 +20,6 @@ CREATE TABLE `authors`
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
--- Create categories
 CREATE TABLE `categories`
 (
     `id`          int(11) NOT NULL AUTO_INCREMENT,
@@ -29,7 +28,6 @@ CREATE TABLE `categories`
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
--- Create genres
 CREATE TABLE `genres`
 (
     `id`          int(11) NOT NULL AUTO_INCREMENT,
@@ -38,7 +36,6 @@ CREATE TABLE `genres`
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
--- Create books (depends on authors, categories, genres)
 CREATE TABLE `books`
 (
     `id`             int(11) NOT NULL AUTO_INCREMENT,
@@ -60,7 +57,6 @@ CREATE TABLE `books`
     CONSTRAINT `books_ibfk_3` FOREIGN KEY (`genre_id`) REFERENCES `genres` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
--- Create book_copy (depends on books)
 CREATE TABLE `book_copy`
 (
     `id`        int(11) NOT NULL AUTO_INCREMENT,
@@ -71,7 +67,6 @@ CREATE TABLE `book_copy`
     CONSTRAINT `book_copy_ibfk_1` FOREIGN KEY (`book_id`) REFERENCES `books` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
--- Create users (independent)
 CREATE TABLE `users`
 (
     `id`         int(11) NOT NULL AUTO_INCREMENT,
@@ -84,11 +79,10 @@ CREATE TABLE `users`
     UNIQUE KEY `username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
--- Create reservation (depends on book_copy and users)
-CREATE TABLE `reservation`
+CREATE TABLE `reservations`
 (
     `id`           int(11) NOT NULL AUTO_INCREMENT,
-    `is_reserved`  varchar(50) DEFAULT NULL,
+    `is_reserved`  tinyint(1) NOT NULL DEFAULT 0,
     `user_id`      int(11) DEFAULT NULL,
     `book_copy_id` int(11) DEFAULT NULL,
     `created_at`   timestamp NULL DEFAULT current_timestamp(),
@@ -107,7 +101,8 @@ CREATE EVENT `expire_reservations`
     ON COMPLETION PRESERVE
     ENABLE
 DO
-    UPDATE reservation
+    UPDATE reservations
     SET is_reserved = 0
     WHERE is_reserved = 1
       AND reserved_until <= NOW();
+

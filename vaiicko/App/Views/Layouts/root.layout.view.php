@@ -45,7 +45,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
                         aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <i class="bi bi-list text-white"></i>
+                    <i class="bi bi-list text-white" aria-hidden="true"></i>
                 </button>
 
                 <div class="collapse navbar-collapse" id="mainNav">
@@ -72,7 +72,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
                             <?php endif; ?>
                             <li class="nav-item dropdown">
                                 <a class="btn btn-light dropdown-toggle" href="#" id="userMenu"
-                                   data-bs-toggle="dropdown" aria-expanded="false"><b><?= $displayNameEsc ?></b></a>
+                                   data-bs-toggle="dropdown" aria-expanded="false"><strong><?= $displayNameEsc ?></strong></a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
                                     <?php if (!$isAdmin): ?>
                                         <li>

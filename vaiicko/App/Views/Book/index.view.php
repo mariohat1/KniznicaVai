@@ -27,14 +27,14 @@ $view->setLayout('root');
                 <input class="form-check-input" type="radio" name="filter" id="filterTitle" value="title"
                        <?= (isset($filters['filter']) ? ($filters['filter'] === 'title' ? 'checked' : '') : 'checked') ?>>
                 <label class="form-check-label" for="filterTitle">
-                    <i class="bi bi-book me-1"></i>Názov
+                    <i class="bi bi-book me-1" aria-hidden="true"></i>Názov
                 </label>
             </div>
             <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="filter" id="filterAuthor" value="author"
                        <?= isset($filters['filter']) && $filters['filter'] === 'author' ? 'checked' : '' ?>>
                 <label class="form-check-label" for="filterAuthor">
-                    <i class="bi bi-person me-1"></i>Autor
+                    <i class="bi bi-person me-1" aria-hidden="true"></i>Autor
                 </label>
             </div>
         </div>
@@ -69,7 +69,7 @@ $view->setLayout('root');
 
             <div class="col-12 col-md-2">
                 <button id="bookSearchBtn" class="btn btn-primary w-100" type="submit">
-                    <i class="bi bi-search"></i><span class="d-none d-md-inline ms-1">Hľadať</span>
+                    <i class="bi bi-search" aria-hidden="true"></i><span class="d-none d-md-inline ms-1">Hľadať</span>
                 </button>
             </div>
         </div>
@@ -142,7 +142,7 @@ $view->setLayout('root');
 
                                  <div>
                                     <span class="badge bg-success-subtle text-success border border-success">
-                                        <i class="bi bi-check-circle me-1"></i>Dostupné
+                                        <i class="bi bi-check-circle me-1" aria-hidden="true"></i>Dostupné
                                         <span class="ms-2"><?= htmlspecialchars((string)($meta['available'] ?? 0)) ?> / <?= htmlspecialchars((string)($meta['total'] ?? 0)) ?></span>
                                     </span>
                                  </div>

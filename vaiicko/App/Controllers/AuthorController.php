@@ -115,11 +115,11 @@ class AuthorController extends BaseController
         $death_year = $request->value('death_year');
         $errors = [];
 
-        if ($err = Validator::validatePersonName($first, 'first name')) {
+        if ($err = Validator::validatePersonName($first, 'Krstné meno')) {
             $errors[] = $err;
         }
 
-        if ($err = Validator::validatePersonName($last, 'last name')) {
+        if ($err = Validator::validatePersonName($last, 'Priezvisko')) {
             $errors[] = $err;
         }
 
@@ -143,9 +143,14 @@ class AuthorController extends BaseController
         $author->setDescription($request->value('description'));
         $author->setBirthYear((int)$birth_year);
         $author->setDeathYear((int)$death_year);
-        if ($photoError = $this->handlePhotoUpload($request, $author)) {
+
+        // Zisti, ci uz autor ma fotku
+        $hasPhoto = !empty($author->getPhoto());
+        $photoError = $this->handlePhotoUpload($request, $author);
+        if ($photoError && !$hasPhoto) {
             $errors[] = $photoError;
         }
+
         if (!empty($errors)) {
             if ($request->isAjax()) {
                 return $this->json(['success' => false, 'errors' => $errors]);
@@ -166,10 +171,6 @@ class AuthorController extends BaseController
     private function handlePhotoUpload(Request $request, Author $author): ?string
     {
         $photoFile = $request->file('photo');
-        if (!$photoFile || !$photoFile->isOk()) {
-            return null;
-        }
-
         $path = PhotoUpload::handle($request, 'author', 'author');
         if ($path !== null) {
             $author->setPhoto($path);

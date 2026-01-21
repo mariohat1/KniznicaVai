@@ -7,19 +7,17 @@ html, body {
     height: 100%;
     margin: 0;
 }
-
 .site-wrap {
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* ensures footer sticks to bottom */
+    min-height: 100vh;
 }
-
 main.flex-fill {
-    flex: 1 1 auto; /* main expands to take available space */
+    flex: 1 1 auto;
 }
 /* footer vec */
 .site-footer {
-    flex-shrink: 0; /* prevent shrinking */
+    flex-shrink: 0;
     background-color: #2b2b2b;
     color: #d9d9d9;
     padding: 40px 20px;
@@ -103,39 +101,11 @@ main.flex-fill {
     text-decoration: underline;
     text-decoration-color: #000;
 }
-
-
 .book-title {
     font-size: 1.4rem;
     font-weight: 700;
     color: #0d3b66;
 }
-
-.muted-small {
-    color: #888;
-    font-size: 0.85em;
-}
-
-/* ===========================
-   BUTTONS / HIGHLIGHT
-=========================== */
-.btn-outline-contrast {
-    background: transparent;
-    color: #6fbf86;
-    border: 2px solid #6fbf86;
-    border-radius: 6px;
-    font-weight: 600;
-    padding: 0.4rem 1rem;
-    transition: background 0.2s, color 0.2s;
-}
-
-.btn-outline-contrast:hover {
-    background: #6fbf86;
-    color: #fff;
-}
-
-
-
 .highlight-reservation {
     background: #fffbe6;
     border-left: 4px solid #ffd166;
@@ -152,21 +122,6 @@ main.flex-fill {
     display: inline-block;
 }
 
-/* ===========================
-   MEDIA QUERIES / RESPONSIVE
-=========================== */
-@media (max-width: 768px) {
-    .site-header .navbar-nav {
-        gap: 6px;
-    }
-    .site-header .navbar-brand img {
-        width: 40px;
-    }
-}
-
-/* ===========================
-   MODERN UI ENHANCEMENTS
-=========================== */
 
 /* Thumbnail wrapper and sizing - books */
 .thumb-wrapper {
@@ -187,7 +142,7 @@ main.flex-fill {
     border: 1px solid #e9eef3;
     background: #f8f9fa;
     position: relative;
-    padding: 8px; /* breathing room so 100x150 covers are not flush */
+    padding: 8px;
 }
 
 .thumb .thumb-img {
@@ -219,25 +174,6 @@ main.flex-fill {
     border-radius: 8px;
     background: #f8f9fa;
 }
-
-.book-cover-img {
-    width: 100%;
-    height: 180px;
-    object-fit: contain; /* show full cover without cropping */
-    display: block;
-    border-radius: 6px;
-}
-
-.book-cover-svg {
-    width: auto;
-    height: auto;
-    max-width: 60%;
-    max-height: 60%;
-    display: block;
-    color: #6c757d;
-    opacity: 0.95;
-}
-
 
 /* 1. Navigačný link aktívny */
 .navbar-nav .nav-link.active {
@@ -285,7 +221,6 @@ main.flex-fill {
     font-weight: 500;
 }
 
-/* 8. Formulárove pole focus stav */
 .form-control:focus {
     border-color: #6fbf86;
     box-shadow: 0 0 0 0.2rem rgba(111, 191, 134, 0.25);
@@ -295,16 +230,8 @@ main.flex-fill {
 .form-label {
     font-weight: 600;
     color: #2c3e50;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
-
-/* 10. Varovný box */
-.alert-warning {
-    background-color: #fffbe6;
-    border-left: 4px solid #ffd166;
-    border-radius: 4px;
-}
-
 /* 11. Úspešný box */
 .alert-success {
     background-color: #e6f9ed;
@@ -332,52 +259,17 @@ main.flex-fill {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
     transform: translateY(-2px);
 }
-
-/* 15. Tabuľka riadky */
-table tbody tr {
-    border-bottom: 1px solid #e9ecef;
-    transition: background-color 0.15s ease;
-}
-
-/* 16. Tabuľka riadky hoveru */
-table tbody tr:hover {
-    background-color: #f8f9fa;
-}
-
-/* 17. Tabuľka záhlavia */
-table thead th {
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    letter-spacing: 0.05em;
-    color: #495057;
-}
-
-/* 18. Rozdelenie obsahu */
-.divider {
-    border-top: 2px solid #dee2e6;
-    margin: 20px 0;
-}
-
-/* 19. Badge štýly removed - using Bootstrap defaults */
-
 /* 20. Text input placeholders */
 .form-control::placeholder {
     color: #adb5bd;
     font-style: italic;
 }
-
-
-/* 22. Nadpis štýly */
 h1, h2, h3, h4, h5, h6 {
     color: #2c3e50;
     font-weight: 600;
     margin-bottom: 16px;
 }
 
-/* 23. Odstavec štýly */
 p {
     line-height: 1.6;
     color: #495057;
@@ -385,85 +277,44 @@ p {
 }
 
 .author-avatar-wrapper {
-    width: 160px; /* increased visual size */
-    height: 160px;
+    width: 150px; /* smaller, not oversized */
+    height: 150px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto;
-    overflow: hidden; /* ensure child image is clipped to circle */
+    overflow: hidden;
     border-radius: 50%;
-    border: 2px solid rgba(111, 191, 134, 0.15);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-    background: #fff;
+    border: 2px solid #e0eae2;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    background: #f8f9fa;
     flex-shrink: 0;
 }
 .avatar-author {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    object-fit: contain; /* show full author photo without cropping */
+    object-fit: contain;
     object-position: center center;
     display: block;
+    background-color: transparent;
 }
 .author-avatar-placeholder {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #f5faf6 0%, #eef7ee 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #2f4858;
-    font-weight: 700;
-    font-size: 28px;
+    width: 150px;
+    height: 150px;
+    background: #f3f7f3;
 }
-
-.author-initials {
-    line-height: 1;
-    letter-spacing: 0.02em;
-}
-
-/* Author page avatar - square, matching list size */
-.author-page-avatar {
-    width: 100%;
-    max-width: 96px;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    object-position: center;
+.author-avatar-wrapper.thumbnail {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
     display: block;
-    border-radius: 6px;
-    border: 1px solid rgba(0,0,0,0.04);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+}
+.author-avatar-placeholder.thumbnail {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
 }
 
-.author-page-avatar-placeholder {
-    width: 100%;
-    max-width: 96px;
-    aspect-ratio: 1 / 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #f8faf8 0%, #eef7ee 100%);
-    border-radius: 6px;
-    border: 1px solid rgba(0,0,0,0.03);
-}
 
-.author-page-avatar-placeholder svg {
-    width: 60%;
-    height: 60%;
-    color: #6c757d;
-    opacity: 0.85;
-}
-
-@media (max-width: 480px) {
-    .author-avatar-wrapper {
-        width: 64px;
-        height: 64px;
-    }
-    .author-page-avatar, .author-page-avatar-placeholder {
-        max-width: 64px;
-    }
-    .author-avatar-placeholder { font-size: 12px; }
-}
 

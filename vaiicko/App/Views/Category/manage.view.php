@@ -37,7 +37,7 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         <p>Žiadne kategórie.</p>
     <?php else: ?>
         <div class="table-responsive">
-        <table class="table table-striped">
+        <table class="table ">
             <thead>
                 <tr>
                     <th>Názov</th>

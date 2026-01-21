@@ -11,7 +11,6 @@ class Genre extends Model
 {
     protected ?int $id = null;
     protected ?string $name = null;
-    // optional descriptive text for the genre
     protected ?string $description = null;
 
     public function getId(): ?int

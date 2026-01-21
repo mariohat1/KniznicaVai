@@ -34,12 +34,11 @@ if (isset($view) && method_exists($view, 'setLayout')) {
         <p>Žiadni autori.</p>
     <?php else: ?>
         <div class="table-responsive">
-        <table class="table table-striped">
+        <table class="table table-hover align-middle">
             <thead>
                 <tr>
                     <th>Meno</th>
                     <th>Priezvisko</th>
-                    <th class="d-none d-md-table-cell">Rok narodenia</th>
                     <th>Akcie</th>
                 </tr>
             </thead>
@@ -49,10 +48,8 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                         <td><?= htmlspecialchars($a->getFirstName()) ?></td>
                         <td><?= htmlspecialchars($a->getLastName()) ?></td>
                         <?php $by = $a->getBirthYear(); ?>
-                        <td class="d-none d-md-table-cell"><?= htmlspecialchars($by ?: 'Neznáme') ?></td>
                         <td>
                             <div class="d-flex gap-1 flex-wrap">
-                                <a class="btn btn-sm btn-outline-primary" href="<?= $link->url('author.index') ?>">Zobraziť</a>
                                 <a class="btn btn-sm btn-outline-secondary" href="<?= $link->url('author.add', ['id' => $a->getId()]) ?>">Upraviť</a>
 
                                 <form method="post" action="<?= $link->url('author.delete') ?>"

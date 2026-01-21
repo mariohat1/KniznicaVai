@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var submitBtn = loginForm.querySelector('button[type="submit"]');
             if (submitBtn) submitBtn.disabled = true;
 
-            var url = loginForm.action || window.location.href;
+            var url = loginForm.action;
             var formData = new FormData(loginForm);
             try {
                 var resp = await fetch(url, {

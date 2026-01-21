@@ -44,7 +44,11 @@
                     return;
                 }
                 if (feedback) {
-                    feedback.innerHTML = '<div class="alert alert-danger mb-0" role="alert">' + ((json && (json.error || json.message)) || 'Chyba') + '</div>';
+                    let errors = json.errors.join('<br>');
+                    feedback.innerHTML =
+                        '<div class="alert alert-danger" role="alert">' +
+                        errors +
+                        '</div>';
                 }
             })
             .catch(() => {

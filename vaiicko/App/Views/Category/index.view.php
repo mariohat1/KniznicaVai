@@ -24,7 +24,7 @@
             <?php foreach ($categories as $c): ?>
                 <?php $url = $link->url('book.index', ['category' => (int)$c->getId()]); ?>
                 <div class="col">
-                    <div class="card h-100 list-item-hover">
+                    <div class="card h-100">
                         <div class="card-body">
                             <h5 class="card-title mb-2">
                                 <a href="<?= htmlspecialchars($url) ?>" class="author-link"><?= htmlspecialchars($c->getName()) ?></a>

@@ -159,9 +159,7 @@ class BookController extends BaseController
         if ($err = Validator::validatePublisher($publisher, 'vydavateľ')) {
             $errors[] = $err;
         }
-        if ($err = Validator::validateYear($year, 'rok vydania')) {
-            $errors[] = $err;
-        }
+
         if ($err = Validator::validateAuthorId($authorId)) {
             $errors[] = $err;
         }
@@ -174,7 +172,7 @@ class BookController extends BaseController
         if ($err = Validator::validateIsbn($isbn)) {
             $errors[] = $err;
         }
-        if ($err = Validator::validateYear($year, 'year_published')) {
+        if ($err = Validator::validateRequiredYear($year, 'rok vydania')) {
             $errors[] = $err;
         }
         if ($err = Validator::validateDescription($description)) {

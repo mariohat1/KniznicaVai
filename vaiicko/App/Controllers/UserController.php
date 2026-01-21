@@ -22,7 +22,6 @@ class UserController extends BaseController
             $password = $request->value('password') ?? '';
             $password2 = $request->value('password2') ?? '';
 
-            // Validation: empty fields or mismatched passwords
             if ($username === '' || $password === '' || $password !== $password2) {
                 return new JsonResponse(['success' => false, 'message' => 'Skontrolujte polia (username a heslá musí byť rovnaké).']);
             }
@@ -38,13 +37,11 @@ class UserController extends BaseController
             }
 
             try {
-                // Check if username exists
                 $exists = User::getCount('username = ?', [$username]);
                 if ($exists > 0) {
                     return new JsonResponse(['success' => false, 'message' => 'Používateľ s týmto menom už existuje.']);
                 }
 
-                // Check if email exists
                 if ($email !== '') {
                     $existsEmail = User::getCount('email = ?', [$email]);
                     if ($existsEmail > 0) {
@@ -52,7 +49,6 @@ class UserController extends BaseController
                     }
                 }
 
-                // Create new user
                 $user = new User();
                 $user->setUsername($username);
                 $user->setPassword(password_hash($password, PASSWORD_BCRYPT));
@@ -60,7 +56,6 @@ class UserController extends BaseController
                 $user->setRole('user');
                 $user->save();
 
-                // Auto-login
                 $auth = $this->app->getAuth();
                 $auth?->login($username, $password);
 

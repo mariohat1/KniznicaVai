@@ -22,7 +22,6 @@ class Validator
         if (mb_strlen($v) > 50) {
             return ucfirst($field) . ' môže mať najviac 50 znakov.';
         }
-        // allow letters (all languages), spaces, hyphen and apostrophe
         if (!preg_match("/^[\\p{L} '\\-]+$/u", $v)) {
             return ucfirst($field) . ' obsahuje neplatné znaky.';
         }
@@ -31,15 +30,19 @@ class Validator
 
     /**
      * Validate a short name/title (category, genre name)
+     * Disallow digits and plus sign; allow Unicode letters, spaces, hyphens and apostrophes.
      */
     public static function validateShortName(?string $value, string $field = 'name'): ?string
     {
-        $v = trim(($value ?? ''));
+        $v = trim((string)($value ?? ''));
         if ($v === '') {
             return $field . ' je povinné.';
         }
         if (mb_strlen($v) > 100) {
             return $field . ' môže mať maximálne 100 znakov.';
+        }
+        if (!preg_match("/^[\\p{L} '\\-]+$/u", $v)) {
+            return $field . ' obsahuje neplatné znaky';
         }
         return null;
     }
@@ -58,13 +61,15 @@ class Validator
     }
 
     /**
-     * Validate birth date (required). Accepts only a 1-4 digit year and must not be in the future.
+     * Validate birth date (optional). Accepts only a 1-4 digit year and must not be in the future.
+     * Empty value is allowed (returns null) — use validateRequiredYear when the field is mandatory.
      */
     public static function validateYear(?string $value, string $field): ?string
     {
-        $v = trim(($value ?? ''));
+        $v = trim((string)($value ?? ''));
+        // optional: empty is allowed
         if ($v === '') {
-            return ucfirst($field) . ' je povinné pole.';
+            return null;
         }
 
         if (!preg_match('/^\d{1,4}$/', $v)) {
@@ -79,6 +84,18 @@ class Validator
         }
 
         return null;
+    }
+
+    /**
+     * Validate a required year field. Calls validateYear but ensures value is present.
+     */
+    public static function validateRequiredYear(?string $value, string $field): ?string
+    {
+        $v = trim((string)($value ?? ''));
+        if ($v === '') {
+            return ucfirst($field) . ' je povinné pole.';
+        }
+        return self::validateYear($value, $field);
     }
 
     public static function validateYearRange(

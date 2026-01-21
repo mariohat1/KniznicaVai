@@ -13,8 +13,6 @@ if (isset($view) && method_exists($view, 'setLayout')) {
 
 <div class="container">
     <h1 class="mb-4">Správa rezervácií</h1>
-
-    <!-- Responsive search: inline on md+, stacked on xs -->
     <form id="reservation-search-form" class="mb-3" method="get"
           action="<?= $link->url('reservation.manage') ?>"
           data-update-url="<?= htmlspecialchars($link->url('reservation.update')) ?>">
@@ -74,10 +72,8 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                 $book = $it['book'];
                 $copy = $it['copy'];
                 $user = $it['user'];
-                // controller provides preformatted expiration date and days left (no seconds)
                 $expDateLabel = $it['expDate'] ?? '';
                 $daysLabel = $it['daysLeft'] ?? '';
-
                 $safeTitle = $book ? htmlspecialchars($book->getTitle(), ENT_QUOTES, 'UTF-8') : 'Neznáma kniha';
                 ?>
                 <div class="list-group-item d-flex justify-content-between align-items-start">

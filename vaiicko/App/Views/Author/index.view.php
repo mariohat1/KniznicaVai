@@ -10,7 +10,7 @@
     <h1 class="mb-4 section-title">Autori</h1>
 
     <!-- Search form -->
-    <form method="get" action="<?= $link->url('author.index') ?>" class="row g-2 mb-4 form-row-search">
+    <form method="get" action="<?= $link->url('author.index') ?>" class="row g-2 mb-4">
         <div class="col-12 col-md-3">
             <label for="authorSearchInput" class="visually-hidden">Hľadať autora</label>
             <input id="authorSearchInput" type="search" name="q" class="form-control" placeholder="Hľadať autora..." value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
@@ -25,22 +25,24 @@
     <?php else: ?>
         <div class="list-group list-group-flush">
             <?php foreach ($authors as $a): ?>
-                <div class="list-group-item border-bottom py-3 card list-item-hover">
+                <div class="list-group-item border-bottom py-3 card">
                     <div class="row g-3 align-items-center">
                         <!-- Avatar column -->
                         <div class="col-auto text-center">
                             <?php $photo = $a->getPhoto(); ?>
-                            <div class="author-avatar-wrapper author-avatar--medium">
+                            <div class="author-avatar-wrapper thumbnail">
                                 <?php if (!empty($photo)): ?>
                                     <img src="<?= htmlspecialchars($photo) ?>"
                                          alt="Fotka - <?= htmlspecialchars($a->getFirstName() . ' ' . $a->getLastName()) ?>"
                                          class="avatar-author">
                                 <?php else: ?>
-                                    <?php
-                                        $fn = trim((string)$a->getFirstName());
-                                        $ln = trim((string)$a->getLastName());
-
-                                    ?>
+                                    <span class="author-avatar-placeholder thumbnail">
+                                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <circle cx="24" cy="24" r="24" fill="#E0E0E0"/>
+                                            <path d="M24 24C27.3137 24 30 21.3137 30 18C30 14.6863 27.3137 12 24 12C20.6863 12 18 14.6863 18 18C18 21.3137 20.6863 24 24 24Z" fill="#9E9E9E"/>
+                                            <path d="M33.6 36C33.6 30.4772 28.5228 26.4 23 26.4H25C19.4772 26.4 14.4 30.4772 14.4 36V38.4H33.6V36Z" fill="#9E9E9E"/>
+                                        </svg>
+                                    </span>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -51,7 +53,7 @@
                                 </a>
                             </h5>
                             <p class="mb-0 text-muted"><small>
-                                <strong>Rok narodenia:</strong> <?= htmlspecialchars($a->getBirthYear() ?: 'Neznáme') ?>
+                                <strong>Ro narodenia:</strong> <?= htmlspecialchars($a->getBirthYear() ?: 'Neznáme') ?>
                             </small></p>
                         </div>
                     </div>

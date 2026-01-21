@@ -45,7 +45,7 @@ $view->setLayout('admin');
             <input type="hidden" id="bookPageInput" name="page" value="<?= htmlspecialchars($filters['page'] ?? 1) ?>">
 
             <div class="col-12 col-sm-6 col-md-auto">
-                <button type="submit" class="btn btn-primary w-100 w-md-auto"><i class="bi bi-search"></i> Hľadať</button>
+                <button type="submit" class="btn btn-primary w-100 w-md-auto"><i class="bi bi-search" aria-hidden="true"></i> Hľadať</button>
             </div>
         </div>
     </form>
@@ -64,7 +64,7 @@ $view->setLayout('admin');
 
     <div id="booksListContainer">
         <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0">
                 <thead>
                 <tr>
                     <th class="visually-hidden">ID</th>
@@ -85,10 +85,10 @@ $view->setLayout('admin');
                     </tr>
                     <tr>
                         <td colspan="4" class="pt-1 pb-1">
-                            <div class="d-flex flex-column flex-sm-row gap-2">
+                            <div class="d-grid gap-2 d-sm-flex flex-sm-row">
                                 <a class="btn btn-sm btn-outline-secondary" href="<?= $link->url('book.add', ['id' => $cid]) ?>">Upraviť</a>
                                 <a class="btn btn-sm btn-outline-info" href="<?= $link->url('bookcopy.index', ['book_id' => $cid]) ?>">Spravovať kópie</a>
-                                <form method="post" action="<?= $link->url('book.delete', ['id' => $cid]) ?>" class="m-0" onsubmit="return confirm('Naozaj chcete zmazať túto knihu?');">
+                                <form method="post" class="d-grid" action="<?= $link->url('book.delete', ['id' => $cid]) ?>" onsubmit="return confirm('Naozaj chcete zmazať túto knihu?');">
                                     <button class="btn btn-sm btn-outline-danger" type="submit">Zmazať</button>
                                 </form>
                             </div>

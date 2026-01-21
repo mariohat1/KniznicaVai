@@ -30,23 +30,22 @@ class PhotoUpload
             self::$lastError = 'Súbor je príliš veľký.';
             return null;
         }
-        $info = $file->getType();
-        if ($info !== 'image/png') {
-            self::$lastError = 'Neplatný typ súboru; očakáva sa PNG.';
+
+        $mime = $file->getType();
+        $ext = null;
+        if ($mime === 'image/png') {
+            $ext = 'png';
+        } elseif ($mime === 'image/jpeg' || $mime === 'image/jpg' || $mime === 'image/pjpeg') {
+            $ext = 'jpg';
+        } else {
+            self::$lastError = 'Neplatný typ súboru; očakáva sa PNG alebo JPEG.';
             return null;
         }
 
         $projectRoot = dirname(__DIR__, 2);
         $dir = $projectRoot . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . $uploadDir;
 
-        if (!is_dir($dir)) {
-            if (!@mkdir($dir, 0755, true)) {
-                self::$lastError = 'Nepodarilo sa vytvoriť priečinok pre nahrávanie.';
-                return null;
-            }
-        }
-
-        $filename = uniqid($filePrefix . '_', true) . '.png';
+        $filename = uniqid($filePrefix . '_', true) . '.' . $ext;
         $dest = $dir . DIRECTORY_SEPARATOR . $filename;
 
         if (!$file->store($dest)) {

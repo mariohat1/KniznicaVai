@@ -3,8 +3,6 @@
     if (!root) return;
 
     document.addEventListener('DOMContentLoaded', function () {
-
-         // book form submit
          const bookForm = document.querySelector('#bookAddRoot form');
          const feedbackEl = document.getElementById('bookFormFeedback');
          if (bookForm && feedbackEl) {
@@ -25,8 +23,7 @@
                      .then(r => r.json())
                      .then(data => {
                          if (data && data.success) {
-                             const cancelHref = document.querySelector('a.btn.btn-link[href]')?.getAttribute('href');
-                             window.location.href = data.redirect || cancelHref || window.location.href;
+                             window.location.href = data.redirect;
                              return;
                          }
                          feedbackEl.innerHTML = '<div class="alert alert-danger">' + ((data && (data.message || data.error)) || 'Chyba') + '</div>';

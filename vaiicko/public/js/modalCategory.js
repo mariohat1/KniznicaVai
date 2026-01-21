@@ -32,21 +32,21 @@
                         if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).hide();
                         return;
                     }
-
-                    // No related select on page: if server sent redirect, navigate
                     if (json && json.redirect) {
                         window.location.href = json.redirect;
                         return;
                     }
-
-                    // Fallback: just reset and hide modal if present
                     form.reset();
                     var modalEl = document.getElementById('categoryModal');
                     if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).hide();
                     return;
                 }
                 if (feedback) {
-                    feedback.innerHTML = '<div class="alert alert-danger mb-0" role="alert">' + ((json && (json.error || json.message)) || 'Chyba') + '</div>';
+                    let errors = json.errors.join('<br>');
+                    feedback.innerHTML =
+                        '<div class="alert alert-danger" role="alert">' +
+                        errors +
+                        '</div>';
                 }
             })
             .catch(() => {

@@ -12,7 +12,6 @@ class Author extends Model
     protected ?int $id = null;
     protected ?string $first_name = null;
     protected ?string $last_name = null;
-    // Store birth year as integer to match DB column `birth_year`
     protected ?int $birth_year = null;
     protected ?int $death_year = null;
     protected ?string $description = null;

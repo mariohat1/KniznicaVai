@@ -80,7 +80,7 @@
                         <span class="badge bg-danger">Všetky požičané</span>
                     <?php else: ?>
                         <span class="badge bg-success bg-opacity-10 text-success border border-success category-label">
-                            <i class="bi bi-check-circle me-1"></i> Dostupné
+                            <i class="bi bi-check-circle me-1" aria-hidden="true"></i> Dostupné
                             <span class="ms-2 small text-dark"><?= htmlspecialchars((string)($available ?? 0)) ?> / <?= htmlspecialchars((string)($available + $reserved)) ?></span>
                         </span>
                     <?php endif; ?>
@@ -91,7 +91,8 @@
                 </span>
                 <span class="mx-1">|</span>
                 <span class="meta-label"><strong>Rok:</strong> <?= htmlspecialchars((string)$book->getYearPublished()) ?></span>
-                <?php $publisher = trim((string)$book->getPublisher()); if (!empty($publisher)): ?>
+                <?php $publisher = trim((string)$book->getPublisher());
+                if (!empty($publisher)): ?>
                     <span class="mx-1">|</span>
                     <span class="meta-label"><strong>Vydavateľ:</strong> <?= htmlspecialchars($publisher) ?></span>
                 <?php endif; ?>

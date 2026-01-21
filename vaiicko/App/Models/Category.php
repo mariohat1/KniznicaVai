@@ -11,7 +11,6 @@ class Category extends Model
 {
     protected ?int $id = null;
     protected ?string $name = null;
-    // optional descriptive text for the category
     protected ?string $description = null;
 
     public function getId(): ?int

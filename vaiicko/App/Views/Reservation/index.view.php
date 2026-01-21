@@ -36,15 +36,14 @@
                             <?php endif; ?>
                         </div>
                         <div class="small text-muted">
-                            Kópia: <?= $copy ? htmlspecialchars((string)$copy->getId()) : '—' ?>
-                            <br>
-                            Rezervované: <?= htmlspecialchars((string)$r->getCreatedAt()) ?>
+                            Rezervované do: <?= htmlspecialchars((new DateTime($r->getReservedUntil()))->format('d.m.Y')) ?>
                         </div>
                     </div>
                     <div class="text-end ms-3">
                         <?php if ($r->getIsReserved()): ?>
                             <form method="post" action="<?= $link->url('reservation.cancel') ?>" class="d-inline">
                                 <input type="hidden" name="id" value="<?= htmlspecialchars((string)$r->getId()) ?>">
+                                <input type="hidden" name="status" value="<?= htmlspecialchars($status ?? 'all') ?>">
                                 <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Naozaj zrušiť rezerváciu?');">Zrušiť</button>
                             </form>
                         <?php endif; ?>

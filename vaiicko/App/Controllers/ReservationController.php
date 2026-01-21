@@ -143,7 +143,6 @@ class ReservationController extends BaseController
     }
 
 
-
     public function update(Request $request): Response
     {
         if (!$request->isPost()) {
@@ -178,7 +177,8 @@ class ReservationController extends BaseController
                 $now = new \DateTimeImmutable();
                 $reservation->setCreatedAt($now->format('Y-m-d H:i'));
                 $reservedUntil = $now->modify('+6 days')->setTime(23, 59);
-                $reservation->setReservedUntil($reservedUntil->format('Y-m-d H:i'));                $reservation->save();
+                $reservation->setReservedUntil($reservedUntil->format('Y-m-d H:i'));
+                $reservation->save();
             }
         } catch (\Throwable $e) {
             if ($request->isAjax()) {
@@ -205,25 +205,26 @@ class ReservationController extends BaseController
         $userId = $user->getId();
 
         $reservationId = (int)$request->value('id');
+        $status = $request->value('status') ?? 'all';
         if ($reservationId <= 0) {
-            return $this->redirect($this->url('reservation.index'));
+            return $this->redirect($this->url('reservation.index', ['status' => $status]));
         }
 
         $reservation = Reservation::getOne($reservationId);
         if (!$reservation) {
-           return $this->redirect($this->url('reservation.index'));
+            return $this->redirect($this->url('reservation.index', ['status' => $status]));
         }
 
         if ((int)$reservation->getUserId() !== (int)$userId) {
-           return $this->redirect($this->url('reservation.index'));
+            return $this->redirect($this->url('reservation.index', ['status' => $status]));
         }
 
         try {
             $reservation->setIsReserved(0);
             $reservation->save();
-            return $this->redirect($this->url('reservation.index'));
+            return $this->redirect($this->url('reservation.index', ['status' => $status]));
         } catch (\Throwable $e) {
-            return $this->redirect($this->url('reservation.index'));
+            return $this->redirect($this->url('reservation.index', ['status' => $status]));
         }
     }
 
@@ -233,10 +234,10 @@ class ReservationController extends BaseController
      *
      * @param string $q
      * @param string $searchBy
-     * @param array  $whereParts (by ref)
-     * @param array  $whereParams (by ref)
+     * @param array $whereParts (by ref)
+     * @param array $whereParams (by ref)
      */
-    private function applySearchFilters(string $q, string $searchBy, array & $whereParts, array & $whereParams): void
+    private function applySearchFilters(string $q, string $searchBy, array &$whereParts, array &$whereParams): void
     {
         if ($q === '') return;
 
@@ -320,7 +321,7 @@ class ReservationController extends BaseController
             $daysLeftStr = '';
             if ($rawUntil) {
                 $until = new \DateTimeImmutable($rawUntil);
-                $now   = new \DateTimeImmutable();
+                $now = new \DateTimeImmutable();
 
                 $expDate = $until->format('d.m.Y H:i');
 
