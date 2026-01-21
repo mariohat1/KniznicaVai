@@ -4,6 +4,8 @@ namespace App\Controllers;
 
 use App\Models\Book;
 use App\Models\BookCopy;
+use App\Models\Reservation;
+use App\Models\User;
 use App\Support\AuthHelper;
 use Framework\Core\BaseController;
 use Framework\Http\Request;
@@ -101,26 +103,35 @@ class BookCopyController extends BaseController
         }
 
         $copies = BookCopy::getAll('book_id = ?', [(int)$bookId]);
-
-        // Preload active reservations for these copies to show reserved status without N+1 queries
         $reservationsMap = [];
         $usersMap = [];
-        $copyIds = array_values(array_filter(array_map(fn($c) => $c->getId(), $copies)));
+        $copyIds = array_values(
+            array_filter(array_map(fn($c) => $c->getId(), $copies)));
         if (!empty($copyIds)) {
             $placeholders = implode(',', array_fill(0, count($copyIds), '?'));
             // active reservation = is_reserved = 1 (we treat all as active; expiry handled elsewhere/event)
             $where = "book_copy_id IN ($placeholders) AND is_reserved = 1";
-            $reservations = \App\Models\Reservation::getAll($where, $copyIds);
+            $reservations = Reservation::getAll($where, $copyIds);
             $userIds = [];
             foreach ($reservations as $r) {
-                $reservationsMap[$r->getBookCopyId()] = $r;
+                $reservedUntil = $r->getReservedUntil();
+                $reservedUntilFmt = null;
+                if (!empty($reservedUntil)) {
+                    try {
+                        $dt = new \DateTime($reservedUntil);
+                        $reservedUntilFmt = $dt->format('d. m. Y');
+                    } catch (\Exception $e) {
+                    }
+                }
+
+                $reservationsMap[$r->getBookCopyId()] = ['reservation' => $r, 'reservedUntilFmt' => $reservedUntilFmt];
                 $uid = $r->getUserId();
                 if ($uid !== null) $userIds[] = $uid;
             }
             $userIds = array_values(array_unique($userIds));
             if (!empty($userIds)) {
                 $uPlace = implode(',', array_fill(0, count($userIds), '?'));
-                $users = \App\Models\User::getAll("id IN ($uPlace)", $userIds);
+                $users = User::getAll("id IN ($uPlace)", $userIds);
                 foreach ($users as $u) {
                     $usersMap[$u->getId()] = $u;
                 }

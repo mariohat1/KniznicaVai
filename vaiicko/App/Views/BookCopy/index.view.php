@@ -41,17 +41,21 @@ if (isset($view) && method_exists($view, 'setLayout')) {
                 <?php foreach ($copies as $c): ?>
                     <?php $id = (int)$c->getId();
                     $avail = $c->getAvailable() ? 1 : 0;
-                    $res = $reservations[$id] ?? null; ?>
+                    $resEntry = $reservations[$id] ?? null;
+                    $resObj = $resEntry['reservation'] ?? null;
+                    $resUntil = $resEntry['reservedUntilFmt'] ?? null;
+
+                    ?>
                     <tr>
                         <td>
-                            <?php if ($res !== null && $res->getIsReserved()): ?>
-                                <?php $uid = $res->getUserId();
+                            <?php if ($resObj && $resObj->getIsReserved()): ?>
+                                <?php $uid = $resObj->getUserId();
                                 $user = $users[$uid] ?? null; ?>
                                 <div><span class="badge bg-warning text-dark">Rezervovaná</span></div>
                                 <div class="small text-black">Pre
-                                    používateľa:<?= htmlspecialchars($user->getUsername()); ?></div>
+                                    používateľa: <?= htmlspecialchars($user->getUsername()); ?></div>
                                 <div class="small text-muted">
-                                    Do: <?php echo htmlspecialchars((string)date('Y-m-d', strtotime(($res->getCreatedAt() ?? '') . ' +7 days'))); ?></div>
+                                    Do: <?php echo htmlspecialchars($resUntil); ?></div>
                             <?php else: ?>
                                 <?= $avail ? '<span class="badge bg-success">Dostupná</span>' : '<span class="badge bg-secondary">Nedostupná</span>' ?>
                             <?php endif; ?>
