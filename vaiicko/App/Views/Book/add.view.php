@@ -101,8 +101,8 @@ if (isset($view) && method_exists($view, 'setLayout')) {
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Obal knihy (PNG)</label>
-                <input type="file" name="photo" accept="image/png" class="form-control">
+                <label class="form-label">Obal knihy (PNG alebo JPEG)</label>
+                <input type="file" name="photo" accept="image/png,image/jpeg" class="form-control">
                 <small class="form-text text-muted">Max 5 MB. Voliteľný.</small>
             </div>
 

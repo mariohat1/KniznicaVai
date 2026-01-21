@@ -56,7 +56,7 @@
             </div>
         </div>
         <div class="col-md-9">
-            <h1 class="book-title"><?= htmlspecialchars($book->getTitle()) ?></h1>
+            <h1 class="book-title mt-3 mt-md-0"><?= htmlspecialchars($book->getTitle()) ?></h1>
 
             <p class="text-muted mb-1">Autor:
                 <?php if ($author): ?>
@@ -107,4 +107,3 @@
     </div>
 </div>
 
-<script src="<?= $link->asset('js/bookView.js') ?>"></script>

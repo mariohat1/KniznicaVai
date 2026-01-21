@@ -144,10 +144,8 @@ class AuthorController extends BaseController
         $author->setBirthYear((int)$birth_year);
         $author->setDeathYear((int)$death_year);
 
-        // Zisti, ci uz autor ma fotku
-        $hasPhoto = !empty($author->getPhoto());
         $photoError = $this->handlePhotoUpload($request, $author);
-        if ($photoError && !$hasPhoto) {
+        if ($photoError !== null) {
             $errors[] = $photoError;
         }
 
@@ -171,6 +169,10 @@ class AuthorController extends BaseController
     private function handlePhotoUpload(Request $request, Author $author): ?string
     {
         $photoFile = $request->file('photo');
+        if (!$photoFile || !$photoFile->isOk()) {
+            return null;
+        }
+
         $path = PhotoUpload::handle($request, 'author', 'author');
         if ($path !== null) {
             $author->setPhoto($path);
@@ -187,7 +189,7 @@ class AuthorController extends BaseController
         if ($id === null) {
             return $this->redirect($this->url('author.manage'));
         }
-        $author =null;
+        $author = null;
         try {
             $author = Author::getOne($id);
         } catch (\Throwable $ex) {

@@ -26,7 +26,11 @@
                              window.location.href = data.redirect;
                              return;
                          }
-                         feedbackEl.innerHTML = '<div class="alert alert-danger">' + ((data && (data.message || data.error)) || 'Chyba') + '</div>';
+                         let errors = data.errors.join('<br>');
+                         feedbackEl.innerHTML =
+                             '<div class="alert alert-danger" role="alert">' +
+                             errors +
+                             '</div>';
                      })
                      .catch(() => {
                          feedbackEl.innerHTML = '<div class="alert alert-danger">Chyba spojenia</div>';

@@ -186,9 +186,7 @@ $isAdmin = AuthView::canAddAuthor($auth);
                 <div class="col-md-4">
                     <h5>Otváracie hodiny</h5>
                     <ul class="opening-hours list-unstyled small mb-0">
-                        <li>Pondelok — Piatok: 9:00 — 18:00</li>
-                        <li>Sobota: 10:00 — 13:00</li>
-                        <li>Nedeľa: Zatvorené</li>
+                        <li>Štvrtok: 16:00 — 17:00</li>
                     </ul>
                 </div>
                 <div class="col-md-4">

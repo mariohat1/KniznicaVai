@@ -9,8 +9,6 @@ if (isset($view) && method_exists($view, 'setLayout')) {
 
 <div class="container">
     <h1>Správa autorov</h1>
-
-    <!-- Search form -->
     <form method="get" action="<?= $link->url('author.manage') ?>" class="row g-2 mb-3">
         <input type="hidden" name="c" value="author">
         <input type="hidden" name="a" value="manage">

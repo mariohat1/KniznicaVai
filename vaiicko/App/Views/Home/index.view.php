@@ -55,7 +55,7 @@ $login = $mustLogin;
 
 
                 <div class="mt-3 small text-muted">
-                    <strong>Otváracie hodiny:</strong> Po–Pia 9:00–18:00, So 10:00–13:00.<br>
+                    <strong>Otváracie hodiny:</strong> štvrtok o 16:00.<br>
                     <strong>Kontakt:</strong> <a href="mailto:info@kniznica.example">info@kniznica.example</a> · Tel:
                     +421 2 123 4567
                 </div>

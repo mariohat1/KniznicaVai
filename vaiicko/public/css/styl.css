@@ -122,8 +122,6 @@ main.flex-fill {
     display: inline-block;
 }
 
-
-/* Thumbnail wrapper and sizing - books */
 .thumb-wrapper {
     width: 140px;
     max-width: 100%;
@@ -166,13 +164,17 @@ main.flex-fill {
 .book-cover-box {
     width: 200px;
     max-width: 100%;
-    margin: 0 auto;
-    display: flex;
+    height: 200px;
     align-items: center;
-    justify-content: center;
-    overflow: hidden;
     border-radius: 8px;
     background: #f8f9fa;
+    margin-left: 18px;
+}
+.book-cover-box img.book-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
 }
 
 /* 1. Navigačný link aktívny */
@@ -315,6 +317,4 @@ p {
     height: 80px;
     object-fit: contain;
 }
-
-
 

@@ -11,6 +11,8 @@
 
     <!-- Search form -->
     <form method="get" action="<?= $link->url('author.index') ?>" class="row g-2 mb-4">
+        <input type="hidden" name="c" value="author">
+
         <div class="col-12 col-md-3">
             <label for="authorSearchInput" class="visually-hidden">Hľadať autora</label>
             <input id="authorSearchInput" type="search" name="q" class="form-control" placeholder="Hľadať autora..." value="<?= htmlspecialchars($filters['q'] ?? '') ?>">
@@ -53,7 +55,7 @@
                                 </a>
                             </h5>
                             <p class="mb-0 text-muted"><small>
-                                <strong>Ro narodenia:</strong> <?= htmlspecialchars($a->getBirthYear() ?: 'Neznáme') ?>
+                                <strong>Rok narodenia:</strong> <?= htmlspecialchars($a->getBirthYear() ?: 'Neznáme') ?>
                             </small></p>
                         </div>
                     </div>

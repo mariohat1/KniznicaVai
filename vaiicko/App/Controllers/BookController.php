@@ -159,7 +159,6 @@ class BookController extends BaseController
         if ($err = Validator::validatePublisher($publisher, 'vydavateľ')) {
             $errors[] = $err;
         }
-
         if ($err = Validator::validateAuthorId($authorId)) {
             $errors[] = $err;
         }
@@ -191,7 +190,7 @@ class BookController extends BaseController
         if ($err = $this->checkISBNUniqueness($book)) {
             $errors[] = $err;
             if ($request->isAjax()) {
-                return $this->json(['success' => false, 'message' => $err]);
+                return $this->json(['success' => false, 'errors' => $errors]);
             }
             return $this->redirect($this->url('book.add'));
         }
@@ -240,7 +239,7 @@ class BookController extends BaseController
     {
         $photoFile = $request->file('photo');
         if (!$photoFile || !$photoFile->isOk()) {
-            return null; // No file uploaded, that's OK
+            return null;
         }
 
         $path = PhotoUpload::handle($request, 'book', 'book');
