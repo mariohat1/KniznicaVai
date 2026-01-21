@@ -1,5 +1,5 @@
 # KniznicaVai
-This app was done using using framework [Vaiicko](https://github.com/vaiicko).
+This app was done using using framework [Vaiicko](https://github.com/thevajko/vaiicko).
 To run the app:
 ---
 ```bash
