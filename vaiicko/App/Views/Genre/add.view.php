@@ -21,6 +21,7 @@ $view->setLayout('admin');
             <textarea id="genre-description" name="description" class="form-control" rows="4"><?= isset($genre) ? htmlspecialchars((string)$genre->getDescription()) : '' ?></textarea>
         </div>
         <button class="btn btn-primary" type="submit"><?= isset($genre) ? 'Upraviť' : 'Uložiť' ?></button>
+        <a href="<?= $link->url('genre.manage') ?>" class="btn btn-link">Zrušiť</a>
     </form>
 </div>
 

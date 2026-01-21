@@ -44,6 +44,7 @@ $view->setLayout('admin');
             <small class="form-text text-muted">Max 5 MB. Voliteľné.</small>
         </div>
         <button class="btn btn-primary"><?= isset($author) ? 'Upraviť' : 'Uložiť' ?></button>
+        <a href="<?= $link->url('author.manage') ?>" class="btn btn-link">Zrušiť</a>
     </form>
 </div>
 

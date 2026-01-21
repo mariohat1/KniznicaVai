@@ -18,8 +18,8 @@ $view->setLayout('admin');
             <textarea id="category-description" name="description" class="form-control" rows="4"><?= isset($category) ? htmlspecialchars((string)$category->getDescription()) : '' ?></textarea>
         </div>
         <button class="btn btn-primary" type="submit"><?= isset($category) ? 'Upraviť' : 'Uložiť' ?></button>
+        <a href="<?= $link->url('category.manage') ?>" class="btn btn-link">Zrušiť</a>
     </form>
 </div>
 
 <script src="<?= $link->asset('js/categoryAdd.js') ?>"></script>
-
